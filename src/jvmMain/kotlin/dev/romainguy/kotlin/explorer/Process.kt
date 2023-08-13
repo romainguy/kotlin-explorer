@@ -1,4 +1,4 @@
-package dev.romainguy.kotlin.explorer/*
+/*
  * Copyright (C) 2023 Romain Guy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +13,8 @@ package dev.romainguy.kotlin.explorer/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package dev.romainguy.kotlin.explorer
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
