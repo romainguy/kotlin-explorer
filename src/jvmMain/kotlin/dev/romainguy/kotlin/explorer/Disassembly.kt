@@ -43,7 +43,7 @@ fun disassemble(
         Files.writeString(path, source)
 
         val kotlinc = process(
-            "kotlinc",
+            toolPaths.kotlinc.toString(),
             path.toString(),
             directory = directory
         )
