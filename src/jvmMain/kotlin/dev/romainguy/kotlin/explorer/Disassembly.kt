@@ -43,7 +43,8 @@ fun disassemble(
         Files.writeString(path, source)
 
         val kotlinc = process(
-            "kotlinc", path.toString(),
+            "kotlinc",
+            path.toString(),
             directory = directory
         )
 
@@ -97,7 +98,7 @@ fun disassemble(
         mainScope.launch { onStatusUpdate("AOT compilation…") }
 
         val push = process(
-            "adb",
+            toolPaths.adb.toString(),
             "push",
             "classes.dex",
             "/sdcard/classes.dex",
@@ -110,7 +111,7 @@ fun disassemble(
         }
 
         val dex2oat = process(
-            "adb",
+            toolPaths.adb.toString(),
             "shell",
             "dex2oat",
             "--dex-file=/sdcard/classes.dex",
@@ -126,7 +127,7 @@ fun disassemble(
         mainScope.launch { onStatusUpdate("Disassembling OAT…") }
 
         val oatdump = process(
-            "adb",
+            toolPaths.adb.toString(),
             "shell",
             "oatdump",
             "--oat-file=/sdcard/classes.oat",
@@ -166,8 +167,7 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
     val classFiles = Files
         .list(directory)
         .filter { path -> path.extension == "class" }
-        .map { file -> file.fileName }
-        .map { file -> file.toString() }
+        .map { file -> file.fileName.toString() }
         .sorted()
         .collect(Collectors.toList())
     command.addAll(classFiles)
@@ -189,8 +189,7 @@ private fun buildJavapCommand(directory: Path): Array<String> {
     val classFiles = Files
         .list(directory)
         .filter { path -> path.extension == "class" }
-        .map { file -> file.fileName }
-        .map { file -> file.toString() }
+        .map { file -> file.fileName.toString() }
         .sorted()
         .collect(Collectors.toList())
     command.addAll(classFiles)

@@ -30,6 +30,8 @@ class ToolPaths {
     val buildToolsDirectory: Path
     val platform: Path
     val d8: Path
+    val adb: Path
+    val kotlinc: Path
     val kotlinLibs: List<Path>
     val settingsDirectory: Path
     val sourceFile: Path
@@ -39,6 +41,7 @@ class ToolPaths {
             println("\$ANDROID_HOME missing or invalid: $androidHome")
             exitProcess(1)
         }
+        adb = androidHome.resolve("platform-tools/adb")
         buildToolsDirectory = Files
             .list(androidHome.resolve("build-tools"))
             .sorted { p1, p2 ->
@@ -61,6 +64,8 @@ class ToolPaths {
             println("\$KOTLIN_HOME missing or invalid: $kotlinHome")
             exitProcess(1)
         }
+
+        kotlinc = kotlinHome.resolve("bin/kotlinc")
 
         val lib = kotlinHome.resolve("lib")
         kotlinLibs = listOf(
