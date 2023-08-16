@@ -58,7 +58,6 @@ private const val PREFERENCE_SOURCE_CODE = "source_code"
 
 @Stable
 class ExplorerState(
-    val scope: CoroutineScope,
     val toolPaths: ToolPaths = ToolPaths(),
 ) {
     var sourceCode = "fun square(a: Int): Int {\n    return a * a\n}\n"
@@ -258,14 +257,15 @@ private fun FrameWindowScope.MainMenu(
     onStatusUpdate: (String) -> Unit,
     onSearchClicked: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
     MenuBar {
         Menu("File") {
             Item(
                 "Decompile",
                 shortcut = KeyShortcut(Key.D, shift = true, meta = true),
                 onClick = {
-                    disassemble(
-                        explorerState.scope,
+                    scope.disassemble(
                         explorerState.toolPaths,
                         sourceTextArea!!.text,
                         onBytecode = onBytecodeUpdate,
@@ -306,8 +306,7 @@ private fun applyTheme(textArea: RSyntaxTextArea) {
 }
 
 fun main() = application {
-    val scope = rememberCoroutineScope()
-    val explorerState = remember(scope) { ExplorerState(scope) }
+    val explorerState = remember() { ExplorerState() }
 
     Runtime.getRuntime().addShutdownHook(Thread {
         Files.writeString(explorerState.toolPaths.sourceFile, explorerState.sourceCode)

@@ -24,8 +24,7 @@ import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
 
-fun disassemble(
-    mainScope: CoroutineScope,
+fun CoroutineScope.disassemble(
     toolPaths: ToolPaths,
     source: String,
     onBytecode: (String) -> Unit,
@@ -33,8 +32,8 @@ fun disassemble(
     onOat: (String) -> Unit,
     onStatusUpdate: (String) -> Unit
 ) {
-    mainScope.launch(Dispatchers.IO) {
-        mainScope.launch { onStatusUpdate("Compiling Kotlin…") }
+    launch(Dispatchers.IO) {
+        launch { onStatusUpdate("Compiling Kotlin…") }
 
         val directory = toolPaths.tempDirectory
         cleanupClasses(directory)
@@ -49,24 +48,24 @@ fun disassemble(
         )
 
         if (kotlinc.exitCode != 0) {
-            mainScope.launch { onBytecode(kotlinc.output) }
+            launch { onBytecode(kotlinc.output) }
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("Disassembling bytecode…") }
+        launch { onStatusUpdate("Disassembling bytecode…") }
 
         val javap = process(
             *buildJavapCommand(directory),
             directory = directory
         )
 
-        mainScope.launch { onBytecode(javap.output) }
+        launch { onBytecode(javap.output) }
 
         if (javap.exitCode != 0) {
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("Optimizing with R8…") }
+        launch { onStatusUpdate("Optimizing with R8…") }
 
         writeR8Rules(directory)
 
@@ -76,11 +75,11 @@ fun disassemble(
         )
 
         if (r8.exitCode != 0) {
-            mainScope.launch { onDex(r8.output) }
+            launch { onDex(r8.output) }
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("Disassembling DEX…") }
+        launch { onStatusUpdate("Disassembling DEX…") }
 
         val dexdump = process(
             toolPaths.buildToolsDirectory.resolve("dexdump").toString(),
@@ -89,13 +88,13 @@ fun disassemble(
             directory = directory
         )
 
-        mainScope.launch { onDex(dexdump.output) }
+        launch { onDex(dexdump.output) }
 
         if (dexdump.exitCode != 0) {
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("AOT compilation…") }
+        launch { onStatusUpdate("AOT compilation…") }
 
         val push = process(
             toolPaths.adb.toString(),
@@ -106,7 +105,7 @@ fun disassemble(
         )
 
         if (push.exitCode != 0) {
-            mainScope.launch { onOat(push.output) }
+            launch { onOat(push.output) }
             return@launch
         }
 
@@ -120,11 +119,11 @@ fun disassemble(
         )
 
         if (dex2oat.exitCode != 0) {
-            mainScope.launch { onOat(dex2oat.output) }
+            launch { onOat(dex2oat.output) }
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("Disassembling OAT…") }
+        launch { onStatusUpdate("Disassembling OAT…") }
 
         val oatdump = process(
             toolPaths.adb.toString(),
@@ -134,13 +133,13 @@ fun disassemble(
             directory = directory
         )
 
-        mainScope.launch { onOat(oatdump.output) }
+        launch { onOat(oatdump.output) }
 
         if (oatdump.exitCode != 0) {
             return@launch
         }
 
-        mainScope.launch { onStatusUpdate("Ready") }
+        launch { onStatusUpdate("Ready") }
     }
 }
 
