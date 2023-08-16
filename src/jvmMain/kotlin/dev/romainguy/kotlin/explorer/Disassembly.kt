@@ -175,10 +175,15 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
 }
 
 private fun writeR8Rules(directory: Path) {
+    // Match $ANDROID_HOME/tools/proguard/proguard-android-optimize.txt
     Files.writeString(
         directory.resolve("rules.txt"),
-        """-keep,allowoptimization class * {
-          <methods>;
+        """-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+        -optimizationpasses 5
+        -allowaccessmodification
+        -dontpreverify
+        -keep,allowoptimization class * {
+        <methods>;
         } """.trimIndent()
     )
 }
