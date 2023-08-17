@@ -72,6 +72,7 @@ class ToolPaths {
             lib.resolve("kotlin-stdlib-jdk8.jar"),
             lib.resolve("kotlin-stdlib.jar"),
             lib.resolve("kotlin-annotations-jvm.jar"),
+            lib.resolve("kotlinx-coroutines-core-jvm.jar"),
             Files
                 .list(lib)
                 .filter { path ->

@@ -42,8 +42,7 @@ fun CoroutineScope.disassemble(
         Files.writeString(path, source)
 
         val kotlinc = process(
-            toolPaths.kotlinc.toString(),
-            path.toString(),
+            *buildKotlincCommand(toolPaths, path),
             directory = directory
         )
 
@@ -170,6 +169,17 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
         .sorted()
         .collect(Collectors.toList())
     command.addAll(classFiles)
+
+    return command.toTypedArray()
+}
+
+private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String> {
+    val command = mutableListOf(
+        toolPaths.kotlinc.toString(),
+        path.toString(),
+        "-classpath",
+        toolPaths.kotlinLibs.map { jar -> jar.toString() }.joinToString(":")
+    )
 
     return command.toTypedArray()
 }
