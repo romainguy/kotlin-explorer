@@ -177,8 +177,9 @@ private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String>
     val command = mutableListOf(
         toolPaths.kotlinc.toString(),
         path.toString(),
+        "-Xmulti-platform",
         "-classpath",
-        toolPaths.kotlinLibs.map { jar -> jar.toString() }.joinToString(":")
+        toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() }
     )
 
     return command.toTypedArray()
