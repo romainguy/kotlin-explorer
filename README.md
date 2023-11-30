@@ -8,9 +8,7 @@ Kotlin Explorer is a desktop tool to quickly and easily disassemble Kotlin code 
 After launching Kotlin Explorer, type valid Kotlin code in the left pane, then click
 *File > Decompile* or use `Cmd-Shift-D` on macOS, `Ctrl-Shift-D` on Linux and Windows.
 
-The middle pane will show the Java bytecode generated from the source Kotlin code.
-
-The right pane will show, at the top, the Android DEX bytecode, and at the bottom,
+The middle pane will show the Android DEX bytecode, and the right panel
 the native assembly resulting from ahead of time compilation (AOT).
 
 ![./art/kotlin-explorer.png](./art/kotlin-explorer.png)
