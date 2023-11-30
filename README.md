@@ -1,7 +1,6 @@
 # Kotlin Explorer
 
 Kotlin Explorer is a desktop tool to quickly and easily disassemble Kotlin code into:
-- Java bytecode
 - Android DEX bytecode
 - Android OAT assembly
 
