@@ -27,7 +27,6 @@ import kotlin.io.path.extension
 fun CoroutineScope.disassemble(
     toolPaths: ToolPaths,
     source: String,
-    onBytecode: (String) -> Unit,
     onDex: (String) -> Unit,
     onOat: (String) -> Unit,
     onStatusUpdate: (String) -> Unit
@@ -47,20 +46,7 @@ fun CoroutineScope.disassemble(
         )
 
         if (kotlinc.exitCode != 0) {
-            launch { onBytecode(kotlinc.output) }
-            return@launch
-        }
-
-        launch { onStatusUpdate("Disassembling bytecode…") }
-
-        val javap = process(
-            *buildJavapCommand(directory),
-            directory = directory
-        )
-
-        launch { onBytecode(javap.output) }
-
-        if (javap.exitCode != 0) {
+            launch { onDex(kotlinc.output) }
             return@launch
         }
 
@@ -132,7 +118,7 @@ fun CoroutineScope.disassemble(
             directory = directory
         )
 
-        launch { onOat(oatdump.output) }
+        launch { onOat(filterOat(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
             return@launch
@@ -180,6 +166,7 @@ private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String>
         "-Xmulti-platform",
         "-classpath",
         toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() }
+            + ":${toolPaths.platform}"
     )
 
     return command.toTypedArray()
@@ -199,21 +186,17 @@ private fun writeR8Rules(directory: Path) {
     )
 }
 
-private fun buildJavapCommand(directory: Path): Array<String> {
-    val command = mutableListOf("javap", "-p", "-l", "-c")
-    val classFiles = Files
-        .list(directory)
-        .filter { path -> path.extension == "class" }
-        .map { file -> file.fileName.toString() }
-        .sorted()
-        .collect(Collectors.toList())
-    command.addAll(classFiles)
-    return command.toTypedArray()
-}
-
 private fun cleanupClasses(directory: Path) {
     Files
         .list(directory)
         .filter { path -> path.extension == "class" }
         .forEach { path -> path.toFile().delete() }
+}
+
+private fun filterOat(oat: String): String {
+    val index = oat.indexOf("OatDexFile:")
+    if (index >= 0) {
+        return oat.substring(index)
+    }
+    return oat
 }

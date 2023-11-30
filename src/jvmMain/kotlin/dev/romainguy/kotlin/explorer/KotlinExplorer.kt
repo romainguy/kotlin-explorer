@@ -30,7 +30,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import kotlinx.coroutines.CoroutineScope
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.FindToolBar
 import org.fife.rsta.ui.search.SearchEvent
@@ -42,7 +41,6 @@ import org.fife.ui.rtextarea.RTextScrollPane
 import org.fife.ui.rtextarea.SearchEngine
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import org.jetbrains.compose.splitpane.VerticalSplitPane
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Color
 import java.awt.event.FocusEvent
@@ -76,7 +74,6 @@ fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
-    var bytecodeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var dexTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var oatTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
@@ -123,7 +120,6 @@ fun FrameWindowScope.KotlinExplorer(
     MainMenu(
         explorerState,
         sourceTextArea,
-        { bytecode -> bytecodeTextArea!!.text = bytecode },
         { dex -> dexTextArea!!.text = dex },
         { oat -> oatTextArea!!.text = oat },
         { statusUpdate -> status = statusUpdate },
@@ -137,7 +133,9 @@ fun FrameWindowScope.KotlinExplorer(
                     modifier = Modifier.weight(1.0f, true).height(32.dp),
                     factory = {
                         FindToolBar(searchListener).apply {
-                            searchContext = findDialog.searchContext
+                            searchContext = findDialog.searchContext.apply {
+                                searchWrap = true
+                            }
                         }
                     }
                 )
@@ -184,46 +182,25 @@ fun FrameWindowScope.KotlinExplorer(
                             SwingPanel(
                                 modifier = Modifier.fillMaxSize(),
                                 factory = {
-                                    bytecodeTextArea = RSyntaxTextArea().apply {
+                                    dexTextArea = RSyntaxTextArea().apply {
                                         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
                                         addFocusListener(focusTracker)
                                     }
-                                    RTextScrollPane(bytecodeTextArea)
+                                    RTextScrollPane(dexTextArea)
                                 }
                             )
                         }
                         second {
-                            VerticalSplitPane(
-                                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
-                            ) {
-                                first {
-                                    SwingPanel(
-                                        modifier = Modifier.fillMaxSize(),
-                                        factory = {
-                                            dexTextArea = RSyntaxTextArea().apply {
-                                                configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                                addFocusListener(focusTracker)
-                                            }
-                                            RTextScrollPane(dexTextArea)
-                                        }
-                                    )
+                            SwingPanel(
+                                modifier = Modifier.fillMaxSize(),
+                                factory = {
+                                    oatTextArea = RSyntaxTextArea().apply {
+                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+                                        addFocusListener(focusTracker)
+                                    }
+                                    RTextScrollPane(oatTextArea)
                                 }
-                                second {
-                                    SwingPanel(
-                                        modifier = Modifier.fillMaxSize(),
-                                        factory = {
-                                            oatTextArea = RSyntaxTextArea().apply {
-                                                configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                                addFocusListener(focusTracker)
-                                            }
-                                            RTextScrollPane(oatTextArea)
-                                        }
-                                    )
-                                }
-                                splitter {
-                                    VerticalSplitter()
-                                }
-                            }
+                            )
                         }
                         splitter {
                             HorizontalSplitter()
@@ -251,7 +228,6 @@ fun FrameWindowScope.KotlinExplorer(
 private fun FrameWindowScope.MainMenu(
     explorerState: ExplorerState,
     sourceTextArea: RSyntaxTextArea?,
-    onBytecodeUpdate: (String) -> Unit,
     onDexUpdate: (String) -> Unit,
     onOatUpdate: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
@@ -268,7 +244,6 @@ private fun FrameWindowScope.MainMenu(
                     scope.disassemble(
                         explorerState.toolPaths,
                         sourceTextArea!!.text,
-                        onBytecode = onBytecodeUpdate,
                         onDex = onDexUpdate,
                         onOat = onOatUpdate,
                         onStatusUpdate = onStatusUpdate
