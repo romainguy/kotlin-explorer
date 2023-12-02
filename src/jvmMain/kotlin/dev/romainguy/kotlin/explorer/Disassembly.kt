@@ -46,7 +46,9 @@ fun CoroutineScope.disassemble(
         )
 
         if (kotlinc.exitCode != 0) {
-            launch { onDex(kotlinc.output) }
+            launch {
+                onDex(kotlinc.output.replace(path.parent.toString() + "/", ""))
+            }
             return@launch
         }
 
@@ -73,11 +75,12 @@ fun CoroutineScope.disassemble(
             directory = directory
         )
 
-        launch { onDex(dexdump.output) }
-
         if (dexdump.exitCode != 0) {
+            launch { onDex(dexdump.output) }
             return@launch
         }
+
+        launch { onDex(filterDex(dexdump.output)) }
 
         launch { onStatusUpdate("AOT compilation…") }
 
@@ -199,4 +202,98 @@ private fun filterOat(oat: String): String {
         return oat.substring(index)
     }
     return oat
+}
+
+private fun filterDex(dex: String) = buildString {
+    val lines = dex.lineSequence().iterator()
+
+    while (lines.hasNext()) {
+        if (!lines.consumeUntil("Class #")) break
+
+        val line = lines.next()
+        val className = extractDexClassName(line)
+        appendLine("class $className")
+
+        if (!lines.consumeUntil("Direct methods")) break
+        lines.extractMethods(this, className, "        ")
+    }
+}
+
+private val DexBytecodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
+private val DexMethodNamePattern = Regex("^name\\s+:\\s+'(.+)'")
+private val DexMethodTypePattern = Regex("^type\\s+:\\s+'(.+)'")
+private val DexMethodProperty = Regex("^(\\s+[a-zA-Z ]+[:-].*)|([0-9a-fA-F]+:[^|]+\\|\\[.+)")
+private val DexClassNamePattern = Regex("Class descriptor\\s+:\\s+'L(.+);'")
+
+private fun Iterator<String>.extractMethods(
+    output: StringBuilder,
+    className: String,
+    indent: String
+) {
+    while (hasNext()) {
+        var line = next()
+        if (line.isEmpty()) break
+
+        if (line.startsWith("    #")) {
+            if (!hasNext()) break
+            line = next()
+
+            val name = extractMethodName(line)
+
+            if (!hasNext()) break
+            line = next()
+
+            val type = extractMethodType(line)
+
+            output.appendLine("    $name$type // $className.$name()")
+
+            while (hasNext()) {
+                line = next()
+
+                val match = DexBytecodePattern.matchEntire(line)
+                if (match != null && match.groupValues.isNotEmpty()) {
+                    output.appendLine("$indent${match.groupValues[1]}")
+                } else if (!DexMethodProperty.matches(line)) {
+                    println(line)
+                    break
+                }
+            }
+
+            output.appendLine()
+        } else if (!line.trim().startsWith("Virtual methods")) {
+            break
+        }
+    }
+}
+
+private fun extractMethodName(line: String): String {
+    val match = DexMethodNamePattern.matchEntire(line.trim())
+    if (match != null && match.groupValues.isNotEmpty()) {
+        return match.groupValues[1]
+    }
+    return "<UNKNOWN>"
+}
+
+private fun extractMethodType(line: String): String {
+    val match = DexMethodTypePattern.matchEntire(line.trim())
+    if (match != null && match.groupValues.isNotEmpty()) {
+        return match.groupValues[1]
+    }
+    return "<UNKNOWN>"
+}
+
+private fun extractDexClassName(line: String): String {
+    val match = DexClassNamePattern.matchEntire(line.trim())
+    if (match != null && match.groupValues.isNotEmpty()) {
+        return match.groupValues[1].replace('/', '.')
+    }
+    return "<UNKNOWN>"
+}
+
+private fun Iterator<String>.consumeUntil(prefix: String): Boolean {
+    while (hasNext()) {
+        val line = next()
+        if (line.trim().startsWith(prefix)) return true
+    }
+    return false
 }
