@@ -138,6 +138,8 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
         toolPaths.d8.toString(),
         "com.android.tools.r8.R8",
         "--release",
+        "--min-api",
+        "21",
         "--pg-conf",
         "rules.txt",
         "--output",
@@ -185,7 +187,7 @@ private fun writeR8Rules(directory: Path) {
         -dontpreverify
         -keep,allowoptimization class * {
         <methods>;
-        } """.trimIndent()
+        }""".trimIndent()
     )
 }
 
@@ -254,7 +256,6 @@ private fun Iterator<String>.extractMethods(
                 if (match != null && match.groupValues.isNotEmpty()) {
                     output.appendLine("$indent${match.groupValues[1]}")
                 } else if (!DexMethodProperty.matches(line)) {
-                    println(line)
                     break
                 }
             }
