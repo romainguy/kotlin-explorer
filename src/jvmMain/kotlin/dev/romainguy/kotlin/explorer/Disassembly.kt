@@ -148,11 +148,6 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
         toolPaths.platform.toString()
     )
 
-    toolPaths.kotlinLibs.forEach { jar ->
-        command += "--lib"
-        command += jar.toString()
-    }
-
     val classFiles = Files
         .list(directory)
         .filter { path -> path.extension == "class" }
@@ -160,6 +155,10 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
         .sorted()
         .collect(Collectors.toList())
     command.addAll(classFiles)
+
+    toolPaths.kotlinLibs.forEach { jar ->
+        command += jar.toString()
+    }
 
     return command.toTypedArray()
 }
@@ -185,8 +184,9 @@ private fun writeR8Rules(directory: Path) {
         -optimizationpasses 5
         -allowaccessmodification
         -dontpreverify
-        -keep,allowoptimization class * {
-        <methods>;
+        -dontobfuscate
+        -keep,allowoptimization class !kotlin.**,!kotlinx.** {
+          <methods>;
         }""".trimIndent()
     )
 }
@@ -214,13 +214,18 @@ private fun filterDex(dex: String) = buildString {
 
         val line = lines.next()
         val className = extractDexClassName(line)
-        appendLine("class $className")
+
+        val suppress = className.matches(DexKotlinClass)
+        if (!suppress) {
+            appendLine("class $className")
+        }
 
         if (!lines.consumeUntil("Direct methods")) break
-        lines.extractMethods(this, className, "        ")
+        lines.extractMethods(if (suppress) StringBuilder() else this, className, "        ")
     }
 }
 
+private val DexKotlinClass = Regex("^(kotlin|kotlinx|java|javax)\\..+")
 private val DexBytecodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
 private val DexMethodNamePattern = Regex("^name\\s+:\\s+'(.+)'")
 private val DexMethodTypePattern = Regex("^type\\s+:\\s+'(.+)'")
