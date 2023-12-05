@@ -200,11 +200,12 @@ private fun cleanupClasses(directory: Path) {
 
 private val BuiltInKotlinClass = Regex("^(kotlin|kotlinx|java|javax|org\\.(intellij|jetbrains))\\..+")
 
-private val DexBytecodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
-private val DexMethodNamePattern = Regex("^name\\s+:\\s+'(.+)'")
-private val DexMethodTypePattern = Regex("^type\\s+:\\s+'(.+)'")
+private val DexCodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
+private val DexMethodStartPattern = Regex("^\\s+#[0-9]+\\s+:\\s+\\(in L[^;]+;\\)")
+private val DexMethodNamePattern = Regex("^\\s+name\\s+:\\s+'(.+)'")
+private val DexMethodTypePattern = Regex("^\\s+type\\s+:\\s+'(.+)'")
 private val DexMethodProperty = Regex("^(\\s+[a-zA-Z ]+[:-].*)|([0-9a-fA-F]+:[^|]+\\|\\[.+)")
-private val DexClassNamePattern = Regex("Class descriptor\\s+:\\s+'L(.+);'")
+private val DexClassNamePattern = Regex("^\\s+Class descriptor\\s+:\\s+'L(.+);'")
 
 private val OatClassNamePattern = Regex("^\\d+: L([^;]+); \\(offset=[0-9a-zA-Zx]+\\) \\(type_idx=\\d+\\).+")
 private val OatMethodPattern = Regex("^\\s+\\d+:\\s+(.+)\\s+\\(dex_method_idx=\\d+\\)")
@@ -219,6 +220,7 @@ private fun filterOat(oat: String) = buildString {
     var insideClass = false
     var insideMethod = false
     var firstMethod = false
+    var firstClass = true
 
     while (lines.hasNext()) {
         val line = lines.next()
@@ -254,10 +256,14 @@ private fun filterOat(oat: String) = buildString {
                 val className = match.groupValues[1].replace('/', '.')
 
                 val suppress = className.matches(BuiltInKotlinClass)
-                if (!suppress) appendLine("class $className")
+                if (!suppress) {
+                    if (!firstClass) appendLine()
+                    appendLine("class $className")
+                }
 
                 insideMethod = false
                 firstMethod = true
+                firstClass = false
                 insideClass = !suppress
             }
         }
@@ -265,86 +271,79 @@ private fun filterOat(oat: String) = buildString {
 }
 
 private fun filterDex(dex: String) = buildString {
+    val indent = "        "
     val lines = dex.lineSequence().iterator()
 
+    var insideClass = false
+    var insideMethod = false
+    var firstMethod = false
+    var firstClass = true
+    var className = "<UNKNOWN>"
+
     while (lines.hasNext()) {
-        if (!lines.consumeUntil("Class #")) break
+        var line = lines.next()
 
-        val line = lines.next()
-        val className = extractDexClassName(line)
+        var match: MatchResult? = null
 
-        val suppress = className.matches(BuiltInKotlinClass)
-        if (!suppress) {
-            appendLine("class $className")
-        }
-
-        if (!lines.consumeUntil("Direct methods")) break
-        lines.extractDexMethods(if (suppress) StringBuilder() else this, className, "        ")
-    }
-}
-
-private fun Iterator<String>.extractDexMethods(
-    output: StringBuilder,
-    className: String,
-    indent: String
-) {
-    while (hasNext()) {
-        var line = next()
-        if (line.isEmpty()) break
-
-        if (line.startsWith("    #")) {
-            if (!hasNext()) break
-            line = next()
-
-            val name = extractDexMethodName(line)
-
-            if (!hasNext()) break
-            line = next()
-
-            val type = extractDexMethodType(line)
-
-            output.appendLine("    $name$type // $className.$name()")
-
-            while (hasNext()) {
-                line = next()
-
-                val match = DexBytecodePattern.matchEntire(line)
+        if (insideClass) {
+            if (insideMethod) {
+                match = DexCodePattern.matchEntire(line)
                 if (match != null && match.groupValues.isNotEmpty()) {
-                    output.appendLine("$indent${match.groupValues[1]}")
-                } else if (!DexMethodProperty.matches(line)) {
-                    break
+                    appendLine("$indent${match.groupValues[1]}")
                 }
             }
 
-            output.appendLine()
-        } else if (!line.trim().startsWith("Virtual methods")) {
-            break
+            if (match === null) {
+                match = DexMethodStartPattern.matchEntire(line)
+                if (match != null) {
+                    if (!lines.hasNext()) return@buildString
+                    line = lines.next()
+
+                    match = DexMethodNamePattern.matchEntire(line)
+                    if (match != null && match.groupValues.isNotEmpty()) {
+                        val name = match.groupValues[1]
+                        if (!firstMethod) appendLine()
+                        firstMethod = false
+
+                        if (!lines.hasNext()) return@buildString
+                        line = lines.next()
+
+                        match = DexMethodTypePattern.matchEntire(line)
+                        if (match != null && match.groupValues.isNotEmpty()) {
+                            val type = match.groupValues[1]
+                            appendLine("    $name$type // $className.$name()")
+                            insideMethod = true
+                        }
+                    }
+                }
+            }
+        }
+
+        if (match === null) {
+            if (line.trim().startsWith("Class #")) {
+                if (!lines.hasNext()) return@buildString
+                line = lines.next()
+
+                match = DexClassNamePattern.matchEntire(line)
+                if (match != null && match.groupValues.isNotEmpty()) {
+                    className = match.groupValues[1].replace('/', '.')
+
+                    val suppress = className.matches(BuiltInKotlinClass)
+                    if (!suppress) {
+                        if (!firstClass) appendLine()
+                        appendLine("class $className")
+                    }
+
+                    if (!lines.consumeUntil("Direct methods")) break
+
+                    insideMethod = false
+                    firstMethod = true
+                    firstClass = false
+                    insideClass = !suppress
+                }
+            }
         }
     }
-}
-
-private fun extractDexMethodName(line: String): String {
-    val match = DexMethodNamePattern.matchEntire(line.trim())
-    if (match != null && match.groupValues.isNotEmpty()) {
-        return match.groupValues[1]
-    }
-    return "<UNKNOWN>"
-}
-
-private fun extractDexMethodType(line: String): String {
-    val match = DexMethodTypePattern.matchEntire(line.trim())
-    if (match != null && match.groupValues.isNotEmpty()) {
-        return match.groupValues[1]
-    }
-    return "<UNKNOWN>"
-}
-
-private fun extractDexClassName(line: String): String {
-    val match = DexClassNamePattern.matchEntire(line.trim())
-    if (match != null && match.groupValues.isNotEmpty()) {
-        return match.groupValues[1].replace('/', '.')
-    }
-    return "<UNKNOWN>"
 }
 
 private fun Iterator<String>.consumeUntil(prefix: String): Boolean {

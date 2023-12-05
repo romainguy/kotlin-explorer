@@ -265,6 +265,7 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String) {
     syntaxEditingStyle = syntaxStyle
     isCodeFoldingEnabled = true
     antiAliasingEnabled = true
+    tabsEmulated = true
     applyTheme(this)
     currentLineHighlightColor = Color.decode("#F5F8FF")
 }
