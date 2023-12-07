@@ -20,6 +20,7 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -52,12 +53,11 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import kotlin.io.path.exists
 
-private const val PREFERENCE_SOURCE_CODE = "source_code"
-
 @Stable
 class ExplorerState(
-    val toolPaths: ToolPaths = ToolPaths(),
+    val toolPaths: ToolPaths = ToolPaths()
 ) {
+    var optimize by mutableStateOf(true)
     var sourceCode = "fun square(a: Int): Int {\n    return a * a\n}\n"
 
     init {
@@ -244,9 +244,10 @@ private fun FrameWindowScope.MainMenu(
                     scope.disassemble(
                         explorerState.toolPaths,
                         sourceTextArea!!.text,
-                        onDex = onDexUpdate,
-                        onOat = onOatUpdate,
-                        onStatusUpdate = onStatusUpdate
+                        onDexUpdate,
+                        onOatUpdate,
+                        onStatusUpdate,
+                        explorerState.optimize
                     )
                 }
             )
@@ -256,6 +257,14 @@ private fun FrameWindowScope.MainMenu(
                 "Search",
                 shortcut = KeyShortcut(Key.F, meta = true),
                 onClick = onSearchClicked
+            )
+        }
+        Menu("Options") {
+            CheckboxItem(
+                "Optimize with R8",
+                explorerState.optimize,
+                shortcut = KeyShortcut(Key.O, shift = true, meta = true),
+                onCheckedChange = { explorerState.optimize = it }
             )
         }
     }

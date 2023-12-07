@@ -29,7 +29,8 @@ fun CoroutineScope.disassemble(
     source: String,
     onDex: (String) -> Unit,
     onOat: (String) -> Unit,
-    onStatusUpdate: (String) -> Unit
+    onStatusUpdate: (String) -> Unit,
+    optimize: Boolean
 ) {
     launch(Dispatchers.IO) {
         launch { onStatusUpdate("Compiling Kotlin…") }
@@ -52,12 +53,18 @@ fun CoroutineScope.disassemble(
             return@launch
         }
 
-        launch { onStatusUpdate("Optimizing with R8…") }
+        launch {
+            onStatusUpdate(if (optimize) {
+                "Optimizing with R8…"
+            } else {
+                "Compiling with D8…"
+            })
+        }
 
         writeR8Rules(directory)
 
         val r8 = process(
-            *buildR8Command(toolPaths, directory),
+            *buildR8Command(toolPaths, directory, optimize),
             directory = directory
         )
 
@@ -131,22 +138,45 @@ fun CoroutineScope.disassemble(
     }
 }
 
-private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String> {
-    val command = mutableListOf(
-        "java",
-        "-classpath",
-        toolPaths.d8.toString(),
-        "com.android.tools.r8.R8",
-        "--release",
-        "--min-api",
-        "21",
-        "--pg-conf",
-        "rules.txt",
-        "--output",
-        ".",
-        "--lib",
-        toolPaths.platform.toString()
-    )
+private fun buildR8Command(
+    toolPaths: ToolPaths,
+    directory: Path,
+    optimize: Boolean
+): Array<String> {
+    val command = if (optimize) {
+        mutableListOf(
+            "java",
+            "-classpath",
+            toolPaths.d8.toString(),
+            "com.android.tools.r8.R8",
+            "--min-api",
+            "21",
+            "--pg-conf",
+            "rules.txt",
+            "--output",
+            ".",
+            "--lib",
+            toolPaths.platform.toString()
+        )
+    } else {
+        mutableListOf(
+            "java",
+            "-classpath",
+            toolPaths.d8.toString(),
+            "com.android.tools.r8.D8",
+            "--min-api",
+            "21",
+            "--output",
+            ".",
+            "--lib",
+            toolPaths.platform.toString()
+        ).apply {
+            toolPaths.kotlinLibs.forEach { jar ->
+                this += "--lib"
+                this += jar.toString()
+            }
+        }
+    }
 
     val classFiles = Files
         .list(directory)
@@ -156,8 +186,10 @@ private fun buildR8Command(toolPaths: ToolPaths, directory: Path): Array<String>
         .collect(Collectors.toList())
     command.addAll(classFiles)
 
-    toolPaths.kotlinLibs.forEach { jar ->
-        command += jar.toString()
+    if (optimize) {
+        toolPaths.kotlinLibs.forEach { jar ->
+            command += jar.toString()
+        }
     }
 
     return command.toTypedArray()
@@ -204,7 +236,6 @@ private val DexCodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
 private val DexMethodStartPattern = Regex("^\\s+#[0-9]+\\s+:\\s+\\(in L[^;]+;\\)")
 private val DexMethodNamePattern = Regex("^\\s+name\\s+:\\s+'(.+)'")
 private val DexMethodTypePattern = Regex("^\\s+type\\s+:\\s+'(.+)'")
-private val DexMethodProperty = Regex("^(\\s+[a-zA-Z ]+[:-].*)|([0-9a-fA-F]+:[^|]+\\|\\[.+)")
 private val DexClassNamePattern = Regex("^\\s+Class descriptor\\s+:\\s+'L(.+);'")
 
 private val OatClassNamePattern = Regex("^\\d+: L([^;]+); \\(offset=[0-9a-zA-Zx]+\\) \\(type_idx=\\d+\\).+")
