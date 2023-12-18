@@ -32,8 +32,9 @@ fun CoroutineScope.disassemble(
     onStatusUpdate: (String) -> Unit,
     optimize: Boolean
 ) {
+    val uiScope = this
     launch(Dispatchers.IO) {
-        launch { onStatusUpdate("Compiling Kotlin…") }
+        uiScope.launch { onStatusUpdate("Compiling Kotlin…") }
 
         val directory = toolPaths.tempDirectory
         cleanupClasses(directory)
@@ -47,13 +48,13 @@ fun CoroutineScope.disassemble(
         )
 
         if (kotlinc.exitCode != 0) {
-            launch {
+            uiScope.launch {
                 onDex(kotlinc.output.replace(path.parent.toString() + "/", ""))
             }
             return@launch
         }
 
-        launch {
+        uiScope.launch {
             onStatusUpdate(if (optimize) {
                 "Optimizing with R8…"
             } else {
@@ -69,11 +70,11 @@ fun CoroutineScope.disassemble(
         )
 
         if (r8.exitCode != 0) {
-            launch { onDex(r8.output) }
+            uiScope.launch { onDex(r8.output) }
             return@launch
         }
 
-        launch { onStatusUpdate("Disassembling DEX…") }
+        uiScope.launch { onStatusUpdate("Disassembling DEX…") }
 
         val dexdump = process(
             toolPaths.buildToolsDirectory.resolve("dexdump").toString(),
@@ -83,11 +84,11 @@ fun CoroutineScope.disassemble(
         )
 
         if (dexdump.exitCode != 0) {
-            launch { onDex(dexdump.output) }
+            uiScope.launch { onDex(dexdump.output) }
             return@launch
         }
 
-        launch {
+        uiScope.launch {
             onDex(filterDex(dexdump.output))
             onStatusUpdate("AOT compilation…")
         }
@@ -101,7 +102,7 @@ fun CoroutineScope.disassemble(
         )
 
         if (push.exitCode != 0) {
-            launch { onOat(push.output) }
+            uiScope.launch { onOat(push.output) }
             return@launch
         }
 
@@ -115,11 +116,11 @@ fun CoroutineScope.disassemble(
         )
 
         if (dex2oat.exitCode != 0) {
-            launch { onOat(dex2oat.output) }
+            uiScope.launch { onOat(dex2oat.output) }
             return@launch
         }
 
-        launch { onStatusUpdate("Disassembling OAT…") }
+        uiScope.launch { onStatusUpdate("Disassembling OAT…") }
 
         val oatdump = process(
             toolPaths.adb.toString(),
@@ -129,13 +130,13 @@ fun CoroutineScope.disassemble(
             directory = directory
         )
 
-        launch { onOat(filterOat(oatdump.output)) }
+        uiScope.launch { onOat(filterOat(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
             return@launch
         }
 
-        launch { onStatusUpdate("Ready") }
+        uiScope.launch { onStatusUpdate("Ready") }
     }
 }
 
