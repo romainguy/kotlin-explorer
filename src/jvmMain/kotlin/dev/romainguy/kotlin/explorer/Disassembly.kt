@@ -87,9 +87,10 @@ fun CoroutineScope.disassemble(
             return@launch
         }
 
-        launch { onDex(filterDex(dexdump.output)) }
-
-        launch { onStatusUpdate("AOT compilation…") }
+        launch {
+            onDex(filterDex(dexdump.output))
+            onStatusUpdate("AOT compilation…")
+        }
 
         val push = process(
             toolPaths.adb.toString(),
