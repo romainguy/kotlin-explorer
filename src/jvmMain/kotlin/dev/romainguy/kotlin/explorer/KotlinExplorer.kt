@@ -182,7 +182,7 @@ fun FrameWindowScope.KotlinExplorer(
                             SwingPanel(
                                 modifier = Modifier.fillMaxSize(),
                                 factory = {
-                                    dexTextArea = RSyntaxTextArea().apply {
+                                    dexTextArea = DexTextArea().apply {
                                         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
                                         addFocusListener(focusTracker)
                                     }
