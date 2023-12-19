@@ -16,23 +16,21 @@
 
 package dev.romainguy.kotlin.explorer
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
 
-fun CoroutineScope.disassemble(
+suspend fun disassemble(
     toolPaths: ToolPaths,
     source: String,
     onDex: (String) -> Unit,
     onOat: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
     optimize: Boolean
-) {
-    val ui = coroutineContext
+) = coroutineScope {
+    val ui = currentCoroutineContext()
 
     launch(Dispatchers.IO) {
         launch(ui) { onStatusUpdate("Compiling Kotlin…") }

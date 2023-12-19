@@ -31,6 +31,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.FindToolBar
 import org.fife.rsta.ui.search.SearchEvent
@@ -241,14 +242,16 @@ private fun FrameWindowScope.MainMenu(
                 "Decompile",
                 shortcut = KeyShortcut(Key.D, shift = true, meta = true),
                 onClick = {
-                    scope.disassemble(
-                        explorerState.toolPaths,
-                        sourceTextArea!!.text,
-                        onDexUpdate,
-                        onOatUpdate,
-                        onStatusUpdate,
-                        explorerState.optimize
-                    )
+                    scope.launch {
+                        disassemble(
+                            explorerState.toolPaths,
+                            sourceTextArea!!.text,
+                            onDexUpdate,
+                            onOatUpdate,
+                            onStatusUpdate,
+                            explorerState.optimize
+                        )
+                    }
                 }
             )
         }
