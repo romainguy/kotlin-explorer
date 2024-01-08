@@ -19,10 +19,11 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Checkbox
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
-import org.fife.rsta.ui.search.FindToolBar
 import org.fife.rsta.ui.search.SearchEvent
 import org.fife.rsta.ui.search.SearchListener
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
@@ -44,6 +44,19 @@ import org.fife.ui.rtextarea.SearchEngine
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
+import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
+import org.jetbrains.jewel.intui.standalone.theme.darkThemeDefinition
+import org.jetbrains.jewel.intui.standalone.theme.lightThemeDefinition
+import org.jetbrains.jewel.intui.window.decoratedWindow
+import org.jetbrains.jewel.intui.window.styling.dark
+import org.jetbrains.jewel.intui.window.styling.light
+import org.jetbrains.jewel.ui.ComponentStyling
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.window.DecoratedWindow
+import org.jetbrains.jewel.window.TitleBar
+import org.jetbrains.jewel.window.newFullscreenControls
+import org.jetbrains.jewel.window.styling.TitleBarStyle
 import java.awt.Color
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
@@ -127,100 +140,88 @@ fun FrameWindowScope.KotlinExplorer(
         { findDialog.isVisible = true }
     )
 
-    MaterialTheme {
-        Column {
-            Row {
+    Column(
+        modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
+    ) {
+        HorizontalSplitPane(
+            modifier = Modifier.weight(1.0f),
+            splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.3f)
+        ) {
+            first {
                 SwingPanel(
-                    modifier = Modifier.weight(1.0f, true).height(32.dp),
+                    modifier = Modifier.fillMaxSize(),
                     factory = {
-                        FindToolBar(searchListener).apply {
-                            searchContext = findDialog.searchContext.apply {
-                                searchWrap = true
-                            }
+                        sourceTextArea = RSyntaxTextArea().apply {
+                            configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
+                            addFocusListener(focusTracker)
+                            SwingUtilities.invokeLater { requestFocusInWindow() }
+                            document.addDocumentListener(object : DocumentListener {
+                                override fun insertUpdate(e: DocumentEvent?) {
+                                    explorerState.sourceCode = text
+                                }
+
+                                override fun removeUpdate(e: DocumentEvent?) {
+                                    explorerState.sourceCode = text
+                                }
+
+                                override fun changedUpdate(e: DocumentEvent?) {
+                                    explorerState.sourceCode = text
+                                }
+                            })
                         }
+                        RTextScrollPane(sourceTextArea)
+                    },
+                    update = {
+                        sourceTextArea?.text = explorerState.sourceCode
                     }
                 )
             }
-            HorizontalSplitPane(
-                modifier = Modifier.weight(1.0f),
-                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.3f)
-            ) {
-                first {
-                    SwingPanel(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = {
-                            sourceTextArea = RSyntaxTextArea().apply {
-                                configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
-                                addFocusListener(focusTracker)
-                                SwingUtilities.invokeLater { requestFocusInWindow() }
-                                document.addDocumentListener(object : DocumentListener {
-                                    override fun insertUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-
-                                    override fun removeUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-
-                                    override fun changedUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-                                })
+            second {
+                HorizontalSplitPane(
+                    modifier = Modifier.weight(1.0f),
+                    splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
+                ) {
+                    first {
+                        SwingPanel(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = {
+                                dexTextArea = DexTextArea().apply {
+                                    configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+                                    addFocusListener(focusTracker)
+                                }
+                                RTextScrollPane(dexTextArea)
                             }
-                            RTextScrollPane(sourceTextArea)
-                        },
-                        update = {
-                            sourceTextArea?.text = explorerState.sourceCode
-                        }
-                    )
-                }
-                second {
-                    HorizontalSplitPane(
-                        modifier = Modifier.weight(1.0f),
-                        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
-                    ) {
-                        first {
-                            SwingPanel(
-                                modifier = Modifier.fillMaxSize(),
-                                factory = {
-                                    dexTextArea = DexTextArea().apply {
-                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                        addFocusListener(focusTracker)
-                                    }
-                                    RTextScrollPane(dexTextArea)
+                        )
+                    }
+                    second {
+                        SwingPanel(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = {
+                                oatTextArea = RSyntaxTextArea().apply {
+                                    configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+                                    addFocusListener(focusTracker)
                                 }
-                            )
-                        }
-                        second {
-                            SwingPanel(
-                                modifier = Modifier.fillMaxSize(),
-                                factory = {
-                                    oatTextArea = RSyntaxTextArea().apply {
-                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                        addFocusListener(focusTracker)
-                                    }
-                                    RTextScrollPane(oatTextArea)
-                                }
-                            )
-                        }
-                        splitter {
-                            HorizontalSplitter()
-                        }
+                                RTextScrollPane(oatTextArea)
+                            }
+                        )
+                    }
+                    splitter {
+                        HorizontalSplitter()
                     }
                 }
-                splitter {
-                    HorizontalSplitter()
-                }
             }
-            Row {
-                Text(
-                    modifier = Modifier
-                        .weight(1.0f, true)
-                        .align(Alignment.CenterVertically)
-                        .padding(8.dp),
-                    text = status
-                )
+            splitter {
+                HorizontalSplitter()
             }
+        }
+        Row {
+            Text(
+                modifier = Modifier
+                    .weight(1.0f, true)
+                    .align(Alignment.CenterVertically)
+                    .padding(8.dp),
+                text = status
+            )
         }
     }
 }
@@ -301,15 +302,35 @@ fun main() = application {
         Files.writeString(explorerState.toolPaths.sourceFile, explorerState.sourceCode)
     })
 
-    Window(
-        state = rememberWindowState(
-            position = WindowPosition.Aligned(Alignment.Center),
-            width = 1900.dp,
-            height = 1600.dp
-        ),
-        onCloseRequest = ::exitApplication,
-        title = "Kotlin Explorer"
+    val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
+        JewelTheme.darkThemeDefinition()
+    } else {
+        JewelTheme.lightThemeDefinition()
+    }
+    val titleBarStyle = if (KotlinExplorerTheme.System.isDark()) {
+        TitleBarStyle.dark()
+    } else {
+        TitleBarStyle.light()
+    }
+
+    IntUiTheme(
+        themeDefinition,
+        ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
+        false
     ) {
-        KotlinExplorer(explorerState)
+        DecoratedWindow(
+            state = rememberWindowState(
+                position = WindowPosition.Aligned(Alignment.Center),
+                width = 1900.dp,
+                height = 1600.dp
+            ),
+            onCloseRequest = ::exitApplication,
+            title = "Kotlin Explorer"
+        ) {
+            TitleBar(Modifier.newFullscreenControls()) {
+                Text("Kotlin Explorer")
+            }
+            KotlinExplorer(explorerState)
+        }
     }
 }

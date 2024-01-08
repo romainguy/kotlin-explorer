@@ -18,9 +18,7 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -31,29 +29,6 @@ import java.awt.Cursor
 
 private fun Modifier.cursorForHorizontalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
-private fun Modifier.cursorForVerticalResize(): Modifier =
-    pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
-
-fun SplitterScope.VerticalSplitter() {
-    visiblePart {
-        Box(
-            Modifier
-                .height(5.dp)
-                .fillMaxWidth()
-                .background(MaterialTheme.colors.background)
-        )
-    }
-    handle {
-        Box(
-            Modifier
-                .markAsHandle()
-                .cursorForVerticalResize()
-                .background(MaterialTheme.colors.background)
-                .height(5.dp)
-                .fillMaxWidth()
-        )
-    }
-}
 
 fun SplitterScope.HorizontalSplitter() {
     visiblePart {
@@ -61,7 +36,6 @@ fun SplitterScope.HorizontalSplitter() {
             Modifier
                 .width(5.dp)
                 .fillMaxHeight()
-                .background(MaterialTheme.colors.background)
         )
     }
     handle {
@@ -69,7 +43,6 @@ fun SplitterScope.HorizontalSplitter() {
             Modifier
                 .markAsHandle()
                 .cursorForHorizontalResize()
-                .background(MaterialTheme.colors.background)
                 .width(5.dp)
                 .fillMaxHeight()
         )
