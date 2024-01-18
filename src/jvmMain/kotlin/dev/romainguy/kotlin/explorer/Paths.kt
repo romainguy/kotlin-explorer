@@ -19,51 +19,61 @@ package dev.romainguy.kotlin.explorer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.stream.Stream
 import kotlin.io.path.exists
 import kotlin.io.path.extension
-import kotlin.system.exitProcess
+import kotlin.jvm.optionals.getOrElse
 
-class ToolPaths {
-    val tempDirectory = Files.createTempDirectory("kotlin-explorer")
-    val androidHome =  Paths.get(System.getenv("ANDROID_HOME") ?: "<unknown>")
-    val kotlinHome =  Paths.get(System.getenv("KOTLIN_HOME") ?: "<unknown>")
-    val buildToolsDirectory: Path
+fun createToolPaths(settings: Settings): ToolPaths {
+    val androidHome = Paths.get(settings.entries.getOrElse("ANDROID_HOME") {
+        System.getenv("ANDROID_HOME")
+    })
+    val kotlinHome = Paths.get(settings.entries.getOrElse("KOTLIN_HOME") {
+        System.getenv("KOTLIN_HOME")
+    })
+
+    return ToolPaths(settings, androidHome, kotlinHome)
+}
+
+class ToolPaths internal constructor(
+    settings: Settings,
+    val androidHome: Path,
+    val kotlinHome: Path
+) {
+    val tempDirectory = Files.createTempDirectory("kotlin-explorer")!!
     val platform: Path
     val d8: Path
     val adb: Path
+    val dexdump: Path
     val kotlinc: Path
     val kotlinLibs: List<Path>
-    val settingsDirectory: Path
     val sourceFile: Path
 
+    var isValid: Boolean = false
+        private set
+    var isAndroidHomeValid: Boolean = false
+        private set
+    var isKotlinHomeValid: Boolean = false
+        private set
+
     init {
-        if (!androidHome.exists()) {
-            println("\$ANDROID_HOME missing or invalid: $androidHome")
-            exitProcess(1)
-        }
         adb = androidHome.resolve("platform-tools/adb")
-        buildToolsDirectory = Files
-            .list(androidHome.resolve("build-tools"))
+        val buildToolsDirectory = listIfExists(androidHome.resolve("build-tools"))
             .sorted { p1, p2 ->
                 p2.toString().compareTo(p1.toString())
             }
             .findFirst()
-            .get()
+            .getOrElse { androidHome }
         d8 = buildToolsDirectory.resolve("lib/d8.jar")
+        dexdump = buildToolsDirectory.resolve("dexdump")
 
-        val platformsDirectory = Files
-            .list(androidHome.resolve("platforms"))
+        val platformsDirectory = listIfExists(androidHome.resolve("platforms"))
             .sorted { p1, p2 ->
                 p2.toString().compareTo(p1.toString())
             }
             .findFirst()
-            .get()
+            .getOrElse { androidHome }
         platform = platformsDirectory.resolve("android.jar")
-
-        if (!kotlinHome.exists()) {
-            println("\$KOTLIN_HOME missing or invalid: $kotlinHome")
-            exitProcess(1)
-        }
 
         kotlinc = kotlinHome.resolve("bin/kotlinc")
 
@@ -73,20 +83,25 @@ class ToolPaths {
             lib.resolve("kotlin-stdlib.jar"),
             lib.resolve("kotlin-annotations-jvm.jar"),
             lib.resolve("kotlinx-coroutines-core-jvm.jar"),
-            Files
-                .list(lib)
+            listIfExists(lib)
                 .filter { path ->
                     path.extension == "jar" && path.fileName.toString().startsWith("annotations-")
                 }
                 .sorted()
                 .findFirst()
-                .get()
+                .getOrElse { lib.resolve("annotations.jar") }
         )
 
-        settingsDirectory = Paths.get(System.getProperty("user.home"), ".kotlin-explorer")
-        if (!settingsDirectory.exists()) {
-            Files.createDirectory(settingsDirectory)
-        }
-        sourceFile = settingsDirectory.resolve("source-code.kt")
+        sourceFile = settings.directory.resolve("source-code.kt")
+
+        isAndroidHomeValid =  adb.exists() && d8.exists() && dexdump.exists()
+        isKotlinHomeValid = kotlinc.exists()
+        isValid = adb.exists() && d8.exists() && dexdump.exists() && kotlinc.exists()
     }
+}
+
+private fun listIfExists(path: Path) = if (path.exists()) {
+    Files.list(path)
+} else {
+    Stream.empty()
 }

@@ -18,16 +18,13 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
@@ -52,39 +49,23 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.ui.ComponentStyling
+import org.jetbrains.jewel.ui.component.DefaultButton
+import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
 import org.jetbrains.jewel.window.styling.TitleBarStyle
-import java.awt.Color
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
-import java.nio.file.Files
 import javax.swing.SwingUtilities
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
-import kotlin.io.path.exists
-
-@Stable
-class ExplorerState(
-    val toolPaths: ToolPaths = ToolPaths()
-) {
-    var optimize by mutableStateOf(true)
-    var sourceCode = "fun square(a: Int): Int {\n    return a * a\n}\n"
-
-    init {
-        // TODO: Don't do this on the main thread
-        if (toolPaths.sourceFile.exists()) {
-            sourceCode = Files.readString(toolPaths.sourceFile)
-        }
-    }
-}
 
 @Composable
-@Preview
-fun FrameWindowScope.KotlinExplorer(
+private fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
@@ -281,7 +262,7 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String) {
     tabsEmulated = true
     tabSize = 4
     applyTheme(this)
-    currentLineHighlightColor = Color.decode("#F5F8FF")
+    currentLineHighlightColor = java.awt.Color.decode("#F5F8FF")
 }
 
 private fun applyTheme(textArea: RSyntaxTextArea) {
@@ -295,12 +276,91 @@ private fun applyTheme(textArea: RSyntaxTextArea) {
     }
 }
 
-fun main() = application {
-    val explorerState = remember() { ExplorerState() }
+@Composable
+private fun ErrorIcon() {
+    Icon(
+        "icons/error.svg",
+        iconClass = Settings::class.java,
+        contentDescription = "Error",
+        tint = Color(0xffee4056)
+    )
+}
 
-    Runtime.getRuntime().addShutdownHook(Thread {
-        Files.writeString(explorerState.toolPaths.sourceFile, explorerState.sourceCode)
-    })
+@Composable
+private fun ValidIcon() {
+    Icon(
+        "icons/done.svg",
+        iconClass = Settings::class.java,
+        contentDescription = "Valid",
+        tint = Color(0xff3369d6)
+    )
+}
+
+
+@Composable
+private fun Settings(
+    explorerState: ExplorerState
+) {
+    var androidHome by remember { mutableStateOf(explorerState.toolPaths.androidHome.toString()) }
+    var kotlinHome by remember { mutableStateOf(explorerState.toolPaths.kotlinHome.toString()) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            Row {
+                Text(
+                    "Android home directory: ",
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                TextField(
+                    androidHome,
+                    { text -> androidHome = text },
+                    modifier = Modifier.defaultMinSize(minWidth = 360.dp),
+                    trailingIcon = {
+                        if (!explorerState.toolPaths.isAndroidHomeValid) {
+                            ErrorIcon()
+                        } else {
+                            ValidIcon()
+                        }
+                    }
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row {
+                Text(
+                    "Kotlin home directory: ",
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                TextField(
+                    kotlinHome,
+                    { text -> kotlinHome = text },
+                    modifier = Modifier.defaultMinSize(minWidth = 360.dp),
+                    trailingIcon = {
+                        if (!explorerState.toolPaths.isKotlinHomeValid) {
+                            ErrorIcon()
+                        } else {
+                            ValidIcon()
+                        }
+                    }
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            DefaultButton(
+                {
+                    explorerState.settings.entries["ANDROID_HOME"] = androidHome
+                    explorerState.settings.entries["KOTLIN_HOME"] = kotlinHome
+                    explorerState.reloadToolPathsFromSettings()
+                }
+            ) {
+                Text("Save")
+            }
+        }
+    }
+}
+
+fun main() = application {
+    val explorerState = remember { ExplorerState() }
+
+    Runtime.getRuntime().addShutdownHook(Thread { writeState(explorerState) })
 
     val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
         JewelTheme.darkThemeDefinition()
@@ -330,7 +390,11 @@ fun main() = application {
             TitleBar(Modifier.newFullscreenControls()) {
                 Text("Kotlin Explorer")
             }
-            KotlinExplorer(explorerState)
+            if (explorerState.toolPaths.isValid) {
+                KotlinExplorer(explorerState)
+            } else {
+                Settings(explorerState)
+            }
         }
     }
 }

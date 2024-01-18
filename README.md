@@ -14,30 +14,21 @@ the native assembly resulting from ahead of time compilation (AOT).
 
 # Running Kotlin Explorer
 
-Kotlin Explorer currently relies on 2 environment variables described below.
+Kotlin Explorer needs to be told where to find the Android SDK and the Kotlin compiler.
+Unless you've set `$ANDROID_HOME` and `$KOTLIN_HOME` properly, Kotlin Explorer will ask
+you to enter the path to those directories.
 
-Kotlin explorer also requires `java` and `javap` to be in your `$PATH`. To display
-Android DEX bytecode and OAT assembly, you also need `adb` in your `$PATH`.
+For `$ANDROID_HOME`, use the path to the root of the Android SDK (directory containing
+`build-tools/`, `platform-tools/`, etc.).
+
+For `$KOTLIN_HOME`, use the path to the root of your Kotlin installation. This directory
+should contain `bin/kotlinc` and `lib/kotlin-stdlib-*.jar` for instance.
+
+Kotlin explorer also requires `java` and `javap` to be in your `$PATH`.
 
 > [!IMPORTANT]  
 > DEX bytecode and OAT assembly will only be displayed if you have an Android
 > device connected that can be successfully reached via adb.
-
-### `$ANDROID_HOME`
-
-Must point at your Android SDK installation (the folder containing `build-tools/`,
-`platform-tools/`, etc.)
-
-### `$KOTLIN_HOME`
-
-Must point at a Kotlin installation (the folder containing `bin/kotlinc` and
-`lib/kotlin-stdlib.jar`).
-
-On macOS, an easy way to install Kotlin is to use Homebrew (`brew install kotlin`)
-and to set `$KOTLIN_HOME` to `/opt/homebrew/Cellar/kotlin/1.9.0/libexec` (change
-the version number appropriately).
-
-Future updates will allow to select those directories from the UI. 
 
 # License
 

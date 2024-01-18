@@ -76,7 +76,7 @@ suspend fun disassemble(
         launch(ui) { onStatusUpdate("Disassembling DEX…") }
 
         val dexdump = process(
-            toolPaths.buildToolsDirectory.resolve("dexdump").toString(),
+            toolPaths.dexdump.toString(),
             "-d",
             "classes.dex",
             directory = directory
@@ -101,7 +101,10 @@ suspend fun disassemble(
         )
 
         if (push.exitCode != 0) {
-            launch(ui) { onOat(push.output) }
+            launch(ui) {
+                onOat(push.output)
+                onStatusUpdate("Ready")
+            }
             return@launch
         }
 
@@ -115,7 +118,10 @@ suspend fun disassemble(
         )
 
         if (dex2oat.exitCode != 0) {
-            launch(ui) { onOat(dex2oat.output) }
+            launch(ui) {
+                onOat(dex2oat.output)
+                onStatusUpdate("Ready")
+            }
             return@launch
         }
 
@@ -132,6 +138,7 @@ suspend fun disassemble(
         launch(ui) { onOat(filterOat(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
+            onStatusUpdate("Ready")
             return@launch
         }
 
