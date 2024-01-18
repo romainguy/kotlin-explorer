@@ -54,10 +54,20 @@ compose.desktop {
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            modules("jdk.unsupported")
+
+            targetFormats(TargetFormat.Dmg)
+
             packageName = "Kotlin Explorer"
             packageVersion = "1.0.0"
-            modules("jdk.unsupported")
+            description = "Kotlin Explorer"
+            vendor = "Romain Guy"
+            licenseFile = rootProject.file("LICENSE")
+
+            macOS {
+                dockName = "Kotlin Explorer"
+                bundleID = "dev.romainguy.kotlin.explorer"
+            }
         }
     }
 }
