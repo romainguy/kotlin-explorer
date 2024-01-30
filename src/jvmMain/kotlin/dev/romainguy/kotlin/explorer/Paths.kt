@@ -26,10 +26,10 @@ import kotlin.jvm.optionals.getOrElse
 
 fun createToolPaths(settings: Settings): ToolPaths {
     val androidHome = Paths.get(settings.entries.getOrElse("ANDROID_HOME") {
-        System.getenv("ANDROID_HOME")
+        System.getenv("ANDROID_HOME") ?: System.getProperty("user.home")
     })
     val kotlinHome = Paths.get(settings.entries.getOrElse("KOTLIN_HOME") {
-        System.getenv("KOTLIN_HOME")
+        System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home")
     })
 
     return ToolPaths(settings, androidHome, kotlinHome)
