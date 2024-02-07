@@ -75,7 +75,7 @@ class ToolPaths internal constructor(
             .getOrElse { androidHome }
         platform = platformsDirectory.resolve("android.jar")
 
-        kotlinc = kotlinHome.resolve("bin/kotlinc")
+        kotlinc = kotlinHome.resolve(if (isWindows) "bin/kotlinc.bat" else "bin/kotlinc")
 
         val lib = kotlinHome.resolve("lib")
         kotlinLibs = listOf(
