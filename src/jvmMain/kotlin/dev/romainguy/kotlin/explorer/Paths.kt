@@ -57,7 +57,7 @@ class ToolPaths internal constructor(
         private set
 
     init {
-        adb = androidHome.resolve("platform-tools/adb")
+        adb = androidHome.resolve(if (isWindows) "platform-tools/adb.exe" else "platform-tools/adb")
         val buildToolsDirectory = listIfExists(androidHome.resolve("build-tools"))
             .sorted { p1, p2 ->
                 p2.toString().compareTo(p1.toString())
@@ -65,7 +65,7 @@ class ToolPaths internal constructor(
             .findFirst()
             .getOrElse { androidHome }
         d8 = buildToolsDirectory.resolve("lib/d8.jar")
-        dexdump = buildToolsDirectory.resolve("dexdump")
+        dexdump = buildToolsDirectory.resolve(if (isWindows) "dexdump.exe" else "dexdump")
 
         val platformsDirectory = listIfExists(androidHome.resolve("platforms"))
             .sorted { p1, p2 ->
@@ -75,7 +75,7 @@ class ToolPaths internal constructor(
             .getOrElse { androidHome }
         platform = platformsDirectory.resolve("android.jar")
 
-        kotlinc = kotlinHome.resolve("bin/kotlinc")
+        kotlinc = kotlinHome.resolve(if (isWindows) "bin/kotlinc.bat" else "bin/kotlinc")
 
         val lib = kotlinHome.resolve("lib")
         kotlinLibs = listOf(
@@ -94,7 +94,7 @@ class ToolPaths internal constructor(
 
         sourceFile = settings.directory.resolve("source-code.kt")
 
-        isAndroidHomeValid =  adb.exists() && d8.exists() && dexdump.exists()
+        isAndroidHomeValid = adb.exists() && d8.exists() && dexdump.exists()
         isKotlinHomeValid = kotlinc.exists()
         isValid = adb.exists() && d8.exists() && dexdump.exists() && kotlinc.exists()
     }
