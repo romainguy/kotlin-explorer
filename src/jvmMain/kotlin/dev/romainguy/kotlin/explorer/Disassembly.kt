@@ -49,6 +49,7 @@ suspend fun disassemble(
         if (kotlinc.exitCode != 0) {
             launch(ui) {
                 onDex(kotlinc.output.replace(path.parent.toString() + "/", ""))
+                onStatusUpdate("Ready")
             }
             return@launch
         }
@@ -69,7 +70,10 @@ suspend fun disassemble(
         )
 
         if (r8.exitCode != 0) {
-            launch(ui) { onDex(r8.output) }
+            launch(ui) {
+                onDex(r8.output)
+                onStatusUpdate("Ready")
+            }
             return@launch
         }
 
@@ -83,7 +87,10 @@ suspend fun disassemble(
         )
 
         if (dexdump.exitCode != 0) {
-            launch(ui) { onDex(dexdump.output) }
+            launch(ui) {
+                onDex(dexdump.output)
+                onStatusUpdate("Ready")
+            }
             return@launch
         }
 
@@ -138,7 +145,7 @@ suspend fun disassemble(
         launch(ui) { onOat(filterOat(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
-            onStatusUpdate("Ready")
+            launch(ui) { onStatusUpdate("Ready") }
             return@launch
         }
 
@@ -208,6 +215,7 @@ private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String>
         toolPaths.kotlinc.toString(),
         path.toString(),
         "-Xmulti-platform",
+        "-Xno-param-assertions",
         "-classpath",
         toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() }
             + ":${toolPaths.platform}"

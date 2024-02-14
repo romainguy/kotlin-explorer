@@ -110,7 +110,7 @@ private fun FrameWindowScope.KotlinExplorer(
         override fun focusLost(e: FocusEvent?) {
         }
     }}
-    val findDialog = remember { FindDialog(window, searchListener) }
+    val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
 
     MainMenu(
         explorerState,
