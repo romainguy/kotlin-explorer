@@ -42,6 +42,7 @@ kotlin {
                 implementation("com.fifesoft:rsyntaxtextarea:${extra["rsyntaxtextarea.version"] as String}")
                 implementation("com.fifesoft:rstaui:${extra["rstaui.version"] as String}")
                 implementation("net.java.dev.jna:jna:${extra["jna.version"] as String}")
+                implementation("androidx.collection:collection:${extra["collections.version"] as String}")
             }
         }
     }
