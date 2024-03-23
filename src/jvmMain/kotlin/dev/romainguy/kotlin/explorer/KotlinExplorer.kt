@@ -222,7 +222,12 @@ private fun FrameWindowScope.MainMenu(
         Menu("File") {
             Item(
                 "Decompile",
-                shortcut = KeyShortcut(Key.D, shift = true, meta = true),
+                shortcut = KeyShortcut(
+                    key = Key.D,
+                    ctrl = !isMac,
+                    shift = true,
+                    meta = isMac,
+                ),
                 onClick = {
                     scope.launch {
                         disassemble(
@@ -240,7 +245,11 @@ private fun FrameWindowScope.MainMenu(
         Menu("Edit") {
             Item(
                 "Search",
-                shortcut = KeyShortcut(Key.F, meta = true),
+                shortcut = KeyShortcut(
+                    key = Key.F,
+                    ctrl = !isMac,
+                    meta = isMac,
+                ),
                 onClick = onSearchClicked
             )
         }
@@ -248,7 +257,12 @@ private fun FrameWindowScope.MainMenu(
             CheckboxItem(
                 "Optimize with R8",
                 explorerState.optimize,
-                shortcut = KeyShortcut(Key.O, shift = true, meta = true),
+                shortcut = KeyShortcut(
+                    key = Key.O,
+                    ctrl = !isMac,
+                    shift = true,
+                    meta = isMac
+                ),
                 onCheckedChange = { explorerState.optimize = it }
             )
         }
