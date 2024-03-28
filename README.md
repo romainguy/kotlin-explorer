@@ -19,9 +19,11 @@ Unless you've set `$ANDROID_HOME` and `$KOTLIN_HOME` properly, Kotlin Explorer w
 you to enter the path to those directories.
 
 For `$ANDROID_HOME`, use the path to the root of the Android SDK (directory containing
-`build-tools/`, `platform-tools/`, etc.).
+`build-tools/`, `platform-tools/`, etc.). Android Studio for macOS stores this in
+`$HOME/Library/Android/sdk`.
 
-For `$KOTLIN_HOME`, use the path to the root of your Kotlin installation. This directory
+For `$KOTLIN_HOME`, use the path to the root of your
+[Kotlin installation](https://kotlinlang.org/docs/command-line.html). This directory
 should contain `bin/kotlinc` and `lib/kotlin-stdlib-*.jar` for instance.
 
 Kotlin explorer also requires `java` and `javap` to be in your `$PATH`.
