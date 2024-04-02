@@ -14,13 +14,6 @@ repositories {
     maven("https://packages.jetbrains.team/maven/p/kpm/public/")
 }
 
-java {
-    toolchain {
-        vendor = JvmVendorSpec.JETBRAINS
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
 kotlin {
     jvm {
         jvmToolchain {
