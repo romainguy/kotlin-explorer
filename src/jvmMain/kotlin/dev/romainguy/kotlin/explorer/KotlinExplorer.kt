@@ -66,7 +66,8 @@ import javax.swing.event.DocumentListener
 
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
-    explorerState: ExplorerState
+    explorerState: ExplorerState,
+    onOpenSettings: () -> Unit
 ) {
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var dexTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
@@ -118,7 +119,8 @@ private fun FrameWindowScope.KotlinExplorer(
         { dex -> dexTextArea!!.text = dex },
         { oat -> oatTextArea!!.text = oat },
         { statusUpdate -> status = statusUpdate },
-        { findDialog.isVisible = true }
+        { findDialog.isVisible = true },
+        onOpenSettings
     )
 
     Column(
@@ -214,7 +216,8 @@ private fun FrameWindowScope.MainMenu(
     onDexUpdate: (String) -> Unit,
     onOatUpdate: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
-    onSearchClicked: () -> Unit
+    onSearchClicked: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -240,6 +243,10 @@ private fun FrameWindowScope.MainMenu(
                         )
                     }
                 }
+            )
+            Item(
+                "Open settings",
+                onClick = onOpenSettings
             )
         }
         Menu("Edit") {
@@ -313,7 +320,8 @@ private fun ValidIcon() {
 
 @Composable
 private fun Settings(
-    explorerState: ExplorerState
+    explorerState: ExplorerState,
+    onSaveClick: () -> Unit
 ) {
     var androidHome by remember { mutableStateOf(explorerState.toolPaths.androidHome.toString()) }
     var kotlinHome by remember { mutableStateOf(explorerState.toolPaths.kotlinHome.toString()) }
@@ -363,6 +371,7 @@ private fun Settings(
                     explorerState.settings.entries["ANDROID_HOME"] = androidHome
                     explorerState.settings.entries["KOTLIN_HOME"] = kotlinHome
                     explorerState.reloadToolPathsFromSettings()
+                    onSaveClick()
                 }
             ) {
                 Text("Save")
@@ -404,10 +413,14 @@ fun main() = application {
             TitleBar(Modifier.newFullscreenControls()) {
                 Text("Kotlin Explorer")
             }
-            if (explorerState.toolPaths.isValid) {
-                KotlinExplorer(explorerState)
+            var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
+            if (showSettings) {
+                Settings(
+                    explorerState,
+                    onSaveClick = { showSettings = !explorerState.toolPaths.isValid }
+                )
             } else {
-                Settings(explorerState)
+                KotlinExplorer(explorerState, onOpenSettings = { showSettings = true })
             }
         }
     }
