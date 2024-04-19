@@ -36,6 +36,7 @@ kotlin {
                 implementation("com.fifesoft:rstaui:${extra["rstaui.version"] as String}")
                 implementation("net.java.dev.jna:jna:${extra["jna.version"] as String}")
                 implementation("androidx.collection:collection:${extra["collections.version"] as String}")
+                implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime:${extra["lifecycle.version"] as String}")
             }
         }
     }
@@ -45,6 +46,7 @@ compose.desktop {
     application {
         mainClass = "dev.romainguy.kotlin.explorer.KotlinExplorerKt"
         buildTypes.release.proguard {
+            isEnabled = false
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
         nativeDistributions {

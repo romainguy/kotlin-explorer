@@ -8,3 +8,5 @@
 -dontnote com.jetbrains.JBR*
 -keep class com.sun.jna** { *; }
 -dontnote com.sun.jna**
+-keep class androidx.compose.ui.input.key.KeyEvent_desktopKt { *; }
+-dontnote androidx.compose.ui.input.key.KeyEvent_desktopKt

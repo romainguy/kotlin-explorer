@@ -15,6 +15,7 @@
  */
 
 @file:OptIn(ExperimentalSplitPaneApi::class)
+@file:Suppress("FunctionName")
 
 package dev.romainguy.kotlin.explorer
 
@@ -66,8 +67,7 @@ import javax.swing.event.DocumentListener
 
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
-    explorerState: ExplorerState,
-    onOpenSettings: () -> Unit
+    explorerState: ExplorerState
 ) {
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var dexTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
@@ -112,6 +112,7 @@ private fun FrameWindowScope.KotlinExplorer(
         }
     }}
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
+    var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
 
     MainMenu(
         explorerState,
@@ -120,91 +121,98 @@ private fun FrameWindowScope.KotlinExplorer(
         { oat -> oatTextArea!!.text = oat },
         { statusUpdate -> status = statusUpdate },
         { findDialog.isVisible = true },
-        onOpenSettings
+        { showSettings = true }
     )
 
-    Column(
-        modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
-    ) {
-        HorizontalSplitPane(
-            modifier = Modifier.weight(1.0f),
-            splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.3f)
+    if (showSettings) {
+        Settings(
+            explorerState,
+            onSaveClick = { showSettings = !explorerState.toolPaths.isValid }
+        )
+    } else {
+        Column(
+            modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
         ) {
-            first {
-                SwingPanel(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = {
-                        sourceTextArea = RSyntaxTextArea().apply {
-                            configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
-                            addFocusListener(focusTracker)
-                            SwingUtilities.invokeLater { requestFocusInWindow() }
-                            document.addDocumentListener(object : DocumentListener {
-                                override fun insertUpdate(e: DocumentEvent?) {
-                                    explorerState.sourceCode = text
-                                }
+            HorizontalSplitPane(
+                modifier = Modifier.weight(1.0f),
+                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.3f)
+            ) {
+                first {
+                    SwingPanel(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = {
+                            sourceTextArea = RSyntaxTextArea().apply {
+                                configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
+                                addFocusListener(focusTracker)
+                                SwingUtilities.invokeLater { requestFocusInWindow() }
+                                document.addDocumentListener(object : DocumentListener {
+                                    override fun insertUpdate(e: DocumentEvent?) {
+                                        explorerState.sourceCode = text
+                                    }
 
-                                override fun removeUpdate(e: DocumentEvent?) {
-                                    explorerState.sourceCode = text
-                                }
+                                    override fun removeUpdate(e: DocumentEvent?) {
+                                        explorerState.sourceCode = text
+                                    }
 
-                                override fun changedUpdate(e: DocumentEvent?) {
-                                    explorerState.sourceCode = text
-                                }
-                            })
+                                    override fun changedUpdate(e: DocumentEvent?) {
+                                        explorerState.sourceCode = text
+                                    }
+                                })
+                            }
+                            RTextScrollPane(sourceTextArea)
+                        },
+                        update = {
+                            sourceTextArea?.text = explorerState.sourceCode
                         }
-                        RTextScrollPane(sourceTextArea)
-                    },
-                    update = {
-                        sourceTextArea?.text = explorerState.sourceCode
-                    }
-                )
-            }
-            second {
-                HorizontalSplitPane(
-                    modifier = Modifier.weight(1.0f),
-                    splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
-                ) {
-                    first {
-                        SwingPanel(
-                            modifier = Modifier.fillMaxSize(),
-                            factory = {
-                                dexTextArea = DexTextArea().apply {
-                                    configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                    addFocusListener(focusTracker)
+                    )
+                }
+                second {
+                    HorizontalSplitPane(
+                        modifier = Modifier.weight(1.0f),
+                        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
+                    ) {
+                        first {
+                            SwingPanel(
+                                modifier = Modifier.fillMaxSize(),
+                                factory = {
+                                    dexTextArea = DexTextArea().apply {
+                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+                                        addFocusListener(focusTracker)
+                                    }
+                                    RTextScrollPane(dexTextArea)
                                 }
-                                RTextScrollPane(dexTextArea)
-                            }
-                        )
-                    }
-                    second {
-                        SwingPanel(
-                            modifier = Modifier.fillMaxSize(),
-                            factory = {
-                                oatTextArea = RSyntaxTextArea().apply {
-                                    configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                    addFocusListener(focusTracker)
+                            )
+                        }
+                        second {
+                            SwingPanel(
+                                modifier = Modifier.fillMaxSize(),
+                                factory = {
+                                    oatTextArea = RSyntaxTextArea().apply {
+                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+                                        addFocusListener(focusTracker)
+                                    }
+                                    RTextScrollPane(oatTextArea)
                                 }
-                                RTextScrollPane(oatTextArea)
-                            }
-                        )
-                    }
-                    splitter {
-                        HorizontalSplitter()
+                            )
+                        }
+                        splitter {
+                            HorizontalSplitter()
+                        }
                     }
                 }
+                splitter {
+                    HorizontalSplitter()
+                }
             }
-            splitter {
-                HorizontalSplitter()
+            Row {
+                Text(
+                    modifier = Modifier
+                        .weight(1.0f, true)
+                        .align(Alignment.CenterVertically)
+                        .padding(8.dp),
+                    text = status
+                )
             }
-        }
-        Row {
-            Text(
-                modifier = Modifier
-                    .weight(1.0f, true)
-                    .align(Alignment.CenterVertically)
-                    .padding(8.dp),
-                text = status
-            )
         }
     }
 }
@@ -224,7 +232,7 @@ private fun FrameWindowScope.MainMenu(
     MenuBar {
         Menu("File") {
             Item(
-                "Decompile",
+                "Compile & Disassemble",
                 shortcut = KeyShortcut(
                     key = Key.D,
                     ctrl = !isMac,
@@ -245,7 +253,7 @@ private fun FrameWindowScope.MainMenu(
                 }
             )
             Item(
-                "Open settings",
+                "Settings…",
                 onClick = onOpenSettings
             )
         }
@@ -413,15 +421,7 @@ fun main() = application {
             TitleBar(Modifier.newFullscreenControls()) {
                 Text("Kotlin Explorer")
             }
-            var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
-            if (showSettings) {
-                Settings(
-                    explorerState,
-                    onSaveClick = { showSettings = !explorerState.toolPaths.isValid }
-                )
-            } else {
-                KotlinExplorer(explorerState, onOpenSettings = { showSettings = true })
-            }
+            KotlinExplorer(explorerState)
         }
     }
 }
