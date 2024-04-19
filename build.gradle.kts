@@ -28,8 +28,8 @@ kotlin {
                 implementation(compose.desktop.currentOs) {
                     exclude(group = "org.jetbrains.compose.material")
                 }
-                implementation("org.jetbrains.jewel:jewel-int-ui-standalone:${extra["jewel.version"] as String}")
-                implementation("org.jetbrains.jewel:jewel-int-ui-decorated-window:${extra["jewel.version"] as String}")
+                implementation("org.jetbrains.jewel:jewel-int-ui-standalone-241:${extra["jewel.version"] as String}")
+                implementation("org.jetbrains.jewel:jewel-int-ui-decorated-window-241:${extra["jewel.version"] as String}")
                 implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:${extra["skiko.version"] as String}")
                 implementation("org.jetbrains.compose.components:components-splitpane-desktop:${extra["compose.version"] as String}")
                 implementation("com.fifesoft:rsyntaxtextarea:${extra["rsyntaxtextarea.version"] as String}")
@@ -46,7 +46,6 @@ compose.desktop {
     application {
         mainClass = "dev.romainguy.kotlin.explorer.KotlinExplorerKt"
         buildTypes.release.proguard {
-            isEnabled = false
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
         nativeDistributions {
