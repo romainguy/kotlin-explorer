@@ -31,7 +31,8 @@ Kotlin explorer also requires `java` and `javap` to be in your `$PATH`.
 
 > [!IMPORTANT]  
 > DEX bytecode and OAT assembly will only be displayed if you have an Android
-> device connected that can be successfully reached via adb.
+> device or emulator that can be successfully reached via `adb`. The device
+> must be recent enough to host the `oatdump` tool on its system image.
 
 # License
 
