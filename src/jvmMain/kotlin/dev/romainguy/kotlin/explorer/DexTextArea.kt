@@ -23,6 +23,12 @@ import java.awt.Graphics2D
 private val JumpPattern = Regex("(\\s+)[0-9a-fA-F]{4}: .+([0-9a-fA-F]{4}) // ([+-])[0-9a-fA-F]{4}[\\n\\r]*")
 private val AddressedPattern = Regex("(\\s+)([0-9a-fA-F]{4}): .+[\\n\\r]*")
 
+internal fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
+    val position = textArea.caretPosition
+    textArea.text = text
+    textArea.caretPosition = position
+}
+
 class DexTextArea : RSyntaxTextArea() {
     private var displayJump = false
     private var jumpRange = 0 to 0

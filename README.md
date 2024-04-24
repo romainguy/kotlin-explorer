@@ -5,8 +5,8 @@ Kotlin Explorer is a desktop tool to quickly and easily disassemble Kotlin code 
 - Android OAT assembly
 
 After launching Kotlin Explorer, type valid Kotlin code in the left pane, then click
-*File > Compile & Disassemble* or use `Cmd-Shift-D` on macOS, `Ctrl-Shift-D` on Linux
-and Windows.
+*Compilation > Compile & Disassemble* or use `Cmd-Shift-D` on macOS, `Ctrl-Shift-D`
+on Linux and Windows.
 
 The middle pane will show the Android DEX bytecode, and the right panel
 the native assembly resulting from ahead of time compilation (AOT).

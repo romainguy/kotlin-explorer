@@ -65,10 +65,14 @@ import javax.swing.SwingUtilities
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
+private const val FontSizeEditingMode = 12.0f
+private const val FontSizePresentationMode = 20.0f
+
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
+    // TODO: Move all those remembers to an internal private state object
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var dexTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var oatTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
@@ -117,10 +121,11 @@ private fun FrameWindowScope.KotlinExplorer(
     MainMenu(
         explorerState,
         sourceTextArea,
-        { dex -> dexTextArea!!.text = dex },
-        { oat -> oatTextArea!!.text = oat },
+        { dex -> updateTextArea(dexTextArea!!, dex) },
+        { oat -> updateTextArea(oatTextArea!!, oat) },
         { statusUpdate -> status = statusUpdate },
         { findDialog.isVisible = true },
+        { SearchEngine.find(activeTextArea, findDialog.searchContext) },
         { showSettings = true }
     )
 
@@ -163,6 +168,9 @@ private fun FrameWindowScope.KotlinExplorer(
                         },
                         update = {
                             sourceTextArea?.text = explorerState.sourceCode
+                            sourceTextArea?.font = sourceTextArea?.font?.deriveFont(
+                                if (explorerState.presentationMode) FontSizePresentationMode else FontSizeEditingMode
+                            )
                         }
                     )
                 }
@@ -180,6 +188,15 @@ private fun FrameWindowScope.KotlinExplorer(
                                         addFocusListener(focusTracker)
                                     }
                                     RTextScrollPane(dexTextArea)
+                                },
+                                update = {
+                                    dexTextArea?.font = dexTextArea?.font?.deriveFont(
+                                        if (explorerState.presentationMode) {
+                                            FontSizePresentationMode
+                                        } else {
+                                            FontSizeEditingMode
+                                        }
+                                    )
                                 }
                             )
                         }
@@ -192,6 +209,15 @@ private fun FrameWindowScope.KotlinExplorer(
                                         addFocusListener(focusTracker)
                                     }
                                     RTextScrollPane(oatTextArea)
+                                },
+                                update = {
+                                    oatTextArea?.font = oatTextArea?.font?.deriveFont(
+                                        if (explorerState.presentationMode) {
+                                            FontSizePresentationMode
+                                        } else {
+                                            FontSizeEditingMode
+                                        }
+                                    )
                                 }
                             )
                         }
@@ -224,13 +250,65 @@ private fun FrameWindowScope.MainMenu(
     onDexUpdate: (String) -> Unit,
     onOatUpdate: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
-    onSearchClicked: () -> Unit,
+    onFindClicked: () -> Unit,
+    onFindNextClicked: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
     MenuBar {
         Menu("File") {
+            Item(
+                "Settings…",
+                onClick = onOpenSettings
+            )
+        }
+        Menu("Edit") {
+            Item(
+                "Find…",
+                shortcut = KeyShortcut(
+                    key = Key.F,
+                    ctrl = !isMac,
+                    meta = isMac,
+                ),
+                onClick = onFindClicked
+            )
+            Item(
+                "Find Next Occurrence",
+                shortcut = KeyShortcut(
+                    key = Key.G,
+                    ctrl = !isMac,
+                    meta = isMac,
+                ),
+                onClick = onFindNextClicked
+            )
+
+        }
+        Menu("View") {
+            CheckboxItem(
+                "Presentation Mode",
+                explorerState.presentationMode,
+                shortcut = KeyShortcut(
+                    key = Key.P,
+                    ctrl = !isMac,
+                    shift = true,
+                    meta = isMac
+                ),
+                onCheckedChange = { explorerState.presentationMode = it }
+            )
+        }
+        Menu("Compilation") {
+            CheckboxItem(
+                "Optimize with R8",
+                explorerState.optimize,
+                shortcut = KeyShortcut(
+                    key = Key.O,
+                    ctrl = !isMac,
+                    shift = true,
+                    meta = isMac
+                ),
+                onCheckedChange = { explorerState.optimize = it }
+            )
             Item(
                 "Compile & Disassemble",
                 shortcut = KeyShortcut(
@@ -251,34 +329,6 @@ private fun FrameWindowScope.MainMenu(
                         )
                     }
                 }
-            )
-            Item(
-                "Settings…",
-                onClick = onOpenSettings
-            )
-        }
-        Menu("Edit") {
-            Item(
-                "Search",
-                shortcut = KeyShortcut(
-                    key = Key.F,
-                    ctrl = !isMac,
-                    meta = isMac,
-                ),
-                onClick = onSearchClicked
-            )
-        }
-        Menu("Options") {
-            CheckboxItem(
-                "Optimize with R8",
-                explorerState.optimize,
-                shortcut = KeyShortcut(
-                    key = Key.O,
-                    ctrl = !isMac,
-                    shift = true,
-                    meta = isMac
-                ),
-                onCheckedChange = { explorerState.optimize = it }
             )
         }
     }

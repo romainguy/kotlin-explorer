@@ -216,6 +216,8 @@ private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String>
         path.toString(),
         "-Xmulti-platform",
         "-Xno-param-assertions",
+        "-Xno-call-assertions",
+        "-Xno-receiver-assertions",
         "-classpath",
         toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() }
             + ":${toolPaths.platform}"

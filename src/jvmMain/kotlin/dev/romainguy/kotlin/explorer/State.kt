@@ -32,6 +32,7 @@ class ExplorerState(
 ) {
     var toolPaths by mutableStateOf(createToolPaths(settings))
     var optimize by mutableStateOf(true)
+    var presentationMode by mutableStateOf(false)
     var sourceCode = readSourceCode(toolPaths)
 
     fun reloadToolPathsFromSettings() {
