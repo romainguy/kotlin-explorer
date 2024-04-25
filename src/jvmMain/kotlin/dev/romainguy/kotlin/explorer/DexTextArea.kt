@@ -26,7 +26,7 @@ private val AddressedPattern = Regex("(\\s+)([0-9a-fA-F]{4}): .+[\\n\\r]*")
 internal fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
     val position = textArea.caretPosition
     textArea.text = text
-    textArea.caretPosition = position
+    textArea.caretPosition = minOf(position, textArea.document.length)
 }
 
 class DexTextArea : RSyntaxTextArea() {
