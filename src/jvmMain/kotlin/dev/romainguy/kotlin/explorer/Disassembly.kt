@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer
 
+import dev.romainguy.kotlin.explorer.dex.DexDumpParser
 import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
@@ -95,7 +96,7 @@ suspend fun disassemble(
         }
 
         launch(ui) {
-            onDex(filterDex(dexdump.output))
+            onDex(DexDumpParser(dexdump.output).parseDexDump())
             onStatusUpdate("AOT compilation…")
         }
 
@@ -248,13 +249,7 @@ private fun cleanupClasses(directory: Path) {
         .forEach { path -> path.toFile().delete() }
 }
 
-private val BuiltInKotlinClass = Regex("^(kotlin|kotlinx|java|javax|org\\.(intellij|jetbrains))\\..+")
-
-private val DexCodePattern = Regex("^[0-9a-fA-F]+:[^|]+\\|([0-9a-fA-F]+: .+)")
-private val DexMethodStartPattern = Regex("^\\s+#[0-9]+\\s+:\\s+\\(in L[^;]+;\\)")
-private val DexMethodNamePattern = Regex("^\\s+name\\s+:\\s+'(.+)'")
-private val DexMethodTypePattern = Regex("^\\s+type\\s+:\\s+'(.+)'")
-private val DexClassNamePattern = Regex("^\\s+Class descriptor\\s+:\\s+'L(.+);'")
+internal val BuiltInKotlinClass = Regex("^(kotlin|kotlinx|java|javax|org\\.(intellij|jetbrains))\\..+")
 
 private val OatClassNamePattern = Regex("^\\d+: L([^;]+); \\(offset=[0-9a-zA-Zx]+\\) \\(type_idx=\\d+\\).+")
 private val OatMethodPattern = Regex("^\\s+\\d+:\\s+(.+)\\s+\\(dex_method_idx=\\d+\\)")
@@ -319,83 +314,7 @@ private fun filterOat(oat: String) = buildString {
     }
 }
 
-private fun filterDex(dex: String) = buildString {
-    val indent = "        "
-    val lines = dex.lineSequence().iterator()
-
-    var insideClass = false
-    var insideMethod = false
-    var firstMethod = false
-    var firstClass = true
-    var className = "<UNKNOWN>"
-
-    while (lines.hasNext()) {
-        var line = lines.next()
-
-        var match: MatchResult? = null
-
-        if (insideClass) {
-            if (insideMethod) {
-                match = DexCodePattern.matchEntire(line)
-                if (match != null && match.groupValues.isNotEmpty()) {
-                    appendLine("$indent${match.groupValues[1]}")
-                }
-            }
-
-            if (match === null) {
-                match = DexMethodStartPattern.matchEntire(line)
-                if (match != null) {
-                    if (!lines.hasNext()) return@buildString
-                    line = lines.next()
-
-                    match = DexMethodNamePattern.matchEntire(line)
-                    if (match != null && match.groupValues.isNotEmpty()) {
-                        val name = match.groupValues[1]
-                        if (!firstMethod) appendLine()
-                        firstMethod = false
-
-                        if (!lines.hasNext()) return@buildString
-                        line = lines.next()
-
-                        match = DexMethodTypePattern.matchEntire(line)
-                        if (match != null && match.groupValues.isNotEmpty()) {
-                            val type = match.groupValues[1]
-                            appendLine("    $name$type // $className.$name()")
-                            insideMethod = true
-                        }
-                    }
-                }
-            }
-        }
-
-        if (match === null) {
-            if (line.trim().startsWith("Class #")) {
-                if (!lines.hasNext()) return@buildString
-                line = lines.next()
-
-                match = DexClassNamePattern.matchEntire(line)
-                if (match != null && match.groupValues.isNotEmpty()) {
-                    className = match.groupValues[1].replace('/', '.')
-
-                    val suppress = className.matches(BuiltInKotlinClass)
-                    if (!suppress) {
-                        if (!firstClass) appendLine()
-                        appendLine("class $className")
-                    }
-
-                    if (!lines.consumeUntil("Direct methods")) break
-
-                    insideMethod = false
-                    firstMethod = true
-                    firstClass = false
-                    insideClass = !suppress
-                }
-            }
-        }
-    }
-}
-
-private fun Iterator<String>.consumeUntil(prefix: String): Boolean {
+internal fun Iterator<String>.consumeUntil(prefix: String): Boolean {
     while (hasNext()) {
         val line = next()
         if (line.trim().startsWith(prefix)) return true

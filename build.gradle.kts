@@ -37,6 +37,7 @@ kotlin {
                 implementation("net.java.dev.jna:jna:${extra["jna.version"] as String}")
                 implementation("androidx.collection:collection:${extra["collections.version"] as String}")
                 implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime:${extra["lifecycle.version"] as String}")
+                runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:${extra["skiko.version"] as String}")
             }
         }
     }
