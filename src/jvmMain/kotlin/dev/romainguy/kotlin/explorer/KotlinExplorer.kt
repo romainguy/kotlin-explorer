@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalSplitPaneApi::class)
 @file:Suppress("FunctionName")
 
 package dev.romainguy.kotlin.explorer
@@ -39,9 +38,6 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rsyntaxtextarea.Theme
 import org.fife.ui.rtextarea.RTextScrollPane
 import org.fife.ui.rtextarea.SearchEngine
-import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
-import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.jetbrains.jewel.intui.standalone.theme.darkThemeDefinition
@@ -62,8 +58,6 @@ import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
 import javax.swing.SwingUtilities
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
 
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
@@ -73,9 +67,6 @@ private fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
     // TODO: Move all those remembers to an internal private state object
-    var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
-    var dexTextArea by remember { mutableStateOf<DexTextArea?>(null) }
-    var oatTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var status by remember { mutableStateOf("Ready") }
 
@@ -115,6 +106,11 @@ private fun FrameWindowScope.KotlinExplorer(
         override fun focusLost(e: FocusEvent?) {
         }
     }}
+
+    val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState) }
+    val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
+    val oatTextArea = remember { oatTextArea(focusTracker) }
+
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
 
@@ -123,13 +119,13 @@ private fun FrameWindowScope.KotlinExplorer(
         sourceTextArea,
         { dex ->
             if (dex != null) {
-                updateTextArea(dexTextArea!!, dex)
+                updateTextArea(dexTextArea, dex)
             } else {
-                dexTextArea?.refreshText()
+                dexTextArea.refreshText()
             }
 
         },
-        { oat -> updateTextArea(oatTextArea!!, oat) },
+        { oat -> updateTextArea(oatTextArea, oat) },
         { statusUpdate -> status = statusUpdate },
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
@@ -145,98 +141,12 @@ private fun FrameWindowScope.KotlinExplorer(
         Column(
             modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
         ) {
-            HorizontalSplitPane(
+            ThreeWaySplitter(
                 modifier = Modifier.weight(1.0f),
-                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.3f)
-            ) {
-                first {
-                    SwingPanel(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = {
-                            sourceTextArea = RSyntaxTextArea().apply {
-                                configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
-                                addFocusListener(focusTracker)
-                                SwingUtilities.invokeLater { requestFocusInWindow() }
-                                document.addDocumentListener(object : DocumentListener {
-                                    override fun insertUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-
-                                    override fun removeUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-
-                                    override fun changedUpdate(e: DocumentEvent?) {
-                                        explorerState.sourceCode = text
-                                    }
-                                })
-                            }
-                            RTextScrollPane(sourceTextArea)
-                        },
-                        update = {
-                            sourceTextArea?.text = explorerState.sourceCode
-                            sourceTextArea?.font = sourceTextArea?.font?.deriveFont(
-                                if (explorerState.presentationMode) FontSizePresentationMode else FontSizeEditingMode
-                            )
-                        }
-                    )
-                }
-                second {
-                    HorizontalSplitPane(
-                        modifier = Modifier.weight(1.0f),
-                        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.5f)
-                    ) {
-                        first {
-                            SwingPanel(
-                                modifier = Modifier.fillMaxSize(),
-                                factory = {
-                                    dexTextArea = DexTextArea(explorerState).apply {
-                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                        addFocusListener(focusTracker)
-                                    }
-                                    RTextScrollPane(dexTextArea)
-                                },
-                                update = {
-                                    dexTextArea?.font = dexTextArea?.font?.deriveFont(
-                                        if (explorerState.presentationMode) {
-                                            FontSizePresentationMode
-                                        } else {
-                                            FontSizeEditingMode
-                                        }
-                                    )
-                                }
-                            )
-                        }
-                        second {
-                            SwingPanel(
-                                modifier = Modifier.fillMaxSize(),
-                                factory = {
-                                    oatTextArea = RSyntaxTextArea().apply {
-                                        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-                                        addFocusListener(focusTracker)
-                                    }
-                                    RTextScrollPane(oatTextArea)
-                                },
-                                update = {
-                                    oatTextArea?.font = oatTextArea?.font?.deriveFont(
-                                        if (explorerState.presentationMode) {
-                                            FontSizePresentationMode
-                                        } else {
-                                            FontSizeEditingMode
-                                        }
-                                    )
-                                }
-                            )
-                        }
-                        splitter {
-                            HorizontalSplitter()
-                        }
-                    }
-                }
-                splitter {
-                    HorizontalSplitter()
-                }
-            }
+                { SourcePanel(sourceTextArea, explorerState) },
+                { TextPanel(dexTextArea, explorerState) },
+                { TextPanel(oatTextArea, explorerState) },
+            )
             Row {
                 Text(
                     modifier = Modifier
@@ -247,6 +157,51 @@ private fun FrameWindowScope.KotlinExplorer(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState) {
+    SwingPanel(
+        modifier = Modifier.fillMaxSize(),
+        factory = {
+            RTextScrollPane(sourceTextArea)
+        },
+        update = {
+            sourceTextArea.text = explorerState.sourceCode
+            sourceTextArea.setFont(explorerState)
+        }
+    )
+}
+
+@Composable
+private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState) {
+    SwingPanel(
+        modifier = Modifier.fillMaxSize(),
+        factory = { RTextScrollPane(textArea) },
+        update = { textArea.setFont(explorerState) })
+}
+
+private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): RSyntaxTextArea {
+    return RSyntaxTextArea().apply {
+        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
+        addFocusListener(focusTracker)
+        SwingUtilities.invokeLater { requestFocusInWindow() }
+        document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
+    }
+}
+
+private fun dexTextArea(explorerState: ExplorerState, focusTracker: FocusListener): DexTextArea {
+    return DexTextArea(explorerState).apply {
+        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+        addFocusListener(focusTracker)
+    }
+}
+
+private fun oatTextArea(focusTracker: FocusListener): RSyntaxTextArea {
+    return RSyntaxTextArea().apply {
+        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
+        addFocusListener(focusTracker)
     }
 }
 
@@ -457,6 +412,11 @@ private fun Settings(
             }
         }
     }
+}
+
+private fun RSyntaxTextArea.setFont(explorerState: ExplorerState) {
+    val presentation = explorerState.presentationMode
+    font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
 fun main() = application {
