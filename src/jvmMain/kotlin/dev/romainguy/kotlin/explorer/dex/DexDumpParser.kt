@@ -93,7 +93,7 @@ internal class DexDumpParser(text: String) {
     }
 
     private class DexClass(val name: String, val methods: List<DexMethod>) {
-        override fun toString() = "class $name\n${methods.joinToString("\n\n") { it.toString() }}"
+        override fun toString() = "class $name\n${methods.joinToString("\n") { it.toString() }}"
     }
 
     private class DexMethod(val className: String, val name: String, val type: String, val code: String) {
