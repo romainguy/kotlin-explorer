@@ -304,7 +304,7 @@ private fun FrameWindowScope.MainMenu(
                 onCheckedChange = { explorerState.presentationMode = it }
             )
             CheckboxItem(
-                "Show Line Numbers Mode",
+                "Show Line Numbers",
                 explorerState.showLineNumbers,
                 shortcut = KeyShortcut(
                     key = Key.L,
