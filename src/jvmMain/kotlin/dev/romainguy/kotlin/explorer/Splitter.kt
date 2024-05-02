@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
+@file:Suppress("FunctionName", "OPT_IN_USAGE", "KotlinRedundantDiagnosticSuppress")
 @file:OptIn(ExperimentalSplitPaneApi::class)
 
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
+import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.SplitterScope
+import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Cursor
 
 private fun Modifier.cursorForHorizontalResize(): Modifier =
@@ -46,5 +50,31 @@ fun SplitterScope.HorizontalSplitter() {
                 .width(5.dp)
                 .fillMaxHeight()
         )
+    }
+}
+
+@Composable
+fun ThreeWaySplitter(
+    modifier: Modifier = Modifier,
+    panel1: @Composable () -> Unit,
+    panel2: @Composable () -> Unit,
+    panel3: @Composable () -> Unit,
+) {
+    HorizontalSplitPane(
+        modifier = modifier,
+        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / 3)
+    ) {
+        first { panel1() }
+        second {
+            HorizontalSplitPane(
+                modifier = modifier,
+                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / 2)
+            ) {
+                first { panel2() }
+                second { panel3() }
+                splitter { HorizontalSplitter() }
+            }
+        }
+        splitter { HorizontalSplitter() }
     }
 }
