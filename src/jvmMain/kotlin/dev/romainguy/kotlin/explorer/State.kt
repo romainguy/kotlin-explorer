@@ -26,14 +26,17 @@ import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.io.path.readLines
 
+private const val OPTIMIZE = "OPTIMIZE"
+private const val PRESENTATION = "PRESENTATION"
+
 @Stable
 class ExplorerState(
     val settings: Settings = Settings()
 ) {
     var toolPaths by mutableStateOf(createToolPaths(settings))
-    var optimize by mutableStateOf(true)
-    var presentationMode by mutableStateOf(false)
-    var sourceCode = readSourceCode(toolPaths)
+    var optimize by mutableStateOf(settings.getValue(OPTIMIZE, "true").toBoolean())
+    var presentationMode by mutableStateOf(settings.getValue(PRESENTATION, "false").toBoolean())
+    var sourceCode: String = readSourceCode(toolPaths)
 
     fun reloadToolPathsFromSettings() {
         toolPaths = createToolPaths(settings)
@@ -44,7 +47,9 @@ data class Settings(
     val directory: Path = settingsPath(),
     val file: Path = directory.resolve("settings"),
     val entries: MutableMap<String, String> = readSettings(file)
-)
+) {
+    fun getValue(name: String, defaultValue: String) = entries[name] ?: defaultValue
+}
 
 private fun settingsPath() = Paths.get(System.getProperty("user.home"), ".kotlin-explorer").apply {
     if (!exists()) Files.createDirectory(this)
@@ -75,7 +80,9 @@ fun writeState(state: ExplorerState) {
         state.toolPaths.sourceFile,
         state.sourceCode
     )
-
+    state.settings.entries[OPTIMIZE] = state.optimize.toString()
+    state.settings.entries[PRESENTATION] = state.presentationMode.toString()
+    
     Files.writeString(
         state.settings.file,
         state.settings.entries
