@@ -20,8 +20,8 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.Graphics
 import java.awt.Graphics2D
 
-private val JumpPattern = Regex("(\\s+)[0-9a-fA-F]{4}: .+([0-9a-fA-F]{4}) // ([+-])[0-9a-fA-F]{4}[\\n\\r]*")
-private val AddressedPattern = Regex("(\\s+)([0-9a-fA-F]{4}): .+[\\n\\r]*")
+private val JumpPattern = Regex(".{9}[0-9a-fA-F]{4}: .+([0-9a-fA-F]{4}) // ([+-])[0-9a-fA-F]{4}[\\n\\r]*")
+private val AddressedPattern = Regex(".{9}([0-9a-fA-F]{4}): .+[\\n\\r]*")
 
 internal fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
     val position = textArea.caretPosition
@@ -29,10 +29,11 @@ internal fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
     textArea.caretPosition = minOf(position, textArea.document.length)
 }
 
-class DexTextArea : RSyntaxTextArea() {
+class DexTextArea(private val explorerState: ExplorerState) : RSyntaxTextArea() {
     private var displayJump = false
     private var jumpRange = 0 to 0
     private var horizontalOffsets = 0 to 0
+    private var fullText = ""
 
     init {
         addCaretListener { event ->
@@ -49,9 +50,9 @@ class DexTextArea : RSyntaxTextArea() {
             var line = document.getText(start, end - start)
             var result = JumpPattern.matchEntire(line)
             if (result != null) {
-                val srcHorizontalOffset = start + result.groupValues[1].length
-                val targetAddress = result.groupValues[2]
-                val direction = if (result.groupValues[3] == "+") 1 else -1
+                val srcHorizontalOffset = start + line.countPadding()
+                val targetAddress = result.groupValues[1]
+                val direction = if (result.groupValues[2] == "+") 1 else -1
 
                 var dstLine = srcLine + direction
                 while (dstLine in 0..<lineCount) {
@@ -62,8 +63,8 @@ class DexTextArea : RSyntaxTextArea() {
                     result = AddressedPattern.matchEntire(line)
                     if (result == null) {
                         break
-                    } else if (result.groupValues[2] == targetAddress) {
-                        val dstHorizontalOffset = start + result.groupValues[1].length
+                    } else if (result.groupValues[1] == targetAddress) {
+                        val dstHorizontalOffset = start + line.countPadding()
 
                         displayJump = true
                         jumpRange = srcLine to dstLine
@@ -82,6 +83,17 @@ class DexTextArea : RSyntaxTextArea() {
         }
     }
 
+    override fun setText(text: String) {
+        fullText = text
+        refreshText()
+    }
+
+    fun refreshText() {
+        val saveCaret = caretPosition
+        super.setText(fullText.takeIf { explorerState.showLineNumbers } ?: fullText.removeLineLumbers())
+        caretPosition = saveCaret
+    }
+
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
 
@@ -97,10 +109,20 @@ class DexTextArea : RSyntaxTextArea() {
             val x2 = bounds2.x.toInt() - padding
             val y2 = (bounds2.y + lineHeight / 2).toInt()
 
+            val x0 = modelToView2D(2).x.toInt()
             val g2 = g as Graphics2D
-            g2.drawLine(x1, y1, x1 / 2, y1)
-            g2.drawLine(x1 / 2, y1, x2 / 2, y2)
-            g2.drawLine(x2 / 2, y2, x2, y2)
+            g2.drawLine(x1, y1, x0, y1)
+            g2.drawLine(x0, y1, x0, y2)
+            g2.drawLine(x0, y2, x2, y2)
         }
     }
 }
+
+private val LineNumber = Regex("^( +\\d+: )([0-9a-f]{4}: )", RegexOption.MULTILINE)
+
+private fun String.removeLineLumbers() = LineNumber.replace(this) {
+    val (start, end) = it.groupValues.drop(1)
+    " ".repeat(start.length) + end
+}
+
+private fun String.countPadding() = indexOfFirst { it != ' ' }

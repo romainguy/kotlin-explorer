@@ -74,7 +74,7 @@ private fun FrameWindowScope.KotlinExplorer(
 ) {
     // TODO: Move all those remembers to an internal private state object
     var sourceTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
-    var dexTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
+    var dexTextArea by remember { mutableStateOf<DexTextArea?>(null) }
     var oatTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var status by remember { mutableStateOf("Ready") }
@@ -121,7 +121,14 @@ private fun FrameWindowScope.KotlinExplorer(
     MainMenu(
         explorerState,
         sourceTextArea,
-        { dex -> updateTextArea(dexTextArea!!, dex) },
+        { dex ->
+            if (dex != null) {
+                updateTextArea(dexTextArea!!, dex)
+            } else {
+                dexTextArea?.refreshText()
+            }
+
+        },
         { oat -> updateTextArea(oatTextArea!!, oat) },
         { statusUpdate -> status = statusUpdate },
         { findDialog.isVisible = true },
@@ -183,7 +190,7 @@ private fun FrameWindowScope.KotlinExplorer(
                             SwingPanel(
                                 modifier = Modifier.fillMaxSize(),
                                 factory = {
-                                    dexTextArea = DexTextArea().apply {
+                                    dexTextArea = DexTextArea(explorerState).apply {
                                         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
                                         addFocusListener(focusTracker)
                                     }
@@ -247,7 +254,7 @@ private fun FrameWindowScope.KotlinExplorer(
 private fun FrameWindowScope.MainMenu(
     explorerState: ExplorerState,
     sourceTextArea: RSyntaxTextArea?,
-    onDexUpdate: (String) -> Unit,
+    onDexUpdate: (String?) -> Unit,
     onOatUpdate: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
     onFindClicked: () -> Unit,
@@ -295,6 +302,20 @@ private fun FrameWindowScope.MainMenu(
                     meta = isMac
                 ),
                 onCheckedChange = { explorerState.presentationMode = it }
+            )
+            CheckboxItem(
+                "Show Line Numbers Mode",
+                explorerState.showLineNumbers,
+                shortcut = KeyShortcut(
+                    key = Key.L,
+                    ctrl = !isMac,
+                    shift = true,
+                    meta = isMac
+                ),
+                onCheckedChange = {
+                    explorerState.showLineNumbers = it
+                    onDexUpdate(null)
+                }
             )
         }
         Menu("Compilation") {

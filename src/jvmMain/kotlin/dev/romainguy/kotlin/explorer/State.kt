@@ -26,16 +26,18 @@ import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.io.path.readLines
 
-private const val OPTIMIZE = "OPTIMIZE"
-private const val PRESENTATION = "PRESENTATION"
+private const val Optimize = "OPTIMIZE"
+private const val Presentation = "PRESENTATION"
+private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
 
 @Stable
 class ExplorerState(
     val settings: Settings = Settings()
 ) {
     var toolPaths by mutableStateOf(createToolPaths(settings))
-    var optimize by mutableStateOf(settings.getValue(OPTIMIZE, "true").toBoolean())
-    var presentationMode by mutableStateOf(settings.getValue(PRESENTATION, "false").toBoolean())
+    var optimize by mutableStateOf(settings.getValue(Optimize, "true").toBoolean())
+    var presentationMode by mutableStateOf(settings.getValue(Presentation, "false").toBoolean())
+    var showLineNumbers by mutableStateOf(settings.getValue(ShowLineNumbers, "true").toBoolean())
     var sourceCode: String = readSourceCode(toolPaths)
 
     fun reloadToolPathsFromSettings() {
@@ -80,9 +82,10 @@ fun writeState(state: ExplorerState) {
         state.toolPaths.sourceFile,
         state.sourceCode
     )
-    state.settings.entries[OPTIMIZE] = state.optimize.toString()
-    state.settings.entries[PRESENTATION] = state.presentationMode.toString()
-    
+    state.settings.entries[Optimize] = state.optimize.toString()
+    state.settings.entries[Presentation] = state.presentationMode.toString()
+    state.settings.entries[ShowLineNumbers] = state.showLineNumbers.toString()
+
     Files.writeString(
         state.settings.file,
         state.settings.entries
