@@ -49,7 +49,7 @@ open class CodeTextArea(
     fun refreshText() {
         val saveCaret = caretPosition
         super.setText(fullText.takeIf { explorerState.showLineNumbers } ?: fullText.removeLineLumbers())
-        caretPosition = saveCaret
+        caretPosition = minOf(saveCaret, document.length)
     }
 
     override fun paintComponent(g: Graphics?) {
