@@ -31,6 +31,7 @@ import androidx.compose.ui.input.key.Key.Companion.G
 import androidx.compose.ui.input.key.Key.Companion.L
 import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
+import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
@@ -120,6 +121,11 @@ private fun FrameWindowScope.KotlinExplorer(
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
 
+    val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState) }
+    val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState) }
+    val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState) }
+    var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, dexPanel, oatPanel)) }
+
     MainMenu(
         explorerState,
         sourceTextArea,
@@ -135,7 +141,8 @@ private fun FrameWindowScope.KotlinExplorer(
         { statusUpdate -> status = statusUpdate },
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
-        { showSettings = true }
+        { showSettings = true },
+        { panels = explorerState.getPanels(sourcePanel, dexPanel, oatPanel) },
     )
 
     if (showSettings) {
@@ -147,12 +154,7 @@ private fun FrameWindowScope.KotlinExplorer(
         Column(
             modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
         ) {
-            MultiSplitter(
-                modifier = Modifier.weight(1.0f),
-                { SourcePanel(sourceTextArea, explorerState) },
-                { TextPanel(dexTextArea, explorerState) },
-                { TextPanel(oatTextArea, explorerState) },
-            )
+            MultiSplitter(modifier = Modifier.weight(1.0f), panels)
             Row {
                 Text(
                     modifier = Modifier
@@ -166,26 +168,59 @@ private fun FrameWindowScope.KotlinExplorer(
     }
 }
 
-@Composable
-private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState) {
-    SwingPanel(
-        modifier = Modifier.fillMaxSize(),
-        factory = {
-            RTextScrollPane(sourceTextArea)
-        },
-        update = {
-            sourceTextArea.text = explorerState.sourceCode
-            sourceTextArea.setFont(explorerState)
+private fun ExplorerState.getPanels(
+    sourcePanel: @Composable () -> Unit,
+    dexPanel: @Composable () -> Unit,
+    oatPanel: @Composable () -> Unit,
+): List<@Composable () -> Unit> {
+    return buildList {
+        add(sourcePanel)
+        if (showDex) {
+            add(dexPanel)
         }
-    )
+        if (showOat) {
+            add(oatPanel)
+        }
+    }
 }
 
 @Composable
-private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState) {
-    SwingPanel(
-        modifier = Modifier.fillMaxSize(),
-        factory = { RTextScrollPane(textArea) },
-        update = { textArea.setFont(explorerState) })
+private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState) {
+    Column {
+        Title("Source")
+        SwingPanel(
+            modifier = Modifier.fillMaxSize(),
+            factory = {
+                RTextScrollPane(sourceTextArea)
+            },
+            update = {
+                sourceTextArea.text = explorerState.sourceCode
+                sourceTextArea.setFont(explorerState)
+            }
+        )
+    }
+}
+
+@Composable
+private fun TextPanel(title: String, textArea: RSyntaxTextArea, explorerState: ExplorerState) {
+    Column {
+        Title(title)
+        SwingPanel(
+            modifier = Modifier.fillMaxSize(),
+            factory = { RTextScrollPane(textArea) },
+            update = { textArea.setFont(explorerState) })
+    }
+}
+
+@Composable
+private fun Title(text: String) {
+    Text(
+        text,
+        textAlign = Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    )
 }
 
 private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): RSyntaxTextArea {
@@ -220,7 +255,8 @@ private fun FrameWindowScope.MainMenu(
     onStatusUpdate: (String) -> Unit,
     onFindClicked: () -> Unit,
     onFindNextClicked: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onPanelsUpdated: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -245,6 +281,9 @@ private fun FrameWindowScope.MainMenu(
             MenuItem("Find Next Occurrence", Ctrl(G), onClick = onFindNextClicked)
         }
         Menu("View") {
+            val onShowPanelChanged: (Boolean) -> Unit = { onPanelsUpdated() }
+            MenuCheckboxItem("Show DEX", Ctrl(D), explorerState::showDex, onShowPanelChanged)
+            MenuCheckboxItem("Show OAT", Ctrl(O), explorerState::showOat, onShowPanelChanged)
             MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode)
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
                 onDexUpdate(null)

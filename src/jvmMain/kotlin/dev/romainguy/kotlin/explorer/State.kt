@@ -26,6 +26,8 @@ import kotlin.io.path.readLines
 private const val Optimize = "OPTIMIZE"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
+private const val ShowDex = "SHOW_DEX"
+private const val ShowOat = "SHOW_OAT"
 
 @Stable
 class ExplorerState(
@@ -35,6 +37,8 @@ class ExplorerState(
     var optimize by BooleanState(Optimize, true)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, true)
+    var showDex by BooleanState(ShowDex, true)
+    var showOat by BooleanState(ShowOat, true)
     var sourceCode: String = readSourceCode(toolPaths)
 
     fun reloadToolPathsFromSettings() {
