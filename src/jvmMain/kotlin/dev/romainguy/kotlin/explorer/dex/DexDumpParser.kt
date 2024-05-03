@@ -18,6 +18,7 @@ package dev.romainguy.kotlin.explorer.dex
 
 import dev.romainguy.kotlin.explorer.BuiltInKotlinClass
 import dev.romainguy.kotlin.explorer.consumeUntil
+import dev.romainguy.kotlin.explorer.getValue
 
 private val PositionRegex = Regex("^\\s*0x(?<address>[0-9a-f]+) line=(?<line>\\d+)$")
 
@@ -101,10 +102,6 @@ internal class DexDumpParser(text: String) {
     }
 
     private class DexInstruction(val address: String, val code: String)
-}
-
-private fun MatchResult.getValue(group: String): String {
-    return groups[group]?.value ?: throw IllegalStateException("Value of $group not found in $value")
 }
 
 private fun String.getClassName() =

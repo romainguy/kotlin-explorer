@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
 import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
+import dev.romainguy.kotlin.explorer.dex.DexTextArea
+import dev.romainguy.kotlin.explorer.oat.OatTextArea
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -115,7 +117,7 @@ private fun FrameWindowScope.KotlinExplorer(
 
     val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState) }
     val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
-    val oatTextArea = remember { oatTextArea(focusTracker) }
+    val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
 
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
@@ -204,8 +206,8 @@ private fun dexTextArea(explorerState: ExplorerState, focusTracker: FocusListene
     }
 }
 
-private fun oatTextArea(focusTracker: FocusListener): RSyntaxTextArea {
-    return RSyntaxTextArea().apply {
+private fun oatTextArea(explorerState: ExplorerState, focusTracker: FocusListener): RSyntaxTextArea {
+    return OatTextArea(explorerState).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
         addFocusListener(focusTracker)
     }
@@ -364,6 +366,12 @@ private fun Settings(
 private fun RSyntaxTextArea.setFont(explorerState: ExplorerState) {
     val presentation = explorerState.presentationMode
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
+}
+
+private fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
+    val position = textArea.caretPosition
+    textArea.text = text
+    textArea.caretPosition = minOf(position, textArea.document.length)
 }
 
 fun main() = application {
