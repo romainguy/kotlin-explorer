@@ -35,8 +35,6 @@ open class CodeTextArea(
     private var jumpOffsets: JumpOffsets? = null
     private var fullText = ""
 
-    var presentationMode: Boolean = false
-
     init {
         addCaretListener(::caretUpdate)
     }
@@ -59,7 +57,7 @@ open class CodeTextArea(
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
         jumpOffsets?.let { jump ->
-            val scale = if (presentationMode) 2 else 1
+            val scale = if (explorerState.presentationMode) 2 else 1
             val padding = 6 * scale
             val triangleSize = 8 * scale
 
@@ -69,10 +67,17 @@ open class CodeTextArea(
             val x1 = bounds1.x.toInt() - padding
             val y1 = (bounds1.y + lineHeight / 2).toInt()
 
-            val x2 = bounds2.x.toInt() - padding
+            val delta = jump.dst - getLineStartOffset(getLineOfOffset(jump.dst))
+            val endPadding = if (explorerState.showLineNumbers && delta < 4) 2 else padding
+
+            val x2 = bounds2.x.toInt() - endPadding
             val y2 = (bounds2.y + lineHeight / 2).toInt()
 
-            val x0 = modelToView2D(4).x.toInt()
+            val x0 = if (explorerState.showLineNumbers) {
+                modelToView2D(minOf(0, jump.dst - 4)).x.toInt() + padding
+            } else {
+                modelToView2D(6).x.toInt()
+            }
 
             val g2 = g as Graphics2D
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)

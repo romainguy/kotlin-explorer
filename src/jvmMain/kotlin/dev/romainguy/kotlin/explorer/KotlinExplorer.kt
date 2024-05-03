@@ -404,9 +404,6 @@ private fun Settings(
 private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     val presentation = explorerState.presentationMode
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
-    if (this is CodeTextArea) {
-        presentationMode = presentation
-    }
 }
 
 private fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
