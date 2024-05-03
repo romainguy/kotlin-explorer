@@ -18,11 +18,13 @@ package dev.romainguy.kotlin.explorer.dex
 
 import dev.romainguy.kotlin.explorer.CodeTextArea
 import dev.romainguy.kotlin.explorer.ExplorerState
+import dev.romainguy.kotlin.explorer.jump.RegexJumpDetector
 
+// DEX Syntax: '         0005: if-nez v0, 0008 // +0003'
 private val DexJumpRegex =
     Regex("^.{9}[0-9a-fA-F]{4}: .+(?<address>[0-9a-fA-F]{4}) // (?<direction>[+-])[0-9a-fA-F]{4}$")
 private val DexAddressedRegex = Regex("^.{9}(?<address>[0-9a-fA-F]{4}): .+$")
 private val DexLineNumberRegex = Regex("^(?<lineNumber> +\\d+: )([0-9a-f]{4}: )", RegexOption.MULTILINE)
 
 class DexTextArea(explorerState: ExplorerState) :
-    CodeTextArea(explorerState, DexJumpRegex, DexAddressedRegex, DexLineNumberRegex)
+    CodeTextArea(explorerState, RegexJumpDetector(DexJumpRegex, DexAddressedRegex), DexLineNumberRegex)

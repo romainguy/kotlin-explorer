@@ -18,10 +18,29 @@ package dev.romainguy.kotlin.explorer.oat
 
 import dev.romainguy.kotlin.explorer.CodeTextArea
 import dev.romainguy.kotlin.explorer.ExplorerState
+import dev.romainguy.kotlin.explorer.jump.CompoundJumpDetector
+import dev.romainguy.kotlin.explorer.jump.RegexJumpDetector
 
-private val OatJumpRegex =
-    Regex("^ +0x[0-9a-fA-F]{8}: .+ (?<direction>[+-])\\d+ \\((?<address>0x[0-9a-fA-F]{8})\\)$")
-private val OatAddressedRegex = Regex("^ +(?<address>0x[0-9a-fA-F]{8}): .+$")
+// Arm64 syntax: '        0x00001040: b.ge #+0x48 (addr 0x1088)'
+private val Arm64JumpRegex =
+    Regex("^ +0x[0-9a-fA-F]{8}: .+ #(?<direction>[+-])0x[0-9a-fA-F]+ \\(addr 0x(?<address>[0-9a-fA-F]+)\\)$")
+
+// X86 syntax: '        0x00001048: jnl/ge +103 (0x000010b5)'
+private val X86JumpRegex =
+    Regex("^ +0x[0-9a-fA-F]{8}: .+ (?<direction>[+-])\\d+ \\(0x(?<address>[0-9a-fA-F]{8})\\)$")
+
+private val OatAddressedRegex = Regex("^ +0x(?<address>[0-9a-fA-F]{8}): .+$")
 
 class OatTextArea(explorerState: ExplorerState) :
-    CodeTextArea(explorerState, OatJumpRegex, OatAddressedRegex, lineNumberRegex = null)
+    CodeTextArea(
+        explorerState,
+        CompoundJumpDetector(
+            RegexJumpDetector(Arm64JumpRegex, OatAddressedRegex),
+            RegexJumpDetector(X86JumpRegex, OatAddressedRegex)
+        ),
+        lineNumberRegex = null
+    )
+
+fun main() {
+    println(X86JumpRegex.matchEntire("        0x00001048: jnl/ge +103 (0x000010b5)"))
+}
