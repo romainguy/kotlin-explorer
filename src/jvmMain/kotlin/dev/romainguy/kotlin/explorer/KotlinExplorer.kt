@@ -25,10 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.input.key.Key.Companion.D
+import androidx.compose.ui.input.key.Key.Companion.F
+import androidx.compose.ui.input.key.Key.Companion.G
+import androidx.compose.ui.input.key.Key.Companion.L
+import androidx.compose.ui.input.key.Key.Companion.O
+import androidx.compose.ui.input.key.Key.Companion.P
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
+import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -208,7 +214,7 @@ private fun oatTextArea(focusTracker: FocusListener): RSyntaxTextArea {
 @Composable
 private fun FrameWindowScope.MainMenu(
     explorerState: ExplorerState,
-    sourceTextArea: RSyntaxTextArea?,
+    sourceTextArea: RSyntaxTextArea,
     onDexUpdate: (String?) -> Unit,
     onOatUpdate: (String) -> Unit,
     onStatusUpdate: (String) -> Unit,
@@ -218,94 +224,35 @@ private fun FrameWindowScope.MainMenu(
 ) {
     val scope = rememberCoroutineScope()
 
+    val compileAndDisassemble: () -> Unit = {
+        scope.launch {
+            disassemble(
+                explorerState.toolPaths,
+                sourceTextArea.text,
+                onDexUpdate,
+                onOatUpdate,
+                onStatusUpdate,
+                explorerState.optimize
+            )
+        }
+    }
     MenuBar {
         Menu("File") {
-            Item(
-                "Settings…",
-                onClick = onOpenSettings
-            )
+            Item("Settings…", onClick = onOpenSettings)
         }
         Menu("Edit") {
-            Item(
-                "Find…",
-                shortcut = KeyShortcut(
-                    key = Key.F,
-                    ctrl = !isMac,
-                    meta = isMac,
-                ),
-                onClick = onFindClicked
-            )
-            Item(
-                "Find Next Occurrence",
-                shortcut = KeyShortcut(
-                    key = Key.G,
-                    ctrl = !isMac,
-                    meta = isMac,
-                ),
-                onClick = onFindNextClicked
-            )
-
+            MenuItem("Find…", Ctrl(F), onClick = onFindClicked)
+            MenuItem("Find Next Occurrence", Ctrl(G), onClick = onFindNextClicked)
         }
         Menu("View") {
-            CheckboxItem(
-                "Presentation Mode",
-                explorerState.presentationMode,
-                shortcut = KeyShortcut(
-                    key = Key.P,
-                    ctrl = !isMac,
-                    shift = true,
-                    meta = isMac
-                ),
-                onCheckedChange = { explorerState.presentationMode = it }
-            )
-            CheckboxItem(
-                "Show Line Numbers",
-                explorerState.showLineNumbers,
-                shortcut = KeyShortcut(
-                    key = Key.L,
-                    ctrl = !isMac,
-                    shift = true,
-                    meta = isMac
-                ),
-                onCheckedChange = {
-                    explorerState.showLineNumbers = it
-                    onDexUpdate(null)
-                }
-            )
+            MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode)
+            MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
+                onDexUpdate(null)
+            }
         }
         Menu("Compilation") {
-            CheckboxItem(
-                "Optimize with R8",
-                explorerState.optimize,
-                shortcut = KeyShortcut(
-                    key = Key.O,
-                    ctrl = !isMac,
-                    shift = true,
-                    meta = isMac
-                ),
-                onCheckedChange = { explorerState.optimize = it }
-            )
-            Item(
-                "Compile & Disassemble",
-                shortcut = KeyShortcut(
-                    key = Key.D,
-                    ctrl = !isMac,
-                    shift = true,
-                    meta = isMac,
-                ),
-                onClick = {
-                    scope.launch {
-                        disassemble(
-                            explorerState.toolPaths,
-                            sourceTextArea!!.text,
-                            onDexUpdate,
-                            onOatUpdate,
-                            onStatusUpdate,
-                            explorerState.optimize
-                        )
-                    }
-                }
-            )
+            MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
+            MenuItem("Compile & Disassemble", CtrlShift(D), onClick = compileAndDisassemble)
         }
     }
 }
