@@ -54,27 +54,20 @@ fun SplitterScope.HorizontalSplitter() {
 }
 
 @Composable
-fun ThreeWaySplitter(
-    modifier: Modifier = Modifier,
-    panel1: @Composable () -> Unit,
-    panel2: @Composable () -> Unit,
-    panel3: @Composable () -> Unit,
-) {
-    HorizontalSplitPane(
-        modifier = modifier,
-        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / 3)
-    ) {
-        first { panel1() }
-        second {
-            HorizontalSplitPane(
-                modifier = modifier,
-                splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / 2)
-            ) {
-                first { panel2() }
-                second { panel3() }
-                splitter { HorizontalSplitter() }
-            }
+fun MultiSplitter(modifier: Modifier = Modifier, vararg panels: @Composable () -> Unit) {
+    val size = panels.size
+    if (size == 1) {
+        panels[0]()
+    } else {
+        HorizontalSplitPane(
+            modifier = modifier,
+            splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / size)
+        ) {
+            first { panels[0]() }
+            second { MultiSplitter(modifier = modifier, *panels.drop(1).toTypedArray()) }
+            splitter { HorizontalSplitter() }
         }
-        splitter { HorizontalSplitter() }
+
     }
 }
+
