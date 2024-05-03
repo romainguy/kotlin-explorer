@@ -134,7 +134,6 @@ private fun FrameWindowScope.KotlinExplorer(
             } else {
                 dexTextArea.refreshText()
             }
-
         },
         { oat -> updateTextArea(oatTextArea, oat) },
         { statusUpdate -> status = statusUpdate },
@@ -193,7 +192,9 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
                 RTextScrollPane(sourceTextArea)
             },
             update = {
-                sourceTextArea.text = explorerState.sourceCode
+                if (explorerState.sourceCode != sourceTextArea.text) {
+                    sourceTextArea.text = explorerState.sourceCode
+                }
                 sourceTextArea.updateStyle(explorerState)
             }
         )
