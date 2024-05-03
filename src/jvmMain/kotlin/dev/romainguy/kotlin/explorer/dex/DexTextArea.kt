@@ -22,8 +22,7 @@ import dev.romainguy.kotlin.explorer.ExplorerState
 private val DexJumpRegex =
     Regex("^.{9}[0-9a-fA-F]{4}: .+(?<address>[0-9a-fA-F]{4}) // (?<direction>[+-])[0-9a-fA-F]{4}$")
 private val DexAddressedRegex = Regex("^.{9}(?<address>[0-9a-fA-F]{4}): .+$")
-private val DexLineNumberRegex = Regex("^(?<lineNumber> +\\d+: )([0-9a-f]{4}: )")
+private val DexLineNumberRegex = Regex("^(?<lineNumber> +\\d+: )([0-9a-f]{4}: )", RegexOption.MULTILINE)
 
 class DexTextArea(explorerState: ExplorerState) :
     CodeTextArea(explorerState, DexJumpRegex, DexAddressedRegex, DexLineNumberRegex)
-
