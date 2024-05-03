@@ -55,10 +55,7 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.ui.ComponentStyling
-import org.jetbrains.jewel.ui.component.DefaultButton
-import org.jetbrains.jewel.ui.component.Icon
-import org.jetbrains.jewel.ui.component.Text
-import org.jetbrains.jewel.ui.component.TextField
+import org.jetbrains.jewel.ui.component.*
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
@@ -197,7 +194,7 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
             },
             update = {
                 sourceTextArea.text = explorerState.sourceCode
-                sourceTextArea.setFont(explorerState)
+                sourceTextArea.updateStyle(explorerState)
             }
         )
     }
@@ -210,7 +207,7 @@ private fun TextPanel(title: String, textArea: RSyntaxTextArea, explorerState: E
         SwingPanel(
             modifier = Modifier.fillMaxSize(),
             factory = { RTextScrollPane(textArea) },
-            update = { textArea.setFont(explorerState) })
+            update = { textArea.updateStyle(explorerState) })
     }
 }
 
@@ -286,10 +283,11 @@ private fun FrameWindowScope.MainMenu(
             val onShowPanelChanged: (Boolean) -> Unit = { onPanelsUpdated() }
             MenuCheckboxItem("Show DEX", Ctrl(D), explorerState::showDex, onShowPanelChanged)
             MenuCheckboxItem("Show OAT", Ctrl(O), explorerState::showOat, onShowPanelChanged)
-            MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode)
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
                 onDexUpdate(null)
             }
+            Separator()
+            MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode)
         }
         Menu("Compilation") {
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
@@ -402,9 +400,12 @@ private fun Settings(
     }
 }
 
-private fun RSyntaxTextArea.setFont(explorerState: ExplorerState) {
+private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     val presentation = explorerState.presentationMode
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
+    if (this is CodeTextArea) {
+        presentationMode = presentation
+    }
 }
 
 private fun updateTextArea(textArea: RSyntaxTextArea, text: String) {

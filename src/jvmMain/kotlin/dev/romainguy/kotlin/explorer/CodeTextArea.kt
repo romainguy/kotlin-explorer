@@ -18,8 +18,12 @@ package dev.romainguy.kotlin.explorer
 
 import dev.romainguy.kotlin.explorer.jump.JumpDetector
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import java.awt.BasicStroke
 import java.awt.Graphics
 import java.awt.Graphics2D
+import java.awt.Polygon
+import java.awt.RenderingHints
+import java.awt.geom.GeneralPath
 import javax.swing.event.CaretEvent
 import javax.swing.event.CaretListener
 
@@ -31,6 +35,7 @@ open class CodeTextArea(
     private var jumpOffsets: JumpOffsets? = null
     private var fullText = ""
 
+    var presentationMode: Boolean = false
 
     init {
         addCaretListener(::caretUpdate)
@@ -54,7 +59,9 @@ open class CodeTextArea(
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
         jumpOffsets?.let { jump ->
-            val padding = 6
+            val scale = if (presentationMode) 2 else 1
+            val padding = 6 * scale
+            val triangleSize = 8 * scale
 
             val bounds1 = modelToView2D(jump.src)
             val bounds2 = modelToView2D(jump.dst)
@@ -65,11 +72,23 @@ open class CodeTextArea(
             val x2 = bounds2.x.toInt() - padding
             val y2 = (bounds2.y + lineHeight / 2).toInt()
 
-            val x0 = modelToView2D(2).x.toInt()
+            val x0 = modelToView2D(4).x.toInt()
+
             val g2 = g as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2.stroke = BasicStroke(scale.toFloat())
             g2.drawLine(x1, y1, x0, y1)
             g2.drawLine(x0, y1, x0, y2)
-            g2.drawLine(x0, y2, x2, y2)
+            g2.drawLine(x0, y2, x2 - triangleSize / 2, y2)
+
+            g2.fill(GeneralPath().apply {
+                val fx = x2.toFloat()
+                val fy = y2.toFloat() + 0.5f
+                val fs = triangleSize.toFloat()
+                moveTo(fx, fy)
+                lineTo(fx - fs, fy - fs / 2.0f)
+                lineTo(fx - fs, fy + fs / 2.0f)
+            })
         }
     }
 
