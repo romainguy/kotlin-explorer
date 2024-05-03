@@ -19,7 +19,9 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -54,7 +56,7 @@ fun SplitterScope.HorizontalSplitter() {
 }
 
 @Composable
-fun MultiSplitter(modifier: Modifier = Modifier, vararg panels: @Composable () -> Unit) {
+fun MultiSplitter(modifier: Modifier = Modifier, panels: List<@Composable () -> Unit>) {
     val size = panels.size
     if (size == 1) {
         panels[0]()
@@ -64,7 +66,7 @@ fun MultiSplitter(modifier: Modifier = Modifier, vararg panels: @Composable () -
             splitPaneState = rememberSplitPaneState(initialPositionPercentage = 1.0f / size)
         ) {
             first { panels[0]() }
-            second { MultiSplitter(modifier = modifier, *panels.drop(1).toTypedArray()) }
+            second { MultiSplitter(modifier = modifier, panels.drop(1)) }
             splitter { HorizontalSplitter() }
         }
 
