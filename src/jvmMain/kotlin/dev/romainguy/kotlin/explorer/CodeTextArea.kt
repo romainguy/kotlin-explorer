@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer
 
+import dev.romainguy.kotlin.explorer.jump.JumpDetector
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -24,11 +25,9 @@ import javax.swing.event.CaretListener
 
 open class CodeTextArea(
     private val explorerState: ExplorerState,
-    jumpRegex: Regex,
-    addressedRegex: Regex,
+    private val jumpDetector: JumpDetector,
     private val lineNumberRegex: Regex?,
 ) : RSyntaxTextArea() {
-    private val jumpDetector = JumpDetector(jumpRegex, addressedRegex)
     private var jumpOffsets: JumpOffsets? = null
     private var fullText = ""
 
@@ -114,17 +113,6 @@ open class CodeTextArea(
         } ?: this
 
     private data class JumpOffsets(val src: Int, val dst: Int)
-
-    private class Jump(val address: String, val direction: Int)
-
-    private class JumpDetector(private val jumpRegex: Regex, private val addressedRegex: Regex) {
-        fun detectJump(line: String): Jump? {
-            val match = jumpRegex.matchEntire(line) ?: return null
-            return Jump(match.getValue("address"), if (match.getValue("direction") == "+") 1 else -1)
-        }
-
-        fun detectAddressed(line: String) = addressedRegex.matchEntire(line)?.getValue("address")
-    }
 }
 
 private fun String.countPadding() = indexOfFirst { it != ' ' }
