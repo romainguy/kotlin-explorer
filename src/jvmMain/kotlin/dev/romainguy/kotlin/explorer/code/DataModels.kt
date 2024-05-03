@@ -21,3 +21,8 @@ data class Class(val header: String, val methods: List<Method>)
 data class Method(val header: String, val instructions: List<Instruction>)
 
 data class Instruction(val address: Int, val code: String, val jumpAddress: Int?, val lineNumber: Int? = null)
+
+fun List<Instruction>.withLineNumbers(lineNumbers: Map<Int, Int>): List<Instruction> {
+    return map { it.copy(lineNumber = lineNumbers[it.address]) }
+
+}

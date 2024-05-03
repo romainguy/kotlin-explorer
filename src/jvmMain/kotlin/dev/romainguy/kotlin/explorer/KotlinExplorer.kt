@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.key.Key.Companion.B
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -123,6 +124,7 @@ private fun FrameWindowScope.KotlinExplorer(
     }}
 
     val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState) }
+    val byteCodeTextArea = remember { byteCodeTextArea(explorerState, focusTracker) }
     val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
     val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
 
@@ -130,14 +132,17 @@ private fun FrameWindowScope.KotlinExplorer(
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
 
     val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState, showSettings) }
+    val byteCodePanel: @Composable () -> Unit = { TextPanel("Byte Code", byteCodeTextArea, explorerState, showSettings) }
     val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState, showSettings) }
     val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState, showSettings) }
-    var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, dexPanel, oatPanel)) }
+    var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
 
     val updatePresentationMode: (Boolean) -> Unit = {
         listOf(dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
     }
-    val updateShowLineNumbers: (Boolean) -> Unit = { dexTextArea.lineNumberMode = it.toLineNumberMode() }
+    val updateShowLineNumbers: (Boolean) -> Unit = {
+        listOf(byteCodeTextArea, dexTextArea).forEach { area -> area.lineNumberMode = it.toLineNumberMode() }
+    }
 
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
         status = newStatus
@@ -147,13 +152,14 @@ private fun FrameWindowScope.KotlinExplorer(
     MainMenu(
         explorerState,
         sourceTextArea,
-        { dex -> dexTextArea.content = dex },
-        { oat -> oatTextArea.content = oat },
+        byteCodeTextArea::setContent,
+        dexTextArea::setContent,
+        oatTextArea::setContent,
         onProgressUpdate,
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
         { showSettings = true },
-        { panels = explorerState.getPanels(sourcePanel, dexPanel, oatPanel) },
+        { panels = explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel) },
         updateShowLineNumbers,
         updatePresentationMode,
     )
@@ -191,11 +197,15 @@ private fun StatusBar(status: String, progress: Float) {
 
 private fun ExplorerState.getPanels(
     sourcePanel: @Composable () -> Unit,
+    byteCodePanel: @Composable () -> Unit,
     dexPanel: @Composable () -> Unit,
     oatPanel: @Composable () -> Unit,
 ): List<@Composable () -> Unit> {
     return buildList {
         add(sourcePanel)
+        if (showByteCode) {
+            add(byteCodePanel)
+        }
         if (showDex) {
             add(dexPanel)
         }
@@ -251,12 +261,14 @@ private fun Title(text: String) {
 
 private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): RSyntaxTextArea {
     return RSyntaxTextArea().apply {
-        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN)
-        addFocusListener(focusTracker)
+        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN, focusTracker)
         SwingUtilities.invokeLater { requestFocusInWindow() }
         document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
     }
 }
+
+private fun byteCodeTextArea(state: ExplorerState, focusTracker: FocusListener) =
+    codeTextArea(state, focusTracker)
 
 private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener) =
     codeTextArea(state, focusTracker)
@@ -271,8 +283,7 @@ private fun codeTextArea(
 ): CodeTextArea {
     val linNumberMode = (hasLineNumbers && state.showLineNumbers).toLineNumberMode()
     return CodeTextArea(state.presentationMode, CodeIndent, linNumberMode).apply {
-        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-        addFocusListener(focusTracker)
+        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE, focusTracker)
     }
 }
 
@@ -280,6 +291,7 @@ private fun codeTextArea(
 private fun FrameWindowScope.MainMenu(
     explorerState: ExplorerState,
     sourceTextArea: RSyntaxTextArea,
+    onByteCodeUpdate: (CodeContent) -> Unit,
     onDexUpdate: (CodeContent) -> Unit,
     onOatUpdate: (CodeContent) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
@@ -297,6 +309,7 @@ private fun FrameWindowScope.MainMenu(
             disassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                onByteCodeUpdate,
                 onDexUpdate,
                 onOatUpdate,
                 onStatusUpdate,
@@ -314,6 +327,7 @@ private fun FrameWindowScope.MainMenu(
         }
         Menu("View") {
             val onShowPanelChanged: (Boolean) -> Unit = { onPanelsUpdated() }
+            MenuCheckboxItem("Show ByteCode", Ctrl(B), explorerState::showByteCode, onShowPanelChanged)
             MenuCheckboxItem("Show DEX", Ctrl(D), explorerState::showDex, onShowPanelChanged)
             MenuCheckboxItem("Show OAT", Ctrl(O), explorerState::showOat, onShowPanelChanged)
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
@@ -336,7 +350,7 @@ private fun FrameWindowScope.MainMenu(
     }
 }
 
-private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String) {
+private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTracker: FocusListener) {
     syntaxEditingStyle = syntaxStyle
     isCodeFoldingEnabled = true
     antiAliasingEnabled = true
@@ -344,6 +358,7 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String) {
     tabSize = 4
     applyTheme(this)
     currentLineHighlightColor = java.awt.Color.decode("#F5F8FF")
+    addFocusListener(focusTracker)
 }
 
 private fun applyTheme(textArea: RSyntaxTextArea) {

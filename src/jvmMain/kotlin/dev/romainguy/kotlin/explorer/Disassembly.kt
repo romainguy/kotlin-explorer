@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer
 
+import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
@@ -29,15 +30,17 @@ import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
 
-private const val TotalSteps = 5
+private const val TotalSteps = 6
 private const val Done = 1f
 
+private val byteCodeParser = ByteCodeParser()
 private val dexDumpParser = DexDumpParser()
 private val oatDumpParser = OatDumpParser()
 
 suspend fun disassemble(
     toolPaths: ToolPaths,
     source: String,
+    onByteCode: (CodeContent) -> Unit,
     onDex: (CodeContent) -> Unit,
     onOat: (CodeContent) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
@@ -64,6 +67,22 @@ suspend fun disassemble(
         if (kotlinc.exitCode != 0) {
             launch(ui) {
                 onDex(Error(kotlinc.output.replace(path.parent.toString() + "/", "")))
+                onStatusUpdate("Ready", Done)
+            }
+            return@launch
+        }
+
+        launch(ui) { onStatusUpdate("Disassembling ByteCode…", step++ / TotalSteps) }
+
+        val javap = process(
+            *buildJavapCommand(directory),
+            directory = directory
+        )
+
+        launch { onByteCode(byteCodeParser.parse(javap.output)) }
+
+        if (javap.exitCode != 0) {
+            launch(ui) {
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -163,6 +182,18 @@ suspend fun disassemble(
 
         launch(ui) { onStatusUpdate("Ready", Done) }
     }
+}
+
+private fun buildJavapCommand(directory: Path): Array<String> {
+    val command = mutableListOf("javap", "-p", "-l", "-c")
+    val classFiles = Files
+        .list(directory)
+        .filter { path -> path.extension == "class" }
+        .map { file -> file.fileName.toString() }
+        .sorted()
+        .collect(Collectors.toList())
+    command.addAll(classFiles)
+    return command.toTypedArray()
 }
 
 private fun buildR8Command(
