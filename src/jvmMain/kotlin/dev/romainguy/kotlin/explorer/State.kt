@@ -16,10 +16,7 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -35,13 +32,27 @@ class ExplorerState(
     val settings: Settings = Settings()
 ) {
     var toolPaths by mutableStateOf(createToolPaths(settings))
-    var optimize by mutableStateOf(settings.getValue(Optimize, "true").toBoolean())
-    var presentationMode by mutableStateOf(settings.getValue(Presentation, "false").toBoolean())
-    var showLineNumbers by mutableStateOf(settings.getValue(ShowLineNumbers, "true").toBoolean())
+    var optimize by BooleanState(Optimize, true)
+    var presentationMode by BooleanState(Presentation, false)
+    var showLineNumbers by BooleanState(ShowLineNumbers, true)
     var sourceCode: String = readSourceCode(toolPaths)
 
     fun reloadToolPathsFromSettings() {
         toolPaths = createToolPaths(settings)
+    }
+
+    private inner class BooleanState(private val key: String, initialValue: Boolean) : MutableState<Boolean> {
+        private val state = mutableStateOf(settings.entries[key]?.toBoolean() ?: initialValue)
+        override var value: Boolean
+            get() = state.value
+            set(value) {
+                settings.entries[key] = value.toString()
+                state.value = value
+            }
+
+        override fun component1() = state.component1()
+
+        override fun component2() = state.component2()
     }
 }
 
@@ -82,10 +93,6 @@ fun writeState(state: ExplorerState) {
         state.toolPaths.sourceFile,
         state.sourceCode
     )
-    state.settings.entries[Optimize] = state.optimize.toString()
-    state.settings.entries[Presentation] = state.presentationMode.toString()
-    state.settings.entries[ShowLineNumbers] = state.showLineNumbers.toString()
-
     Files.writeString(
         state.settings.file,
         state.settings.entries
