@@ -141,7 +141,7 @@ private fun FrameWindowScope.KotlinExplorer(
         Column(
             modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
         ) {
-            ThreeWaySplitter(
+            MultiSplitter(
                 modifier = Modifier.weight(1.0f),
                 { SourcePanel(sourceTextArea, explorerState) },
                 { TextPanel(dexTextArea, explorerState) },
