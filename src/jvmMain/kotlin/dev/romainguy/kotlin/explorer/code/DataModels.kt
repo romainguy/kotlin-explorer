@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Romain Guy
+ * Copyright (C) 2024 Romain Guy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package dev.romainguy.kotlin.explorer
+package dev.romainguy.kotlin.explorer.code
 
-const val HexDigit = "[0-9a-fA-F]"
+data class Class(val header: String, val methods: List<Method>)
 
-fun MatchResult.getValue(group: String): String {
-    return groups[group]?.value ?: throw IllegalStateException("Value of $group not found in $value")
-}
+data class Method(val header: String, val instructions: List<Instruction>)
+
+data class Instruction(val address: Int, val code: String, val jumpAddress: Int?, val lineNumber: Int? = null)

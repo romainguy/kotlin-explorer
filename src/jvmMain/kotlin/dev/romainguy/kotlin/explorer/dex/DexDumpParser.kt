@@ -17,10 +17,19 @@
 package dev.romainguy.kotlin.explorer.dex
 
 import dev.romainguy.kotlin.explorer.BuiltInKotlinClass
+import dev.romainguy.kotlin.explorer.HexDigit
+import dev.romainguy.kotlin.explorer.code.Class
+import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.CodeContent.Error
+import dev.romainguy.kotlin.explorer.code.CodeContent.Success
+import dev.romainguy.kotlin.explorer.code.Instruction
+import dev.romainguy.kotlin.explorer.code.Method
 import dev.romainguy.kotlin.explorer.consumeUntil
 import dev.romainguy.kotlin.explorer.getValue
 
 private val PositionRegex = Regex("^\\s*0x(?<address>[0-9a-f]+) line=(?<line>\\d+)$")
+
+private val JumpRegex = Regex("^$HexDigit{4}: .* (?<address>$HexDigit{4}) // [+-]$HexDigit{4}$")
 
 private const val ClassStart = "Class #"
 private const val ClassEnd = "source_file_idx"
@@ -28,80 +37,76 @@ private const val ClassName = "Class descriptor"
 private const val Instructions = "insns size"
 private const val Positions = "positions"
 
-internal class DexDumpParser(text: String) {
-    private val lines = text.lineSequence().iterator()
-    fun parseDexDump(): String {
-        val classes = buildList {
-            while (lines.consumeUntil(ClassStart)) {
-                add(readClass())
+internal class DexDumpParser {
+
+    fun parse(text: String): CodeContent {
+        return try {
+            val lines = text.lineSequence().iterator()
+            val classes = buildList {
+                while (lines.consumeUntil(ClassStart)) {
+                    val clazz = lines.readClass()
+                    if (clazz != null && clazz.methods.isNotEmpty()) {
+                        add(clazz)
+                    }
+                }
             }
+            Success(classes)
+        } catch (e: Exception) {
+            Error(e)
         }
-        return classes
-            .filter { it.methods.isNotEmpty() && !it.name.matches(BuiltInKotlinClass)}
-            .joinToString(separator = "\n") { it.toString() }
     }
 
-    private fun readClass(): DexClass {
-        val className = lines.next().getClassName()
+    private fun Iterator<String>.readClass(): Class? {
+        val className = next().getClassName()
+        if (className.matches(BuiltInKotlinClass)) {
+            return null
+        }
         val methods = buildList {
-            while (lines.hasNext()) {
-                val line = lines.next().trim()
+            while (hasNext()) {
+                val line = next().trim()
                 when {
                     line.startsWith(ClassEnd) -> break
                     line.startsWith(Instructions) -> add(readMethod(className))
                 }
             }
         }
-        return DexClass(className, methods)
+        return Class("class $className", methods)
     }
 
-    private fun readMethod(className: String): DexMethod {
-        val (name, type) = lines.next().substringAfterLast(".").split(':', limit = 2)
-        val instructions = readInstructions()
-        lines.consumeUntil(Positions)
+    private fun Iterator<String>.readMethod(className: String): Method {
+        val (name, type) = next().substringAfterLast(".").split(':', limit = 2)
+        val instructionsWithoutLineNumbers = readInstructions()
+        consumeUntil(Positions)
         val positions = readPositions()
-        val code = buildString {
-            instructions.forEach {
-                val lineNumber = positions[it.address]
-                val prefix = if (lineNumber != null) "%3s: ".format(lineNumber) else "     "
-                append("    $prefix${it.address}: ${it.code}\n")
-            }
-        }
-        return DexMethod(className, name, type, code)
+        val instruction = instructionsWithoutLineNumbers.map { it.copy(lineNumber = positions[it.address]) }
+        return Method("$name$type // $className.$name()", instruction)
     }
 
-    private fun readInstructions(): List<DexInstruction> {
+    private fun Iterator<String>.readInstructions(): List<Instruction> {
         return buildList {
-            while (lines.hasNext()) {
-                val line = lines.next()
+            while (hasNext()) {
+                val line = next()
                 if (line.startsWith(" ")) {
                     break
                 }
-                val (address, code) = line.substringAfter('|').split(": ", limit = 2)
-                add(DexInstruction(address, code))
+                val code = line.substringAfter('|')
+                val address = code.substringBefore(": ")
+                val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")
+                add(Instruction(address.toInt(16), code, jumpAddress?.toInt(16)))
             }
         }
     }
 
-    private fun readPositions(): Map<String, Int> {
+    private fun Iterator<String>.readPositions(): Map<Int, Int> {
         return buildMap {
-            while (lines.hasNext()) {
-                val line = lines.next()
+            while (hasNext()) {
+                val line = next()
                 val match = PositionRegex.matchEntire(line) ?: break
-                put(match.getValue("address"), match.getValue("line").toInt())
+                put(match.getValue("address").toInt(16), match.getValue("line").toInt())
             }
         }
     }
 
-    private class DexClass(val name: String, val methods: List<DexMethod>) {
-        override fun toString() = "class $name\n${methods.joinToString("\n") { it.toString() }}"
-    }
-
-    private class DexMethod(val className: String, val name: String, val type: String, val code: String) {
-        override fun toString() = "    $name$type // $className.$name()\n$code"
-    }
-
-    private class DexInstruction(val address: String, val code: String)
 }
 
 private fun String.getClassName() =

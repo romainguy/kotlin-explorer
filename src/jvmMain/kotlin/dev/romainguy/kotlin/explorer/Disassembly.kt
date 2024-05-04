@@ -16,7 +16,10 @@
 
 package dev.romainguy.kotlin.explorer
 
+import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
+import dev.romainguy.kotlin.explorer.oat.OatDumpParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -29,11 +32,14 @@ import kotlin.io.path.extension
 private const val TotalSteps = 5
 private const val Done = 1f
 
+private val dexDumpParser = DexDumpParser()
+private val oatDumpParser = OatDumpParser()
+
 suspend fun disassemble(
     toolPaths: ToolPaths,
     source: String,
-    onDex: (String) -> Unit,
-    onOat: (String) -> Unit,
+    onDex: (CodeContent) -> Unit,
+    onOat: (CodeContent) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
     optimize: Boolean
 ) = coroutineScope {
@@ -57,7 +63,7 @@ suspend fun disassemble(
 
         if (kotlinc.exitCode != 0) {
             launch(ui) {
-                onDex(kotlinc.output.replace(path.parent.toString() + "/", ""))
+                onDex(Error(kotlinc.output.replace(path.parent.toString() + "/", "")))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -77,7 +83,7 @@ suspend fun disassemble(
 
         if (r8.exitCode != 0) {
             launch(ui) {
-                onDex(r8.output)
+                onDex(Error(r8.output))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -94,14 +100,14 @@ suspend fun disassemble(
 
         if (dexdump.exitCode != 0) {
             launch(ui) {
-                onDex(dexdump.output)
+                onDex(Error(dexdump.output))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
         launch(ui) {
-            onDex(DexDumpParser(dexdump.output).parseDexDump())
+            onDex(dexDumpParser.parse(dexdump.output))
             onStatusUpdate("AOT compilation…", step++ / TotalSteps)
         }
 
@@ -115,7 +121,7 @@ suspend fun disassemble(
 
         if (push.exitCode != 0) {
             launch(ui) {
-                onOat(push.output)
+                onOat(Error(push.output))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -132,7 +138,7 @@ suspend fun disassemble(
 
         if (dex2oat.exitCode != 0) {
             launch(ui) {
-                onOat(dex2oat.output)
+                onOat(Error(dex2oat.output))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -148,7 +154,7 @@ suspend fun disassemble(
             directory = directory
         )
 
-        launch(ui) { onOat(filterOat(oatdump.output)) }
+        launch(ui) { onOat(oatDumpParser.parse(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
             launch(ui) { onStatusUpdate("Ready", Done) }
@@ -256,73 +262,3 @@ private fun cleanupClasses(directory: Path) {
 
 internal val BuiltInKotlinClass = Regex("^(kotlin|kotlinx|java|javax|org\\.(intellij|jetbrains))\\..+")
 
-private val OatClassNamePattern = Regex("^\\d+: L([^;]+); \\(offset=[0-9a-zA-Zx]+\\) \\(type_idx=\\d+\\).+")
-private val OatMethodPattern = Regex("^\\s+\\d+:\\s+(.+)\\s+\\(dex_method_idx=\\d+\\)")
-private val OatCodePattern = Regex("^\\s+(0x[a-zA-Z0-9]+):\\s+[a-zA-Z0-9]+\\s+(.+)")
-
-private fun filterOat(oat: String) = buildString {
-    val indent = "        "
-    val lines = oat.lineSequence().iterator()
-
-    if (!lines.consumeUntil("OatDexFile:")) return@buildString
-
-    var insideClass = false
-    var insideMethod = false
-    var firstMethod = false
-    var firstClass = true
-
-    while (lines.hasNext()) {
-        val line = lines.next()
-
-        var match: MatchResult? = null
-
-        if (insideClass) {
-            if (insideMethod) {
-                match = OatCodePattern.matchEntire(line)
-                if (match != null && match.groupValues.isNotEmpty()) {
-                    appendLine("$indent${match.groupValues[1]}: ${match.groupValues[2]}")
-                }
-            }
-
-            if (match === null) {
-                match = OatMethodPattern.matchEntire(line)
-                if (match != null && match.groupValues.isNotEmpty()) {
-                    val name = match.groupValues[1]
-                    if (!firstMethod) appendLine()
-                    firstMethod = false
-
-                    appendLine("    $name")
-
-                    if (!lines.consumeUntil("CODE: ")) break
-                    insideMethod = true
-                }
-            }
-        }
-
-        if (match === null) {
-            match = OatClassNamePattern.matchEntire(line)
-            if (match != null && match.groupValues.isNotEmpty()) {
-                val className = match.groupValues[1].replace('/', '.')
-
-                val suppress = className.matches(BuiltInKotlinClass)
-                if (!suppress) {
-                    if (!firstClass) appendLine()
-                    appendLine("class $className")
-                }
-
-                insideMethod = false
-                firstMethod = true
-                firstClass = false
-                insideClass = !suppress
-            }
-        }
-    }
-}
-
-internal fun Iterator<String>.consumeUntil(prefix: String): Boolean {
-    while (hasNext()) {
-        val line = next()
-        if (line.trim().startsWith(prefix)) return true
-    }
-    return false
-}
