@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -57,10 +56,7 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.ui.ComponentStyling
-import org.jetbrains.jewel.ui.component.DefaultButton
-import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
-import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
@@ -323,89 +319,6 @@ private fun applyTheme(textArea: RSyntaxTextArea) {
     }
 }
 
-@Composable
-private fun ErrorIcon() {
-    Icon(
-        "icons/error.svg",
-        iconClass = Settings::class.java,
-        contentDescription = "Error",
-        tint = Color(0xffee4056)
-    )
-}
-
-@Composable
-private fun ValidIcon() {
-    Icon(
-        "icons/done.svg",
-        iconClass = Settings::class.java,
-        contentDescription = "Valid",
-        tint = Color(0xff3369d6)
-    )
-}
-
-
-@Composable
-private fun Settings(
-    explorerState: ExplorerState,
-    onSaveClick: () -> Unit
-) {
-    var androidHome by remember { mutableStateOf(explorerState.toolPaths.androidHome.toString()) }
-    var kotlinHome by remember { mutableStateOf(explorerState.toolPaths.kotlinHome.toString()) }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.align(Alignment.Center)) {
-            Row {
-                Text(
-                    "Android home directory: ",
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-                TextField(
-                    androidHome,
-                    { text -> androidHome = text },
-                    modifier = Modifier.defaultMinSize(minWidth = 360.dp),
-                    trailingIcon = {
-                        if (!explorerState.toolPaths.isAndroidHomeValid) {
-                            ErrorIcon()
-                        } else {
-                            ValidIcon()
-                        }
-                    }
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            Row {
-                Text(
-                    "Kotlin home directory: ",
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-                TextField(
-                    kotlinHome,
-                    { text -> kotlinHome = text },
-                    modifier = Modifier.defaultMinSize(minWidth = 360.dp),
-                    trailingIcon = {
-                        if (!explorerState.toolPaths.isKotlinHomeValid) {
-                            ErrorIcon()
-                        } else {
-                            ValidIcon()
-                        }
-                    }
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            DefaultButton(
-                {
-                    explorerState.settings.entries["ANDROID_HOME"] = androidHome
-                    explorerState.settings.entries["KOTLIN_HOME"] = kotlinHome
-                    explorerState.reloadToolPathsFromSettings()
-                    onSaveClick()
-                }
-            ) {
-                Text("Save")
-            }
-        }
-    }
-}
-
 private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     val presentation = explorerState.presentationMode
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
@@ -420,7 +333,7 @@ private fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
 fun main() = application {
     val explorerState = remember { ExplorerState() }
 
-    Runtime.getRuntime().addShutdownHook(Thread { writeState(explorerState) })
+    Runtime.getRuntime().addShutdownHook(Thread { explorerState.writeState() })
 
     val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
         JewelTheme.darkThemeDefinition()
@@ -473,5 +386,4 @@ private fun ExplorerState.setWindowState(windowState: WindowState) {
     windowPosX = windowState.position.x.value.toInt()
     windowPosY = windowState.position.y.value.toInt()
     windowPlacement = windowState.placement
-
 }
