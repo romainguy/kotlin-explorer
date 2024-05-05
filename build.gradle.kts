@@ -32,6 +32,7 @@ kotlin {
                 implementation("org.jetbrains.jewel:jewel-int-ui-decorated-window-241:${extra["jewel.version"] as String}")
                 implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:${extra["skiko.version"] as String}")
                 implementation("org.jetbrains.compose.components:components-splitpane-desktop:${extra["compose.version"] as String}")
+                implementation("org.jetbrains.compose.material3:material3-desktop:${extra["compose.version"] as String}")
                 implementation("com.fifesoft:rsyntaxtextarea:${extra["rsyntaxtextarea.version"] as String}")
                 implementation("com.fifesoft:rstaui:${extra["rstaui.version"] as String}")
                 implementation("net.java.dev.jna:jna:${extra["jna.version"] as String}")

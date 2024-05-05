@@ -20,8 +20,10 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color
@@ -55,7 +57,10 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.ui.ComponentStyling
-import org.jetbrains.jewel.ui.component.*
+import org.jetbrains.jewel.ui.component.DefaultButton
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
@@ -75,6 +80,7 @@ private fun FrameWindowScope.KotlinExplorer(
     // TODO: Move all those remembers to an internal private state object
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var status by remember { mutableStateOf("Ready") }
+    var progress by remember { mutableStateOf(1f) }
 
     val searchListener = remember { object : SearchListener {
         override fun searchEvent(e: SearchEvent?) {
@@ -124,7 +130,11 @@ private fun FrameWindowScope.KotlinExplorer(
     val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState) }
     val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState) }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, dexPanel, oatPanel)) }
-
+    val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
+        status = newStatus
+        progress = newProgress
+    }
+    
     MainMenu(
         explorerState,
         sourceTextArea,
@@ -136,7 +146,7 @@ private fun FrameWindowScope.KotlinExplorer(
             }
         },
         { oat -> updateTextArea(oatTextArea, oat) },
-        { statusUpdate -> status = statusUpdate },
+        onProgressUpdate,
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
         { showSettings = true },
@@ -153,14 +163,17 @@ private fun FrameWindowScope.KotlinExplorer(
             modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
         ) {
             MultiSplitter(modifier = Modifier.weight(1.0f), panels)
-            Row {
+            Row(verticalAlignment = CenterVertically) {
+                val width = 160.dp
                 Text(
                     modifier = Modifier
-                        .weight(1.0f, true)
-                        .align(Alignment.CenterVertically)
+                        .widthIn(min = width, max = width)
                         .padding(8.dp),
                     text = status
                 )
+                if (progress < 1) {
+                    LinearProgressIndicator({ progress })
+                }
             }
         }
     }
@@ -252,7 +265,7 @@ private fun FrameWindowScope.MainMenu(
     sourceTextArea: RSyntaxTextArea,
     onDexUpdate: (String?) -> Unit,
     onOatUpdate: (String) -> Unit,
-    onStatusUpdate: (String) -> Unit,
+    onStatusUpdate: (String, Float) -> Unit,
     onFindClicked: () -> Unit,
     onFindNextClicked: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -352,7 +365,7 @@ private fun Settings(
             Row {
                 Text(
                     "Android home directory: ",
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier.align(CenterVertically)
                 )
                 TextField(
                     androidHome,
@@ -371,7 +384,7 @@ private fun Settings(
             Row {
                 Text(
                     "Kotlin home directory: ",
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier.align(CenterVertically)
                 )
                 TextField(
                     kotlinHome,

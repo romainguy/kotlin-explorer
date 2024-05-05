@@ -17,24 +17,32 @@
 package dev.romainguy.kotlin.explorer
 
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
+
+private const val TotalSteps = 5
+private const val Done = 1f
 
 suspend fun disassemble(
     toolPaths: ToolPaths,
     source: String,
     onDex: (String) -> Unit,
     onOat: (String) -> Unit,
-    onStatusUpdate: (String) -> Unit,
+    onStatusUpdate: (String, Float) -> Unit,
     optimize: Boolean
 ) = coroutineScope {
     val ui = currentCoroutineContext()
 
     launch(Dispatchers.IO) {
-        launch(ui) { onStatusUpdate("Compiling Kotlin…") }
+        var step = 0f
+
+        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalSteps) }
 
         val directory = toolPaths.tempDirectory
         cleanupClasses(directory)
@@ -50,17 +58,14 @@ suspend fun disassemble(
         if (kotlinc.exitCode != 0) {
             launch(ui) {
                 onDex(kotlinc.output.replace(path.parent.toString() + "/", ""))
-                onStatusUpdate("Ready")
+                onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
         launch(ui) {
-            onStatusUpdate(if (optimize) {
-                "Optimizing with R8…"
-            } else {
-                "Compiling with D8…"
-            })
+            val status = if (optimize) "Optimizing with R8…" else "Compiling with D8…"
+            onStatusUpdate(status, step++ / TotalSteps)
         }
 
         writeR8Rules(directory)
@@ -73,12 +78,12 @@ suspend fun disassemble(
         if (r8.exitCode != 0) {
             launch(ui) {
                 onDex(r8.output)
-                onStatusUpdate("Ready")
+                onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Disassembling DEX…") }
+        launch(ui) { onStatusUpdate("Disassembling DEX…", step++ / TotalSteps) }
 
         val dexdump = process(
             toolPaths.dexdump.toString(),
@@ -90,14 +95,14 @@ suspend fun disassemble(
         if (dexdump.exitCode != 0) {
             launch(ui) {
                 onDex(dexdump.output)
-                onStatusUpdate("Ready")
+                onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
         launch(ui) {
             onDex(DexDumpParser(dexdump.output).parseDexDump())
-            onStatusUpdate("AOT compilation…")
+            onStatusUpdate("AOT compilation…", step++ / TotalSteps)
         }
 
         val push = process(
@@ -111,7 +116,7 @@ suspend fun disassemble(
         if (push.exitCode != 0) {
             launch(ui) {
                 onOat(push.output)
-                onStatusUpdate("Ready")
+                onStatusUpdate("Ready", Done)
             }
             return@launch
         }
@@ -128,12 +133,12 @@ suspend fun disassemble(
         if (dex2oat.exitCode != 0) {
             launch(ui) {
                 onOat(dex2oat.output)
-                onStatusUpdate("Ready")
+                onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Disassembling OAT…") }
+        launch(ui) { onStatusUpdate("Disassembling OAT…", step++ / TotalSteps) }
 
         val oatdump = process(
             toolPaths.adb.toString(),
@@ -146,11 +151,11 @@ suspend fun disassemble(
         launch(ui) { onOat(filterOat(oatdump.output)) }
 
         if (oatdump.exitCode != 0) {
-            launch(ui) { onStatusUpdate("Ready") }
+            launch(ui) { onStatusUpdate("Ready", Done) }
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Ready") }
+        launch(ui) { onStatusUpdate("Ready", Done) }
     }
 }
 
