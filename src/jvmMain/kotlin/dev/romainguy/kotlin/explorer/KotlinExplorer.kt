@@ -32,8 +32,10 @@ import androidx.compose.ui.input.key.Key.Companion.L
 import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
 import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
 import dev.romainguy.kotlin.explorer.dex.DexTextArea
@@ -55,7 +57,10 @@ import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.ui.ComponentStyling
-import org.jetbrains.jewel.ui.component.*
+import org.jetbrains.jewel.ui.component.DefaultButton
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextField
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
@@ -433,13 +438,17 @@ fun main() = application {
         ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
         false
     ) {
+        val windowState = rememberWindowState(
+            size = explorerState.getWindowSize(),
+            position = explorerState.getWindowPosition(),
+            placement = explorerState.windowPlacement,
+        )
         DecoratedWindow(
-            state = rememberWindowState(
-                position = WindowPosition.Aligned(Alignment.Center),
-                width = 1900.dp,
-                height = 1600.dp
-            ),
-            onCloseRequest = ::exitApplication,
+            state = windowState,
+            onCloseRequest = {
+                explorerState.setWindowState(windowState)
+                exitApplication()
+            },
             title = "Kotlin Explorer"
         ) {
             TitleBar(Modifier.newFullscreenControls()) {
@@ -448,4 +457,21 @@ fun main() = application {
             KotlinExplorer(explorerState)
         }
     }
+}
+
+private fun ExplorerState.getWindowSize() = DpSize(windowWidth.dp, windowHeight.dp)
+
+private fun ExplorerState.getWindowPosition(): WindowPosition {
+    val x = windowPosX
+    val y = windowPosY
+    return if (x > 0 && y > 0) WindowPosition(x.dp, y.dp) else Aligned(Alignment.Center)
+}
+
+private fun ExplorerState.setWindowState(windowState: WindowState) {
+    windowWidth = windowState.size.width.value.toInt()
+    windowHeight = windowState.size.height.value.toInt()
+    windowPosX = windowState.position.x.value.toInt()
+    windowPosY = windowState.position.y.value.toInt()
+    windowPlacement = windowState.placement
+
 }

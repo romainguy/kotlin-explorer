@@ -17,6 +17,8 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.WindowPlacement.Floating
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -28,6 +30,11 @@ private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
 private const val ShowDex = "SHOW_DEX"
 private const val ShowOat = "SHOW_OAT"
+private const val WindowPosX = "WINDOW_X"
+private const val WindowPosY = "WINDOW_Y"
+private const val WindowWidth = "WINDOW_WIDTH"
+private const val WindowHeight = "WINDOW_HEIGHT"
+private const val Placement = "WINDOW_PLACEMENT"
 
 @Stable
 class ExplorerState(
@@ -40,14 +47,26 @@ class ExplorerState(
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
     var sourceCode: String = readSourceCode(toolPaths)
+    var windowWidth by IntState(WindowWidth, 1900)
+    var windowHeight by IntState(WindowHeight, 1600)
+    var windowPosX by IntState(WindowPosX, -1)
+    var windowPosY by IntState(WindowPosY, -1)
+    var windowPlacement by SettingsState(Placement, Floating) { WindowPlacement.valueOf(this) }
 
     fun reloadToolPathsFromSettings() {
         toolPaths = createToolPaths(settings)
     }
 
-    private inner class BooleanState(private val key: String, initialValue: Boolean) : MutableState<Boolean> {
-        private val state = mutableStateOf(settings.entries[key]?.toBoolean() ?: initialValue)
-        override var value: Boolean
+    private inner class BooleanState(key: String, initialValue: Boolean) :
+        SettingsState<Boolean>(key, initialValue, { toBoolean() })
+
+    private inner class IntState(key: String, initialValue: Int) :
+        SettingsState<Int>(key, initialValue, { toInt() })
+
+    private open inner class SettingsState<T>(private val key: String, initialValue: T, parse: String.() -> T) :
+        MutableState<T> {
+        private val state = mutableStateOf(settings.entries[key]?.parse() ?: initialValue)
+        override var value: T
             get() = state.value
             set(value) {
                 settings.entries[key] = value.toString()
