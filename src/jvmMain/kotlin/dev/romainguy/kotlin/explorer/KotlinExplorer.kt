@@ -72,8 +72,8 @@ import javax.swing.SwingUtilities
 
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
-private const val LINE_NUMBER_WIDTH = 4
-private const val CODE_INDENT = 4
+private const val LineNumberWidth = 4
+private const val CodeIndent = 4
 
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
@@ -261,7 +261,7 @@ private fun codeTextArea(
     hasLineNumbers: Boolean = true
 ): CodeTextArea {
     val linNumberMode = (hasLineNumbers && state.showLineNumbers).toLineNumberMode()
-    return CodeTextArea(state.presentationMode, CODE_INDENT, linNumberMode).apply {
+    return CodeTextArea(state.presentationMode, CodeIndent, linNumberMode).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
         addFocusListener(focusTracker)
     }
@@ -348,7 +348,7 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
-private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LINE_NUMBER_WIDTH) else None
+private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LineNumberWidth) else None
 
 fun main() = application {
     val explorerState = remember { ExplorerState() }
