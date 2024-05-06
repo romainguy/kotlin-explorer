@@ -1,0 +1,21 @@
+[versions]
+compose = "1.6.10-rc01"
+jewel = "0.18.1"
+jna = '5.14.0'
+kotlin = "1.9.23"
+rstaui = "3.3.1"
+rsyntaxtextarea="3.4.0"
+skiko="0.8.4"
+
+[libraries]
+compose-splitpane = { group = "org.jetbrains.compose.components", name = "components-splitpane-desktop", version.ref = "compose" }
+jewel-decorated = { group = "org.jetbrains.jewel", name = "jewel-int-ui-decorated-window-241", version.ref = "jewel" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+rstaui = { group = "com.fifesoft", name = "rstaui", version.ref = "rstaui" }
+rsyntaxtextarea = { group = "com.fifesoft", name = "rsyntaxtextarea", version.ref = "rsyntaxtextarea" }
+skiko-linux = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-linux-arm64", version.ref = "skiko" }
+skiko-mac = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-macos-arm64", version.ref = "skiko" }
+
+[plugins]
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
