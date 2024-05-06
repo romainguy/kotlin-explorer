@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2023 Romain Guy
+ * Copyright 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,21 @@
 
 package dev.romainguy.kotlin.explorer
 
-const val HexDigit = "[0-9a-fA-F]"
+fun Iterator<String>.consumeUntil(prefix: String): Boolean {
+    while (hasNext()) {
+        val line = next()
+        if (line.trim().startsWith(prefix)) return true
+    }
+    return false
+}
 
-fun MatchResult.getValue(group: String): String {
-    return groups[group]?.value ?: throw IllegalStateException("Value of $group not found in $value")
+fun Iterator<String>.consumeUntil(regex: Regex): MatchResult? {
+    while (hasNext()) {
+        val line = next()
+        val match = regex.matchEntire(line)
+        if (match != null) {
+            return match
+        }
+    }
+    return null
 }

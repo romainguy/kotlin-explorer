@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Romain Guy
+ * Copyright (C) 2024 Romain Guy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,21 @@
 
 package dev.romainguy.kotlin.explorer
 
-const val HexDigit = "[0-9a-fA-F]"
+/** Based on Guava PeekingIterator */
+class PeekingIterator<E : Any>(private val iterator: Iterator<E>) : Iterator<E> {
+    private var peekedElement: E? = null
 
-fun MatchResult.getValue(group: String): String {
-    return groups[group]?.value ?: throw IllegalStateException("Value of $group not found in $value")
+    override fun hasNext(): Boolean {
+        return peekedElement != null || iterator.hasNext()
+    }
+
+    override fun next(): E {
+        val element = peekedElement ?: return iterator.next()
+        peekedElement = null
+        return element
+    }
+
+    fun peek(): E {
+        return peekedElement.takeIf { it != null } ?: iterator.next().also { peekedElement = it }
+    }
 }

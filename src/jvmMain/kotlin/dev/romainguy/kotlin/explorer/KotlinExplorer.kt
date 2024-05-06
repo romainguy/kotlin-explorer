@@ -39,8 +39,10 @@ import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
 import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
-import dev.romainguy.kotlin.explorer.dex.DexTextArea
-import dev.romainguy.kotlin.explorer.oat.OatTextArea
+import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.FixedWidth
+import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.None
+import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.CodeTextArea
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -70,6 +72,8 @@ import javax.swing.SwingUtilities
 
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
+private const val LINE_NUMBER_WIDTH = 4
+private const val CODE_INDENT = 4
 
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
@@ -128,27 +132,29 @@ private fun FrameWindowScope.KotlinExplorer(
     val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState) }
     val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState) }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, dexPanel, oatPanel)) }
+
+    val updatePresentationMode: (Boolean) -> Unit = {
+        listOf(dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
+    }
+    val updateShowLineNumbers: (Boolean) -> Unit = { dexTextArea.lineNumberMode = it.toLineNumberMode() }
+
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
         status = newStatus
         progress = newProgress
     }
-    
+
     MainMenu(
         explorerState,
         sourceTextArea,
-        { dex ->
-            if (dex != null) {
-                updateTextArea(dexTextArea, dex)
-            } else {
-                dexTextArea.refreshText()
-            }
-        },
-        { oat -> updateTextArea(oatTextArea, oat) },
+        { dex -> dexTextArea.content = dex },
+        { oat -> oatTextArea.content = oat },
         onProgressUpdate,
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
         { showSettings = true },
         { panels = explorerState.getPanels(sourcePanel, dexPanel, oatPanel) },
+        updateShowLineNumbers,
+        updatePresentationMode,
     )
 
     if (showSettings) {
@@ -243,15 +249,19 @@ private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerS
     }
 }
 
-private fun dexTextArea(explorerState: ExplorerState, focusTracker: FocusListener): DexTextArea {
-    return DexTextArea(explorerState).apply {
-        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
-        addFocusListener(focusTracker)
-    }
-}
+private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener) =
+    codeTextArea(state, focusTracker)
 
-private fun oatTextArea(explorerState: ExplorerState, focusTracker: FocusListener): RSyntaxTextArea {
-    return OatTextArea(explorerState).apply {
+private fun oatTextArea(state: ExplorerState, focusTracker: FocusListener) =
+    codeTextArea(state, focusTracker, hasLineNumbers = false)
+
+private fun codeTextArea(
+    state: ExplorerState,
+    focusTracker: FocusListener,
+    hasLineNumbers: Boolean = true
+): CodeTextArea {
+    val linNumberMode = (hasLineNumbers && state.showLineNumbers).toLineNumberMode()
+    return CodeTextArea(state.presentationMode, CODE_INDENT, linNumberMode).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE)
         addFocusListener(focusTracker)
     }
@@ -261,13 +271,15 @@ private fun oatTextArea(explorerState: ExplorerState, focusTracker: FocusListene
 private fun FrameWindowScope.MainMenu(
     explorerState: ExplorerState,
     sourceTextArea: RSyntaxTextArea,
-    onDexUpdate: (String?) -> Unit,
-    onOatUpdate: (String) -> Unit,
+    onDexUpdate: (CodeContent) -> Unit,
+    onOatUpdate: (CodeContent) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
     onFindClicked: () -> Unit,
     onFindNextClicked: () -> Unit,
     onOpenSettings: () -> Unit,
     onPanelsUpdated: () -> Unit,
+    onShowLineNumberChanged: (Boolean) -> Unit,
+    onPresentationModeChanged: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -296,10 +308,12 @@ private fun FrameWindowScope.MainMenu(
             MenuCheckboxItem("Show DEX", Ctrl(D), explorerState::showDex, onShowPanelChanged)
             MenuCheckboxItem("Show OAT", Ctrl(O), explorerState::showOat, onShowPanelChanged)
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
-                onDexUpdate(null)
+                onShowLineNumberChanged(it)
             }
             Separator()
-            MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode)
+            MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode) {
+                onPresentationModeChanged(it)
+            }
         }
         Menu("Compilation") {
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
@@ -334,11 +348,7 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
-private fun updateTextArea(textArea: RSyntaxTextArea, text: String) {
-    val position = textArea.caretPosition
-    textArea.text = text
-    textArea.caretPosition = minOf(position, textArea.document.length)
-}
+private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LINE_NUMBER_WIDTH) else None
 
 fun main() = application {
     val explorerState = remember { ExplorerState() }
