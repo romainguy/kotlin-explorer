@@ -1,16 +1,25 @@
 [versions]
+collection = "1.4.0"
 compose = "1.6.10-rc01"
 jewel = "0.18.1"
-jna = '5.14.0'
+jna = "5.14.0"
 kotlin = "1.9.23"
+lifecycle = "2.8.0-rc01"
 rstaui = "3.3.1"
 rsyntaxtextarea="3.4.0"
 skiko="0.8.4"
 
 [libraries]
+collection = { group = "androidx.collection", name = "collection", version.ref = "collection" }
+compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "compose" }
 compose-splitpane = { group = "org.jetbrains.compose.components", name = "components-splitpane-desktop", version.ref = "compose" }
+jewel = { group = "org.jetbrains.jewel", name = "jewel-int-ui-standalone-241", version.ref = "jewel" }
 jewel-decorated = { group = "org.jetbrains.jewel", name = "jewel-int-ui-decorated-window-241", version.ref = "jewel" }
 jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+lifecycle = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime", version.ref = "lifecycle" }
+lifecycle-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 rstaui = { group = "com.fifesoft", name = "rstaui", version.ref = "rstaui" }
 rsyntaxtextarea = { group = "com.fifesoft", name = "rsyntaxtextarea", version.ref = "rsyntaxtextarea" }
 skiko-linux = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-linux-arm64", version.ref = "skiko" }
