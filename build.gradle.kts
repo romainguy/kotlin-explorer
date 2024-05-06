@@ -27,11 +27,18 @@ kotlin {
                 implementation(compose.desktop.currentOs) {
                     exclude(group = "org.jetbrains.compose.material")
                 }
+                implementation(libs.collection)
+                implementation(libs.compose.material3)
+                implementation(libs.compose.splitpane)
+                implementation(libs.jewel)
                 implementation(libs.jewel.decorated)
                 implementation(libs.jna)
+                implementation(libs.lifecycle)
+                implementation(libs.lifecycle.compose)
+                implementation(libs.lifecycle.viewmodel)
+                implementation(libs.lifecycle.viewmodel.compose)
                 implementation(libs.skiko.mac)
                 implementation(libs.rsyntaxtextarea)
-                implementation(libs.compose.splitpane)
                 implementation(libs.rstaui)
                 runtimeOnly(libs.skiko.linux)
             }
