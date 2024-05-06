@@ -18,32 +18,16 @@ package dev.romainguy.kotlin.explorer
 
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.jvm.optionals.getOrElse
 
-fun createToolPaths(settings: Settings): ToolPaths {
-    val androidHome = Paths.get(settings.entries.getOrElse("ANDROID_HOME") {
-        System.getenv("ANDROID_HOME") ?: System.getProperty("user.home")
-    })
-    val kotlinHome = Paths.get(settings.entries.getOrElse("KOTLIN_HOME") {
-        System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home")
-    })
-
-    return ToolPaths(settings, androidHome, kotlinHome)
-}
-
-class ToolPaths internal constructor(
-    settings: Settings,
-    val androidHome: Path,
-    val kotlinHome: Path
-) {
+class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
     val tempDirectory = Files.createTempDirectory("kotlin-explorer")!!
     val platform: Path
     val d8: Path
-    val adb: Path
+    val adb: Path = androidHome.resolve(if (isWindows) "platform-tools/adb.exe" else "platform-tools/adb")
     val dexdump: Path
     val kotlinc: Path
     val kotlinLibs: List<Path>
@@ -57,7 +41,6 @@ class ToolPaths internal constructor(
         private set
 
     init {
-        adb = androidHome.resolve(if (isWindows) "platform-tools/adb.exe" else "platform-tools/adb")
         val buildToolsDirectory = listIfExists(androidHome.resolve("build-tools"))
             .sorted { p1, p2 ->
                 p2.toString().compareTo(p1.toString())
@@ -92,7 +75,7 @@ class ToolPaths internal constructor(
                 .getOrElse { lib.resolve("annotations.jar") }
         )
 
-        sourceFile = settings.directory.resolve("source-code.kt")
+        sourceFile = settingsDirectory.resolve("source-code.kt")
 
         isAndroidHomeValid = adb.exists() && d8.exists() && dexdump.exists()
         isKotlinHomeValid = kotlinc.exists()
@@ -100,8 +83,4 @@ class ToolPaths internal constructor(
     }
 }
 
-private fun listIfExists(path: Path) = if (path.exists()) {
-    Files.list(path)
-} else {
-    Stream.empty()
-}
+private fun listIfExists(path: Path) = if (path.exists()) Files.list(path) else Stream.empty()

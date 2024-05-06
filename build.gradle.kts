@@ -3,8 +3,8 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.jetbrains.compose)
 }
 
 repositories {
@@ -21,24 +21,19 @@ kotlin {
             languageVersion = JavaLanguageVersion.of(17)
         }
     }
-
     sourceSets {
         val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs) {
                     exclude(group = "org.jetbrains.compose.material")
                 }
-                implementation("org.jetbrains.jewel:jewel-int-ui-standalone-241:${extra["jewel.version"] as String}")
-                implementation("org.jetbrains.jewel:jewel-int-ui-decorated-window-241:${extra["jewel.version"] as String}")
-                implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:${extra["skiko.version"] as String}")
-                implementation("org.jetbrains.compose.components:components-splitpane-desktop:${extra["compose.version"] as String}")
-                implementation("org.jetbrains.compose.material3:material3-desktop:${extra["compose.version"] as String}")
-                implementation("com.fifesoft:rsyntaxtextarea:${extra["rsyntaxtextarea.version"] as String}")
-                implementation("com.fifesoft:rstaui:${extra["rstaui.version"] as String}")
-                implementation("net.java.dev.jna:jna:${extra["jna.version"] as String}")
-                implementation("androidx.collection:collection:${extra["collections.version"] as String}")
-                implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime:${extra["lifecycle.version"] as String}")
-                runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:${extra["skiko.version"] as String}")
+                implementation(libs.jewel.decorated)
+                implementation(libs.jna)
+                implementation(libs.skiko.mac)
+                implementation(libs.rsyntaxtextarea)
+                implementation(libs.compose.splitpane)
+                implementation(libs.rstaui)
+                runtimeOnly(libs.skiko.linux)
             }
         }
     }

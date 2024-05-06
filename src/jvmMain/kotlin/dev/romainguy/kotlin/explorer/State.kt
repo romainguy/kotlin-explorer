@@ -17,40 +17,70 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.WindowPlacement.Floating
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.io.path.readLines
 
+private const val AndroidHome = "ANDROID_HOME"
+private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
 private const val ShowDex = "SHOW_DEX"
 private const val ShowOat = "SHOW_OAT"
+private const val WindowPosX = "WINDOW_X"
+private const val WindowPosY = "WINDOW_Y"
+private const val WindowWidth = "WINDOW_WIDTH"
+private const val WindowHeight = "WINDOW_HEIGHT"
+private const val Placement = "WINDOW_PLACEMENT"
 
 @Stable
-class ExplorerState(
-    val settings: Settings = Settings()
-) {
-    var toolPaths by mutableStateOf(createToolPaths(settings))
+class ExplorerState {
+    private val directory = settingsPath()
+    private val file: Path = directory.resolve("settings")
+    private val entries: MutableMap<String, String> = readSettings(file)
+
+    var androidHome by StringState(AndroidHome, System.getenv("ANDROID_HOME") ?: System.getProperty("user.home"))
+    var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
+    var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, true)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
     var sourceCode: String = readSourceCode(toolPaths)
+    var windowWidth by IntState(WindowWidth, 1900)
+    var windowHeight by IntState(WindowHeight, 1600)
+    var windowPosX by IntState(WindowPosX, -1)
+    var windowPosY by IntState(WindowPosY, -1)
+    var windowPlacement by SettingsState(Placement, Floating) { WindowPlacement.valueOf(this) }
 
     fun reloadToolPathsFromSettings() {
-        toolPaths = createToolPaths(settings)
+        toolPaths = createToolPaths()
     }
 
-    private inner class BooleanState(private val key: String, initialValue: Boolean) : MutableState<Boolean> {
-        private val state = mutableStateOf(settings.entries[key]?.toBoolean() ?: initialValue)
-        override var value: Boolean
+    private fun createToolPaths() = ToolPaths(directory, Path.of(androidHome), Path.of(kotlinHome))
+
+    private inner class BooleanState(key: String, initialValue: Boolean) :
+        SettingsState<Boolean>(key, initialValue, { toBoolean() })
+
+    private inner class IntState(key: String, initialValue: Int) :
+        SettingsState<Int>(key, initialValue, { toInt() })
+
+    private inner class StringState(key: String, initialValue: String) :
+        SettingsState<String>(key, initialValue, { this })
+
+    private open inner class SettingsState<T>(private val key: String, initialValue: T, parse: String.() -> T) :
+        MutableState<T> {
+        private val state = mutableStateOf(entries[key]?.parse() ?: initialValue)
+        override var value: T
             get() = state.value
             set(value) {
-                settings.entries[key] = value.toString()
+                entries[key] = value.toString()
                 state.value = value
             }
 
@@ -58,14 +88,11 @@ class ExplorerState(
 
         override fun component2() = state.component2()
     }
-}
 
-data class Settings(
-    val directory: Path = settingsPath(),
-    val file: Path = directory.resolve("settings"),
-    val entries: MutableMap<String, String> = readSettings(file)
-) {
-    fun getValue(name: String, defaultValue: String) = entries[name] ?: defaultValue
+    fun writeState() {
+        Files.writeString(toolPaths.sourceFile, sourceCode)
+        Files.writeString(file, entries.map { (key, value) -> "$key=$value" }.joinToString("\n"))
+    }
 }
 
 private fun settingsPath() = Paths.get(System.getProperty("user.home"), ".kotlin-explorer").apply {
@@ -91,17 +118,3 @@ private fun readSourceCode(toolPaths: ToolPaths) = if (toolPaths.sourceFile.exis
 } else {
     "fun square(a: Int): Int {\n    return a * a\n}\n"
 }
-
-fun writeState(state: ExplorerState) {
-    Files.writeString(
-        state.toolPaths.sourceFile,
-        state.sourceCode
-    )
-    Files.writeString(
-        state.settings.file,
-        state.settings.entries
-            .map { "${it.key}=${it.value}" }
-            .joinToString("\n")
-    )
-}
-
