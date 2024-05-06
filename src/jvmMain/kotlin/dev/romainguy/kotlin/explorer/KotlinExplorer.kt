@@ -25,7 +25,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -128,9 +127,9 @@ private fun FrameWindowScope.KotlinExplorer(
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
 
-    val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState) }
-    val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState) }
-    val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState) }
+    val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState, showSettings) }
+    val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState, showSettings) }
+    val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState, showSettings) }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, dexPanel, oatPanel)) }
 
     val updatePresentationMode: (Boolean) -> Unit = {
@@ -158,27 +157,27 @@ private fun FrameWindowScope.KotlinExplorer(
     )
 
     if (showSettings) {
-        Settings(
-            explorerState,
-            onSaveClick = { showSettings = !explorerState.toolPaths.isValid }
+        Settings(explorerState, onDismissRequest = { showSettings = false })
+    }
+
+    Column(modifier = Modifier.background(JewelTheme.globalColors.paneBackground)) {
+        MultiSplitter(modifier = Modifier.weight(1.0f), panels)
+        StatusBar(status, progress)
+    }
+}
+
+@Composable
+private fun StatusBar(status: String, progress: Float) {
+    Row(verticalAlignment = CenterVertically) {
+        val width = 160.dp
+        Text(
+            modifier = Modifier
+                .widthIn(min = width, max = width)
+                .padding(8.dp),
+            text = status
         )
-    } else {
-        Column(
-            modifier = Modifier.background(JewelTheme.globalColors.paneBackground)
-        ) {
-            MultiSplitter(modifier = Modifier.weight(1.0f), panels)
-            Row(verticalAlignment = CenterVertically) {
-                val width = 160.dp
-                Text(
-                    modifier = Modifier
-                        .widthIn(min = width, max = width)
-                        .padding(8.dp),
-                    text = status
-                )
-                if (progress < 1) {
-                    LinearProgressIndicator({ progress })
-                }
-            }
+        if (progress < 1) {
+            LinearProgressIndicator({ progress })
         }
     }
 }
@@ -200,10 +199,10 @@ private fun ExplorerState.getPanels(
 }
 
 @Composable
-private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState) {
+private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState, showSettings: Boolean) {
     Column {
         Title("Source")
-        SwingPanel(
+        DialogSupportingSwingPanel(
             modifier = Modifier.fillMaxSize(),
             factory = {
                 RTextScrollPane(sourceTextArea)
@@ -213,19 +212,22 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
                     sourceTextArea.text = explorerState.sourceCode
                 }
                 sourceTextArea.updateStyle(explorerState)
-            }
+            },
+            isDialogVisible = showSettings,
         )
     }
 }
 
 @Composable
-private fun TextPanel(title: String, textArea: RSyntaxTextArea, explorerState: ExplorerState) {
+private fun TextPanel(title: String, textArea: RSyntaxTextArea, explorerState: ExplorerState, showSettings: Boolean) {
     Column {
         Title(title)
-        SwingPanel(
+        DialogSupportingSwingPanel(
             modifier = Modifier.fillMaxSize(),
             factory = { RTextScrollPane(textArea) },
-            update = { textArea.updateStyle(explorerState) })
+            update = { textArea.updateStyle(explorerState) },
+            isDialogVisible = showSettings
+        )
     }
 }
 
@@ -317,7 +319,12 @@ private fun FrameWindowScope.MainMenu(
         }
         Menu("Compilation") {
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
-            MenuItem("Compile & Disassemble", CtrlShift(D), onClick = compileAndDisassemble)
+            MenuItem(
+                "Compile & Disassemble",
+                CtrlShift(D),
+                onClick = compileAndDisassemble,
+                enabled = explorerState.toolPaths.isValid
+            )
         }
     }
 }

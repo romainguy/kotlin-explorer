@@ -24,6 +24,11 @@ import kotlin.io.path.extension
 import kotlin.jvm.optionals.getOrElse
 
 class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
+    constructor(settingsDirectory: Path, androidHome: String, kotlinHome: String) : this(
+        settingsDirectory,
+        Path.of(androidHome),
+        Path.of(kotlinHome)
+    )
     val tempDirectory = Files.createTempDirectory("kotlin-explorer")!!
     val platform: Path
     val d8: Path
