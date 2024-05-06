@@ -46,6 +46,6 @@ fun MenuScope.MenuCheckboxItem(
 }
 
 @Composable
-fun MenuScope.MenuItem(text: String, shortcut: Shortcut, onClick: () -> Unit) {
-    Item(text, shortcut = shortcut.asKeyShortcut(), onClick = onClick)
+fun MenuScope.MenuItem(text: String, shortcut: Shortcut, onClick: () -> Unit, enabled: Boolean = true) {
+    Item(text, enabled = enabled, shortcut = shortcut.asKeyShortcut(), onClick = onClick)
 }

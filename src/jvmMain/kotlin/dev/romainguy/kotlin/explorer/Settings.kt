@@ -19,6 +19,8 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
@@ -35,32 +40,75 @@ import org.jetbrains.jewel.ui.component.TextField
 @Composable
 fun Settings(
     explorerState: ExplorerState,
-    onSaveClick: () -> Unit
+    onDismissRequest: () -> Unit
 ) {
-    val androidHome = remember { mutableStateOf(explorerState.androidHome) }
-    val kotlinHome = remember { mutableStateOf(explorerState.kotlinHome) }
+    Dialog(onDismissRequest = onDismissRequest) {
+        SettingsContent(explorerState, onDismissRequest)
+    }
+}
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.align(Alignment.Center)) {
-            StringSetting("Android home directory: ", androidHome) { explorerState.toolPaths.isAndroidHomeValid }
-            StringSetting("Kotlin home directory: ", kotlinHome) { explorerState.toolPaths.isKotlinHomeValid }
+@Composable
+private fun SettingsContent(
+    state: ExplorerState,
+    onDismissRequest: () -> Unit
+) {
+    val androidHome = remember { mutableStateOf(state.androidHome) }
+    val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
 
-            DefaultButton({ explorerState.saveState(androidHome, kotlinHome, onSaveClick) }) {
-                Text("Save")
+    Card(shape = RoundedCornerShape(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
+            Title()
+
+            val toolPaths = ToolPaths(state.directory, androidHome.value, kotlinHome.value)
+            StringSetting("Android home directory: ", androidHome) { toolPaths.isAndroidHomeValid }
+            StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
+
+            Spacer(modifier = Modifier.height(32.dp))
+            val onSaveClick = {
+                state.saveState(androidHome, kotlinHome)
+                onDismissRequest()
             }
+            Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
         }
     }
+}
+
+@Composable
+private fun Title() {
+    Text(
+        "Settings",
+        fontSize = 24.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+    )
+}
+
+@Composable
+private fun ColumnScope.Buttons(
+    saveEnabled: Boolean,
+    onSaveClick: () -> Unit,
+    onCancelClick: () -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.align(Alignment.End)) {
+        DefaultButton(onClick = onCancelClick) {
+            Text("Cancel")
+        }
+        DefaultButton(enabled = saveEnabled, onClick = onSaveClick) {
+            Text("Save")
+        }
+    }
+
 }
 
 private fun ExplorerState.saveState(
     androidHome: MutableState<String>,
     kotlinHome: MutableState<String>,
-    onSaveClick: () -> Unit
 ) {
     this.androidHome = androidHome.value
     this.kotlinHome = kotlinHome.value
     this.reloadToolPathsFromSettings()
-    onSaveClick()
 }
 
 @Composable
@@ -81,7 +129,6 @@ private fun StringSetting(title: String, state: MutableState<String>, isValid: (
             trailingIcon = { if (isValid()) ValidIcon() else ErrorIcon() }
         )
     }
-    Spacer(Modifier.height(8.dp))
 }
 
 @Composable

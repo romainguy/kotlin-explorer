@@ -40,7 +40,7 @@ private const val Placement = "WINDOW_PLACEMENT"
 
 @Stable
 class ExplorerState {
-    private val directory = settingsPath()
+    val directory: Path = settingsPath()
     private val file: Path = directory.resolve("settings")
     private val entries: MutableMap<String, String> = readSettings(file)
 
