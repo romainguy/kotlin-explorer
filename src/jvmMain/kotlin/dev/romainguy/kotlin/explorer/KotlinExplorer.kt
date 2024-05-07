@@ -41,9 +41,8 @@ import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
 import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.FixedWidth
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.None
 import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.CodeStyle
 import dev.romainguy.kotlin.explorer.code.CodeTextArea
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
@@ -74,8 +73,6 @@ import javax.swing.SwingUtilities
 
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
-private const val LineNumberWidth = 4
-private const val CodeIndent = 4
 
 @Composable
 private fun FrameWindowScope.KotlinExplorer(
@@ -127,6 +124,7 @@ private fun FrameWindowScope.KotlinExplorer(
     val byteCodeTextArea = remember { byteCodeTextArea(explorerState, focusTracker) }
     val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
     val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
+    val codeTextAreas = listOf(byteCodeTextArea, dexTextArea, oatTextArea)
 
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
     var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
@@ -141,7 +139,9 @@ private fun FrameWindowScope.KotlinExplorer(
         listOf(dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
     }
     val updateShowLineNumbers: (Boolean) -> Unit = {
-        listOf(byteCodeTextArea, dexTextArea).forEach { area -> area.lineNumberMode = it.toLineNumberMode() }
+        listOf(byteCodeTextArea, dexTextArea).forEach { area ->
+            area.codeStyle = area.codeStyle.withShowLineNumbers(it)
+        }
     }
 
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
@@ -165,7 +165,12 @@ private fun FrameWindowScope.KotlinExplorer(
     )
 
     if (showSettings) {
-        Settings(explorerState, onDismissRequest = { showSettings = false })
+        Settings(explorerState, onDismissRequest = {
+            showSettings = false
+            codeTextAreas.forEach {
+                it.codeStyle = it.codeStyle.withSettings(explorerState.indent, explorerState.lineNumberWidth)
+            }
+        })
     }
 
     Column(modifier = Modifier.background(JewelTheme.globalColors.paneBackground)) {
@@ -281,8 +286,8 @@ private fun codeTextArea(
     focusTracker: FocusListener,
     hasLineNumbers: Boolean = true
 ): CodeTextArea {
-    val linNumberMode = (hasLineNumbers && state.showLineNumbers).toLineNumberMode()
-    return CodeTextArea(state.presentationMode, CodeIndent, linNumberMode).apply {
+    val codeStyle = CodeStyle(state.indent, state.showLineNumbers && hasLineNumbers, state.lineNumberWidth)
+    return CodeTextArea(state.presentationMode, codeStyle).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE, focusTracker)
     }
 }
@@ -377,8 +382,6 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
-private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LineNumberWidth) else None
-
 fun main() = application {
     // TODO: Needed to properly composite Compose on top of Swing
     // System.setProperty("compose.interop.blending", "true")
@@ -439,3 +442,8 @@ private fun ExplorerState.setWindowState(windowState: WindowState) {
     windowPosY = windowState.position.y.value.toInt()
     windowPlacement = windowState.placement
 }
+
+private fun CodeStyle.withSettings(indent: Int, lineNumberWidth: Int) =
+    copy(indent = indent, lineNumberWidth = lineNumberWidth)
+
+private fun CodeStyle.withShowLineNumbers(value: Boolean) = copy(showLineNumbers = value)
