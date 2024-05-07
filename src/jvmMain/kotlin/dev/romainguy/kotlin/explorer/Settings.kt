@@ -21,7 +21,6 @@ package dev.romainguy.kotlin.explorer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -56,6 +55,12 @@ private fun SettingsContent(
 ) {
     val androidHome = remember { mutableStateOf(state.androidHome) }
     val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
+    val indent = remember { mutableStateOf(state.indent.toString()) }
+    val lineNumberWidth = remember { mutableStateOf(state.lineNumberWidth.toString()) }
+    val onSaveClick = {
+        state.saveState(androidHome, kotlinHome, indent, lineNumberWidth)
+        onDismissRequest()
+    }
 
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -68,12 +73,10 @@ private fun SettingsContent(
             val toolPaths = ToolPaths(state.directory, androidHome.value, kotlinHome.value)
             StringSetting("Android home directory: ", androidHome) { toolPaths.isAndroidHomeValid }
             StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
+            IntSetting("Decompiled Code indent: ", indent, minValue = 2)
+            IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
 
             Spacer(modifier = Modifier.height(32.dp))
-            val onSaveClick = {
-                state.saveState(androidHome, kotlinHome)
-                onDismissRequest()
-            }
             Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
         }
     }
@@ -111,24 +114,48 @@ private fun ColumnScope.Buttons(
 private fun ExplorerState.saveState(
     androidHome: MutableState<String>,
     kotlinHome: MutableState<String>,
+    indent: MutableState<String>,
+    lineNumberWidth: MutableState<String>,
 ) {
     this.androidHome = androidHome.value
     this.kotlinHome = kotlinHome.value
+    this.indent = indent.value.toInt()
+    this.lineNumberWidth = lineNumberWidth.value.toInt()
     this.reloadToolPathsFromSettings()
 }
 
 @Composable
 private fun StringSetting(title: String, state: MutableState<String>, isValid: () -> Boolean) {
+    SettingRow(title, state.value, { state.value = it }, isValid)
+}
+
+@Composable
+private fun IntSetting(title: String, state: MutableState<String>, minValue: Int) {
+
+    SettingRow(
+        title,
+        value = state.value,
+        onValueChange = {
+            if (it.toIntOrNull() != null || it.isEmpty()) {
+                state.value = it
+            }
+        },
+        isValid = { (state.value.toIntOrNull() ?: Int.MIN_VALUE) >= minValue }
+    )
+}
+
+@Composable
+private fun SettingRow(title: String, value: String, onValueChange: (String) -> Unit, isValid: () -> Boolean) {
     Row {
         Text(
             title,
             modifier = Modifier
                 .alignByBaseline()
-                .defaultMinSize(minWidth = 160.dp),
+                .defaultMinSize(minWidth = 200.dp),
         )
         TextField(
-            value = state.value,
-            onValueChange = { state.value = it },
+            value = value,
+            onValueChange = onValueChange,
             modifier = Modifier
                 .alignByBaseline()
                 .defaultMinSize(minWidth = 360.dp),
@@ -136,6 +163,7 @@ private fun StringSetting(title: String, state: MutableState<String>, isValid: (
         )
     }
 }
+
 
 @Composable
 private fun ErrorIcon() {

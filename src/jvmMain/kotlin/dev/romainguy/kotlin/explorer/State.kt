@@ -33,6 +33,8 @@ private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
 private const val ShowByteCode = "SHOW_BYTE_CODE"
 private const val ShowDex = "SHOW_DEX"
 private const val ShowOat = "SHOW_OAT"
+private const val Indent = "Indent"
+private const val LineNumberWidth = "LINE_NUMBER_WIDTH"
 private const val WindowPosX = "WINDOW_X"
 private const val WindowPosY = "WINDOW_Y"
 private const val WindowWidth = "WINDOW_WIDTH"
@@ -54,6 +56,8 @@ class ExplorerState {
     var showByteCode by BooleanState(ShowByteCode, false)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
+    var lineNumberWidth by IntState(LineNumberWidth, 4)
+    var indent by IntState(Indent, 4)
     var sourceCode: String = readSourceCode(toolPaths)
     var windowWidth by IntState(WindowWidth, 1900)
     var windowHeight by IntState(WindowHeight, 1600)

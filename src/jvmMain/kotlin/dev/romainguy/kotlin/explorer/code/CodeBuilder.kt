@@ -16,11 +16,8 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.FixedWidth
-
-fun buildCode(indent: Int, lineNumberMode: LineNumberMode, builderAction: CodeBuilder.() -> Unit): CodeBuilder {
-    return CodeBuilder(indent, lineNumberMode).apply(builderAction)
+fun buildCode(codeStyle: CodeStyle, builderAction: CodeBuilder.() -> Unit): CodeBuilder {
+    return CodeBuilder(codeStyle).apply(builderAction)
 }
 
 /**
@@ -29,10 +26,7 @@ fun buildCode(indent: Int, lineNumberMode: LineNumberMode, builderAction: CodeBu
  * This class maintains a state allowing it to build the `jump` table `line-number` list
  * that will be used by the UI to display jump markers and line number annotations.
  */
-class CodeBuilder(
-    private val indent: Int,
-    private val lineNumberMode: LineNumberMode,
-) {
+class CodeBuilder(private val codeStyle: CodeStyle) {
     private var line = 0
     private val sb = StringBuilder()
     private val jumps = mutableMapOf<Int, Int>()
@@ -48,7 +42,7 @@ class CodeBuilder(
     }
 
     fun startMethod(method: Method) {
-        sb.append(" ".repeat(indent))
+        sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
     }
 
@@ -63,15 +57,15 @@ class CodeBuilder(
     }
 
     fun writeInstruction(instruction: Instruction) {
-        sb.append("  ".repeat(indent))
+        sb.append("  ".repeat(codeStyle.indent))
         methodAddresses[instruction.address] = line
         if (instruction.jumpAddress != null) {
             methodJumps.add(line to instruction.jumpAddress)
         }
-        if (lineNumberMode is FixedWidth) {
+        if (codeStyle.showLineNumbers) {
             val lineNumber = instruction.lineNumber
             val prefix = if (lineNumber != null) "$lineNumber:" else " "
-            sb.append(prefix.padEnd(lineNumberMode.width + 2))
+            sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
         writeLine(instruction.code)
     }
@@ -82,11 +76,5 @@ class CodeBuilder(
         sb.append(text)
         sb.append('\n')
         line++
-    }
-
-    sealed class LineNumberMode {
-        data object None : LineNumberMode()
-        class FixedWidth(val width: Int) : LineNumberMode()
-        // todo: Maybe add an AutoWidth mode that derives the width from the max line number.
     }
 }

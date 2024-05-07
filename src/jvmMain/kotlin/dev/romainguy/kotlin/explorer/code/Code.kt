@@ -16,7 +16,6 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode
 
 /**
  * A data model representing disassembled code
@@ -25,13 +24,13 @@ import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode
  * * Disassembled text with optional line number annotations
  * * Jump information for branch instructions
  */
-class Code(private val classes: List<Class>, indent: Int, lineNumberMode: LineNumberMode) {
+class Code(private val classes: List<Class>, codeStyle: CodeStyle) {
     private val jumps: Map<Int, Int>
 
     val text: String
 
     init {
-        val code = buildCode(indent, lineNumberMode) {
+        val code = buildCode(codeStyle) {
             classes.forEach { clazz ->
                 startClass(clazz)
                 clazz.methods.forEach { method ->

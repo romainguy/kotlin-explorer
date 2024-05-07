@@ -16,9 +16,6 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.FixedWidth
-import dev.romainguy.kotlin.explorer.code.CodeBuilder.LineNumberMode.None
 import dev.romainguy.kotlin.explorer.code.CodeContent.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.BasicStroke
@@ -31,8 +28,7 @@ import javax.swing.event.CaretListener
 
 open class CodeTextArea(
     presentationMode: Boolean = false,
-    private val indent: Int = 4,
-    lineNumberMode: LineNumberMode = FixedWidth(4),
+    codeStyle: CodeStyle,
 ) : RSyntaxTextArea() {
     private var code: Code? = null
     private var jumpOffsets: JumpOffsets? = null
@@ -45,17 +41,28 @@ open class CodeTextArea(
             repaint()
         }
 
-    var lineNumberMode = lineNumberMode
+    var codeStyle = codeStyle
         set(value) {
+            val changed = value != field
             field = value
-            val line = getLineOfOffset(caretPosition)
-            updateContent()
-            caretPosition = getLineStartOffset(line)
-            caretUpdate(line)
+            if (changed) {
+                updatePreservingCaretLine()
+            }
         }
 
     init {
         addCaretListener(::caretUpdate)
+    }
+
+
+    private fun updatePreservingCaretLine() {
+        val line = getLineOfOffset(caretPosition)
+        val oldText = text
+        updateContent()
+        if (oldText != text) {
+            caretPosition = getLineStartOffset(line)
+            caretUpdate(line)
+        }
     }
 
     fun setContent(value: CodeContent) {
@@ -68,7 +75,7 @@ open class CodeTextArea(
         when (val content = content) {
             is Empty -> text = ""
             is Error -> text = content.errorText
-            is Success -> code = Code(content.classes, indent, lineNumberMode).also {
+            is Success -> code = Code(content.classes, codeStyle).also {
                 val text = it.text
                 if (text != this.text) {
                     this.text = text
@@ -95,18 +102,12 @@ open class CodeTextArea(
             val y1 = (bounds1.y + lineHeight / 2).toInt()
 
             val delta = jump.dst - getLineStartOffset(getLineOfOffset(jump.dst))
-            val showLineNumbers = lineNumberMode !is None
-            val endPadding = if (showLineNumbers && delta < 4) 2 else padding
+            val endPadding = if (codeStyle.showLineNumbers && delta < 4) 2 else padding
 
             val x2 = bounds2.x.toInt() - endPadding
             val y2 = (bounds2.y + lineHeight / 2).toInt()
 
-            val x0 = if (showLineNumbers) {
-                modelToView2D(minOf(4, jump.dst - 4)).x.toInt() + padding
-            } else {
-                modelToView2D(4).x.toInt()
-                modelToView2D(4).x.toInt()
-            }
+            val x0 = modelToView2D(maxOf(codeStyle.indent * 2 - 4, 1)).x.toInt()
 
             val g2 = g as Graphics2D
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
