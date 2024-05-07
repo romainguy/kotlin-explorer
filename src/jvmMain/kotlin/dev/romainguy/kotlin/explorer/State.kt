@@ -51,7 +51,7 @@ class ExplorerState {
     var optimize by BooleanState(Optimize, true)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, true)
-    var showByteCode by BooleanState(ShowByteCode, true)
+    var showByteCode by BooleanState(ShowByteCode, false)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
     var sourceCode: String = readSourceCode(toolPaths)
