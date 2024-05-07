@@ -25,11 +25,23 @@ import androidx.compose.ui.window.MenuScope
 import kotlin.reflect.KMutableProperty0
 
 /** Convenience class handles `Ctrl <-> Meta` modifies */
-sealed class Shortcut(private val key: Key, private val isShift: Boolean, private val isCtrl: Boolean) {
+sealed class Shortcut(
+    private val key: Key,
+    private val isShift: Boolean,
+    private val isCtrl: Boolean,
+    private val metaOnMac: Boolean = true
+) {
     class Ctrl(key: Key) : Shortcut(key, isCtrl = true, isShift = false)
+    class CtrlOnly(key: Key) : Shortcut(key, isCtrl = true, isShift = false, metaOnMac = false)
     class CtrlShift(key: Key) : Shortcut(key, isCtrl = true, isShift = true)
 
-    fun asKeyShortcut() = KeyShortcut(key = key, ctrl = isCtrl && !isMac, shift = isShift, meta = isCtrl && isMac)
+    fun asKeyShortcut() =
+        KeyShortcut(
+            key = key,
+            ctrl = isCtrl && (!isMac || !metaOnMac),
+            shift = isShift,
+            meta = isCtrl && isMac && metaOnMac
+        )
 }
 
 @Composable

@@ -19,22 +19,20 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
-import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import org.jetbrains.compose.splitpane.SplitterScope
-import org.jetbrains.compose.splitpane.rememberSplitPaneState
+import org.jetbrains.compose.splitpane.*
 import java.awt.Cursor
 
 private fun Modifier.cursorForHorizontalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+
+private fun Modifier.cursorForVerticalResize(): Modifier =
+    pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
 
 fun SplitterScope.HorizontalSplitter() {
     visiblePart {
@@ -55,6 +53,25 @@ fun SplitterScope.HorizontalSplitter() {
     }
 }
 
+fun SplitterScope.VerticalSplitter() {
+    visiblePart {
+        Box(
+            Modifier
+                .height(5.dp)
+                .fillMaxWidth()
+        )
+    }
+    handle {
+        Box(
+            Modifier
+                .markAsHandle()
+                .cursorForVerticalResize()
+                .height(5.dp)
+                .fillMaxWidth()
+        )
+    }
+}
+
 @Composable
 fun MultiSplitter(modifier: Modifier = Modifier, panels: List<@Composable () -> Unit>) {
     val size = panels.size
@@ -69,7 +86,26 @@ fun MultiSplitter(modifier: Modifier = Modifier, panels: List<@Composable () -> 
             second { MultiSplitter(modifier = modifier, panels.drop(1)) }
             splitter { HorizontalSplitter() }
         }
-
     }
 }
 
+@Composable
+fun VerticalOptionalPanel(
+    modifier: Modifier = Modifier,
+    showOptionalPanel: Boolean = false,
+    optionalPanel: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    if (showOptionalPanel) {
+        VerticalSplitPane(
+            modifier = modifier,
+            splitPaneState = rememberSplitPaneState(initialPositionPercentage = 4f / 5f)
+        ) {
+            first { content() }
+            second { optionalPanel() }
+            splitter { VerticalSplitter() }
+        }
+    } else {
+        content()
+    }
+}
