@@ -380,8 +380,8 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
 private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LineNumberWidth) else None
 
 fun main() = application {
-    // Needed to properly composite Compose on top of Swing
-    System.setProperty("compose.interop.blending", "true")
+    // TODO: Needed to properly composite Compose on top of Swing
+    // System.setProperty("compose.interop.blending", "true")
 
     val explorerState = remember { ExplorerState() }
 
