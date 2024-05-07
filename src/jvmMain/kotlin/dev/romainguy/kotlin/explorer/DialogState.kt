@@ -41,9 +41,7 @@ class DialogState(initial: Boolean) : MutableState<Boolean> {
         set(value) {
             if (value) {
                 focusOwner = FocusManager.getCurrentManager().focusOwner
-                println("Saving focus owner: $focusOwner")
             } else {
-                println("Restoring focus owner: $focusOwner")
                 focusOwner?.requestFocus()
             }
             state.value = value
