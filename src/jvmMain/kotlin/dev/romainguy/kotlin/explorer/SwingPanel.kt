@@ -20,6 +20,7 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -52,18 +53,19 @@ fun <T : Component> DialogSupportingSwingPanel(
     // See https://github.com/JetBrains/compose-multiplatform-core/pull/915
     // macOS should work, but it doesn't quite yet, mouse events get dispatched only to the Swing panel below
     if (isLinux || isMac) {
-        Box(modifier = modifier) {
-            if (isDialogVisible) {
+        if (isDialogVisible) {
+            Column(modifier = modifier) {
                 val bitmap = remember { component.getScreenShot()?.toComposeImageBitmap() }
                 if (bitmap != null) {
                     Image(bitmap = bitmap, contentDescription = "", modifier = Modifier.fillMaxSize())
+                } else {
+                    Box(modifier.fillMaxSize())
                 }
-            } else {
-                SwingPanel(background, { component }, Modifier.fillMaxSize(), update)
             }
         }
+        SwingPanel(background, { component }, modifier = Modifier.fillMaxSize(), update)
     } else {
-        SwingPanel(background, { component }, Modifier.fillMaxSize(), update)
+        SwingPanel(background, { component }, modifier, update)
     }
 }
 
