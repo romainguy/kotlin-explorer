@@ -1,11 +1,12 @@
-name: CI
+name: Presubmit
 
 on:
-  pull_request:
   push:
     branches:
-      - 'main'
-  workflow_dispatch:
+    - main
+  pull_request:
+    branches:
+    - main
 
 jobs:
   build:
