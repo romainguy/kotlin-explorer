@@ -129,7 +129,7 @@ private fun FrameWindowScope.KotlinExplorer(
     val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
 
     val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
-    var showSettings by remember { mutableStateOf(!explorerState.toolPaths.isValid) }
+    var showSettings by remember { DialogState(!explorerState.toolPaths.isValid) }
 
     val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState, showSettings) }
     val byteCodePanel: @Composable () -> Unit = { TextPanel("Byte Code", byteCodeTextArea, explorerState, showSettings) }
