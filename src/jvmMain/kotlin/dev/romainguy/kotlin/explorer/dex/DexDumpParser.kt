@@ -18,12 +18,9 @@ package dev.romainguy.kotlin.explorer.dex
 
 import dev.romainguy.kotlin.explorer.BuiltInKotlinClass
 import dev.romainguy.kotlin.explorer.HexDigit
-import dev.romainguy.kotlin.explorer.code.Class
-import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.*
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
-import dev.romainguy.kotlin.explorer.code.Instruction
-import dev.romainguy.kotlin.explorer.code.Method
 import dev.romainguy.kotlin.explorer.consumeUntil
 import dev.romainguy.kotlin.explorer.getValue
 
@@ -75,11 +72,10 @@ internal class DexDumpParser {
 
     private fun Iterator<String>.readMethod(className: String): Method {
         val (name, type) = next().substringAfterLast(".").split(':', limit = 2)
-        val instructionsWithoutLineNumbers = readInstructions()
+        val instructions = readInstructions()
         consumeUntil(Positions)
         val positions = readPositions()
-        val instruction = instructionsWithoutLineNumbers.map { it.copy(lineNumber = positions[it.address]) }
-        return Method("$name$type // $className.$name()", instruction)
+        return Method("$name$type // $className.$name()", instructions.withLineNumbers(positions))
     }
 
     private fun Iterator<String>.readInstructions(): List<Instruction> {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Romain Guy
+ * Copyright (C) 2024 Romain Guy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package dev.romainguy.kotlin.explorer.jump
+package dev.romainguy.kotlin.explorer.code
 
-interface JumpDetector {
-    fun detectJump(line: String): Jump?
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
-    fun detectAddressed(line: String): Int?
+sealed class CodeContent {
+    data class Success(val classes: List<Class>) : CodeContent()
+    data class Error(val errorText: String) : CodeContent() {
+        constructor(e: Exception) : this(e.toFullString())
+    }
+    data object Empty : CodeContent()
+}
+
+private fun Throwable.toFullString(): String {
+    return ByteArrayOutputStream().use {
+        printStackTrace(PrintStream(it))
+        it.toString()
+    }
 }

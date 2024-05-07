@@ -30,6 +30,7 @@ private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
+private const val ShowByteCode = "SHOW_BYTE_CODE"
 private const val ShowDex = "SHOW_DEX"
 private const val ShowOat = "SHOW_OAT"
 private const val WindowPosX = "WINDOW_X"
@@ -49,7 +50,8 @@ class ExplorerState {
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
     var presentationMode by BooleanState(Presentation, false)
-    var showLineNumbers by BooleanState(ShowLineNumbers, false)
+    var showLineNumbers by BooleanState(ShowLineNumbers, true)
+    var showByteCode by BooleanState(ShowByteCode, true)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
     var sourceCode: String = readSourceCode(toolPaths)

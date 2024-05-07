@@ -37,11 +37,7 @@ open class CodeTextArea(
     private var code: Code? = null
     private var jumpOffsets: JumpOffsets? = null
 
-    var content: CodeContent = Empty
-        set(value) {
-            field = value
-            updateContent()
-        }
+    private var content: CodeContent = Empty
 
     var presentationMode = presentationMode
         set(value) {
@@ -60,6 +56,11 @@ open class CodeTextArea(
 
     init {
         addCaretListener(::caretUpdate)
+    }
+
+    fun setContent(value: CodeContent) {
+        content = value
+        updateContent()
     }
 
     private fun updateContent() {
