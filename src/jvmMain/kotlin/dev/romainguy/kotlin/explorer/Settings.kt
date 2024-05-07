@@ -21,6 +21,8 @@ package dev.romainguy.kotlin.explorer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +57,11 @@ private fun SettingsContent(
     val androidHome = remember { mutableStateOf(state.androidHome) }
     val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
 
-    Card(shape = RoundedCornerShape(8.dp)) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        // TODO: Use a theme
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
             Title()
 

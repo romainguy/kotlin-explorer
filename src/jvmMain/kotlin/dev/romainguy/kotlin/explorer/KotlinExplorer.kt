@@ -25,6 +25,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -177,7 +179,12 @@ private fun StatusBar(status: String, progress: Float) {
             text = status
         )
         if (progress < 1) {
-            LinearProgressIndicator({ progress })
+            LinearProgressIndicator(
+                progress = { progress },
+                color = Color(0xff3369d6),
+                trackColor = Color(0xffc4c4c4),
+                strokeCap = StrokeCap.Round
+            )
         }
     }
 }
@@ -358,6 +365,9 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
 private fun Boolean.toLineNumberMode() = if (this) FixedWidth(LineNumberWidth) else None
 
 fun main() = application {
+    // Needed to properly composite Compose on top of Swing
+    System.setProperty("compose.interop.blending", "true")
+
     val explorerState = remember { ExplorerState() }
 
     Runtime.getRuntime().addShutdownHook(Thread { explorerState.writeState() })

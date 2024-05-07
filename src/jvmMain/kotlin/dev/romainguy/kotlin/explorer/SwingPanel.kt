@@ -33,7 +33,6 @@ import java.awt.Component
 import java.awt.GraphicsEnvironment
 import java.awt.image.BufferedImage
 
-
 /**
  * A [SwingPanel] that supports a Dialog rendered over it
  *
@@ -50,21 +49,26 @@ fun <T : Component> DialogSupportingSwingPanel(
 ) {
     val component = remember { factory() }
 
-    Column(modifier = modifier) {
-        val fillMaxSize = Modifier.fillMaxSize()
-        if (isDialogVisible) {
-            val bitmap = remember { component.getScreenShot()?.toComposeImageBitmap() }
-            if (bitmap != null) {
-                Image(bitmap = bitmap, contentDescription = "", modifier = fillMaxSize)
+    // TODO: Remove all this code
+    // See https://github.com/JetBrains/compose-multiplatform-core/pull/915
+    // macOS should work, but it doesn't quite yet, mouse events get dispatched only to the Swing panel below
+    if (isLinux || isMac) {
+        Box(modifier = modifier) {
+            if (isDialogVisible) {
+                val bitmap = remember { component.getScreenShot()?.toComposeImageBitmap() }
+                if (bitmap != null) {
+                    Image(bitmap = bitmap, contentDescription = "", modifier = Modifier.fillMaxSize())
+                }
             } else {
-                Box(modifier = fillMaxSize)
+                SwingPanel(background, { component }, Modifier.fillMaxSize(), update)
             }
         }
-        SwingPanel(background, { component }, fillMaxSize, update)
+    } else {
+        SwingPanel(background, { component }, Modifier.fillMaxSize(), update)
     }
 }
 
-fun Component.getScreenShot(): BufferedImage? {
+private fun Component.getScreenShot(): BufferedImage? {
     if (width == 0 || height == 0) {
         return null
     }
