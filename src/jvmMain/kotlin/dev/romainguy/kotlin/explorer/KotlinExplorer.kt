@@ -20,7 +20,6 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
@@ -69,7 +68,6 @@ import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
 import org.jetbrains.jewel.window.styling.TitleBarStyle
-import java.awt.Container
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
