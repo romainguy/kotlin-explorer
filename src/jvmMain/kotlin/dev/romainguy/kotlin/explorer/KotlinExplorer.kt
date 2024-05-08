@@ -18,11 +18,10 @@
 
 package dev.romainguy.kotlin.explorer
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,6 +69,7 @@ import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
 import org.jetbrains.jewel.window.styling.TitleBarStyle
+import java.awt.Container
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
@@ -84,6 +84,7 @@ private fun FrameWindowScope.KotlinExplorer(
 ) {
     // TODO: Move all those remembers to an internal private state object
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
+    var previousActiveTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var status by remember { mutableStateOf("Ready") }
     var progress by remember { mutableStateOf(1f) }
     var logs by remember { mutableStateOf("") }
@@ -118,14 +119,24 @@ private fun FrameWindowScope.KotlinExplorer(
     }}
     val focusTracker = remember { object : FocusListener {
         override fun focusGained(e: FocusEvent?) {
+            previousActiveTextArea = activeTextArea
             activeTextArea = e?.component as RSyntaxTextArea
         }
 
         override fun focusLost(e: FocusEvent?) {
+            // TODO: Bit of a hack to keep focus on the text areas. Without this, clicking
+            //       the background loses focus, so does opening/closing panels
+            if (e?.oppositeComponent !is RSyntaxTextArea) {
+                if (activeTextArea?.isShowing == true) {
+                    activeTextArea?.requestFocusInWindow()
+                } else {
+                    previousActiveTextArea?.requestFocusInWindow()
+                }
+            }
         }
     }}
 
-    val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState) }
+    val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() } }
     val byteCodeTextArea = remember { byteCodeTextArea(explorerState, focusTracker) }
     val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
     val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
@@ -200,17 +211,20 @@ private fun FrameWindowScope.KotlinExplorer(
 private fun LogsPanel(logs: String) {
     Column {
         Title("Logs")
-        Text(
-            text = logs,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier
-                .weight(1.0f)
-                .fillMaxSize()
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
-                .border(1.dp, JewelTheme.globalColors.borders.normal)
-                .padding(8.dp)
-        )
+        SelectionContainer {
+            Text(
+                text = logs,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier
+                    .weight(1.0f)
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .verticalScroll(rememberScrollState())
+                    .border(1.dp, JewelTheme.globalColors.borders.normal)
+                    .padding(8.dp)
+                    .focusable(false)
+            )
+        }
     }
 }
 
