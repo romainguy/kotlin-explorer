@@ -17,7 +17,7 @@
 package dev.romainguy.kotlin.explorer.code
 
 data class CodeStyle(
-    val indent: Int,
-    val showLineNumbers: Boolean,
-    val lineNumberWidth: Int,
+    val indent: Int = 4,
+    val showLineNumbers: Boolean = true,
+    val lineNumberWidth: Int = 4,
     )

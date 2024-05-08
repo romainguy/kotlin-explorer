@@ -16,7 +16,7 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-fun buildCode(codeStyle: CodeStyle, builderAction: CodeBuilder.() -> Unit): CodeBuilder {
+fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
     return CodeBuilder(codeStyle).apply(builderAction)
 }
 
@@ -30,12 +30,13 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private var line = 0
     private val sb = StringBuilder()
     private val jumps = mutableMapOf<Int, Int>()
+    private val sourceToCodeLine = mutableMapOf<Int, Int>()
+    private val codeToSourceToLine = mutableMapOf<Int, Int>()
 
-    // These 2 fields collect method scope data. They are reset when a method is added
+    // These 3 fields collect method scope data. They are reset when a method is added
     private val methodAddresses = mutableMapOf<Int, Int>()
     private val methodJumps = mutableListOf<Pair<Int, Int>>()
-
-    fun getJumps(): Map<Int, Int> = jumps
+    private var lastMethodLineNumber: Int = -1
 
     fun startClass(clazz: Class) {
         writeLine(clazz.header)
@@ -53,6 +54,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         }
         methodAddresses.clear()
         methodJumps.clear()
+        lastMethodLineNumber = -1
+
         writeLine("")
     }
 
@@ -62,12 +65,21 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         if (instruction.jumpAddress != null) {
             methodJumps.add(line to instruction.jumpAddress)
         }
+        val lineNumber = instruction.lineNumber
+        if (lineNumber != null) {
+            sourceToCodeLine[lineNumber] = line
+            lastMethodLineNumber = lineNumber
+        }
+        codeToSourceToLine[line] = lastMethodLineNumber
         if (codeStyle.showLineNumbers) {
-            val lineNumber = instruction.lineNumber
             val prefix = if (lineNumber != null) "$lineNumber:" else " "
             sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
         writeLine(instruction.code)
+    }
+
+    fun build(): Code {
+        return Code(sb.toString(), jumps, sourceToCodeLine, codeToSourceToLine)
     }
 
     override fun toString() = sb.toString()

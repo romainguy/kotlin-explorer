@@ -76,7 +76,7 @@ open class CodeTextArea(
         when (val content = content) {
             is Empty -> text = ""
             is Error -> text = content.errorText
-            is Success -> code = Code(content.classes, codeStyle).also {
+            is Success -> code = Code.fromClasses(content.classes, codeStyle).also {
                 val text = it.text
                 if (text != this.text) {
                     this.text = text
