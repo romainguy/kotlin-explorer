@@ -71,6 +71,7 @@ open class CodeTextArea(
     }
 
     private fun updateContent() {
+        val position = caretPosition
         code = null
         when (val content = content) {
             is Empty -> text = ""
@@ -82,6 +83,7 @@ open class CodeTextArea(
                 }
             }
         }
+        caretPosition = minOf(position, document.length)
     }
 
     final override fun addCaretListener(listener: CaretListener?) {
