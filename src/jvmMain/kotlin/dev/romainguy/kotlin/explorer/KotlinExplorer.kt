@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.key.Key.Companion.B
@@ -76,18 +77,14 @@ import javax.swing.SwingUtilities
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
 
-@Composable
-private fun FrameWindowScope.KotlinExplorer(
-    explorerState: ExplorerState
-) {
-    // TODO: Move all those remembers to an internal private state object
-    var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
-    var previousActiveTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
-    var status by remember { mutableStateOf("Ready") }
-    var progress by remember { mutableStateOf(1f) }
-    var logs by remember { mutableStateOf("") }
+private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
+    var activeTextArea by mutableStateOf<RSyntaxTextArea?>(null)
+    var previousActiveTextArea by mutableStateOf<RSyntaxTextArea?>(null)
+    var status by mutableStateOf("Ready")
+    var progress by mutableStateOf(1f)
+    var logs by mutableStateOf("")
 
-    val searchListener = remember { object : SearchListener {
+    val searchListener = object : SearchListener {
         override fun searchEvent(e: SearchEvent?) {
             when (e?.type) {
                 SearchEvent.Type.MARK_ALL -> {
@@ -114,8 +111,8 @@ private fun FrameWindowScope.KotlinExplorer(
         override fun getSelectedText(): String {
             return ""
         }
-    }}
-    val focusTracker = remember { object : FocusListener {
+    }
+    val focusTracker = object : FocusListener {
         override fun focusGained(e: FocusEvent?) {
             previousActiveTextArea = activeTextArea
             activeTextArea = e?.component as RSyntaxTextArea
@@ -132,62 +129,76 @@ private fun FrameWindowScope.KotlinExplorer(
                 }
             }
         }
-    }}
+    }
 
-    val sourceTextArea = remember { sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() } }
-    val byteCodeTextArea = remember { byteCodeTextArea(explorerState, focusTracker) }
-    val dexTextArea = remember { dexTextArea(explorerState, focusTracker) }
-    val oatTextArea = remember { oatTextArea(explorerState, focusTracker) }
+    val sourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
+    val byteCodeTextArea = byteCodeTextArea(explorerState, focusTracker)
+    val dexTextArea = dexTextArea(explorerState, focusTracker)
+    val oatTextArea = oatTextArea(explorerState, focusTracker)
     val codeTextAreas = listOf(byteCodeTextArea, dexTextArea, oatTextArea)
 
-    val findDialog = remember { FindDialog(window, searchListener).apply { searchContext.searchWrap = true } }
-    var showSettings by remember { DialogState(!explorerState.toolPaths.isValid) }
-
-    val sourcePanel: @Composable () -> Unit = { SourcePanel(sourceTextArea, explorerState, showSettings) }
-    val byteCodePanel: @Composable () -> Unit = { TextPanel("Byte Code", byteCodeTextArea, explorerState, showSettings) }
-    val dexPanel: @Composable () -> Unit = { TextPanel("DEX", dexTextArea, explorerState, showSettings) }
-    val oatPanel: @Composable () -> Unit = { TextPanel("OAT", oatTextArea, explorerState, showSettings) }
-    var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
+    val findDialog = FindDialog(window, searchListener).apply { searchContext.searchWrap = true }
+    var showSettings by DialogState(!explorerState.toolPaths.isValid)
 
     val updatePresentationMode: (Boolean) -> Unit = {
         listOf(dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
     }
+
     val updateShowLineNumbers: (Boolean) -> Unit = {
         listOf(byteCodeTextArea, dexTextArea).forEach { area ->
             area.codeStyle = area.codeStyle.withShowLineNumbers(it)
         }
     }
+
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
         status = newStatus
         progress = newProgress
     }
+
     val onLogsUpdate: (String) -> Unit = { text ->
         logs = text
         if (text.isNotEmpty()) {
             explorerState.showLogs = true
         }
     }
+}
+
+@Composable
+private fun FrameWindowScope.KotlinExplorer(
+    explorerState: ExplorerState
+) {
+    val uiState = remember { UiState(explorerState, window) }
+
+    val sourcePanel: @Composable () -> Unit =
+        { SourcePanel(uiState.sourceTextArea, explorerState, uiState.showSettings) }
+    val byteCodePanel: @Composable () -> Unit =
+        { TextPanel("Byte Code", uiState.byteCodeTextArea, explorerState, uiState.showSettings) }
+    val dexPanel: @Composable () -> Unit =
+        { TextPanel("DEX", uiState.dexTextArea, explorerState, uiState.showSettings) }
+    val oatPanel: @Composable () -> Unit =
+        { TextPanel("OAT", uiState.oatTextArea, explorerState, uiState.showSettings) }
+    var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
 
     MainMenu(
         explorerState,
-        sourceTextArea,
-        byteCodeTextArea::setContent,
-        dexTextArea::setContent,
-        oatTextArea::setContent,
-        onLogsUpdate,
-        onProgressUpdate,
-        { findDialog.isVisible = true },
-        { SearchEngine.find(activeTextArea, findDialog.searchContext) },
-        { showSettings = true },
+        uiState.sourceTextArea,
+        uiState.byteCodeTextArea::setContent,
+        uiState.dexTextArea::setContent,
+        uiState.oatTextArea::setContent,
+        uiState.onLogsUpdate,
+        uiState.onProgressUpdate,
+        { uiState.findDialog.isVisible = true },
+        { SearchEngine.find(uiState.activeTextArea, uiState.findDialog.searchContext) },
+        { uiState.showSettings = true },
         { panels = explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel) },
-        updateShowLineNumbers,
-        updatePresentationMode,
+        uiState.updateShowLineNumbers,
+        uiState.updatePresentationMode,
     )
 
-    if (showSettings) {
+    if (uiState.showSettings) {
         Settings(explorerState, onDismissRequest = {
-            showSettings = false
-            codeTextAreas.forEach {
+            uiState.showSettings = false
+            uiState.codeTextAreas.forEach {
                 it.codeStyle = it.codeStyle.withSettings(explorerState.indent, explorerState.lineNumberWidth)
             }
         })
@@ -197,11 +208,11 @@ private fun FrameWindowScope.KotlinExplorer(
         VerticalOptionalPanel(
             modifier = Modifier.weight(1.0f),
             showOptionalPanel = explorerState.showLogs,
-            optionalPanel = { LogsPanel(logs) }
+            optionalPanel = { LogsPanel(uiState.logs) }
         ) {
-            MultiSplitter(modifier = Modifier.weight(1.0f), panels = panels)
+            MultiSplitter(modifier = Modifier.weight(1.0f), panels)
         }
-        StatusBar(status, progress)
+        StatusBar(uiState.status, uiState.progress)
     }
 }
 
