@@ -18,7 +18,6 @@ package dev.romainguy.kotlin.explorer
 
 import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
-import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
 import dev.romainguy.kotlin.explorer.oat.OatDumpParser
 import kotlinx.coroutines.Dispatchers
@@ -197,7 +196,7 @@ suspend fun buildAndDisassemble(
 
         if (push.exitCode != 0) {
             launch(ui) {
-                onOat(Error(push.output))
+                onLogs(push.output)
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -214,7 +213,7 @@ suspend fun buildAndDisassemble(
 
         if (dex2oat.exitCode != 0) {
             launch(ui) {
-                onOat(Error(dex2oat.output))
+                onLogs(dex2oat.output)
                 onStatusUpdate("Ready", Done)
             }
             return@launch
