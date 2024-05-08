@@ -448,8 +448,8 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTr
 
 private fun applyTheme(textArea: RSyntaxTextArea) {
     try {
-        val theme = Theme.load(RSyntaxTextArea::class.java.getResourceAsStream(
-            "/org/fife/ui/rsyntaxtextarea/themes/idea.xml")
+        val theme = Theme.load(UiState::class.java.getResourceAsStream(
+            "/themes/kotlin_explorer.xml")
         )
         theme.apply(textArea)
     } catch (ioe: IOException) {
