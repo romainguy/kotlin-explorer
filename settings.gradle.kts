@@ -13,3 +13,4 @@ plugins {
 }
 
 rootProject.name = "kotlin-explorer"
+include("tests")
