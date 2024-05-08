@@ -43,6 +43,14 @@ kotlin {
                 runtimeOnly(libs.skiko.linux)
             }
         }
+
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.junit4)
+                implementation(libs.truth)
+            }
+        }
+
     }
 }
 
