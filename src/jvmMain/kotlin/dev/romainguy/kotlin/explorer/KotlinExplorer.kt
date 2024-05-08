@@ -19,7 +19,10 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,13 +37,14 @@ import androidx.compose.ui.input.key.Key.Companion.G
 import androidx.compose.ui.input.key.Key.Companion.L
 import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
+import androidx.compose.ui.input.key.Key.Companion.R
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
-import dev.romainguy.kotlin.explorer.Shortcut.Ctrl
-import dev.romainguy.kotlin.explorer.Shortcut.CtrlShift
+import dev.romainguy.kotlin.explorer.Shortcut.*
 import dev.romainguy.kotlin.explorer.code.CodeContent
 import dev.romainguy.kotlin.explorer.code.CodeStyle
 import dev.romainguy.kotlin.explorer.code.CodeTextArea
@@ -82,6 +86,7 @@ private fun FrameWindowScope.KotlinExplorer(
     var activeTextArea by remember { mutableStateOf<RSyntaxTextArea?>(null) }
     var status by remember { mutableStateOf("Ready") }
     var progress by remember { mutableStateOf(1f) }
+    var logs by remember { mutableStateOf("") }
 
     val searchListener = remember { object : SearchListener {
         override fun searchEvent(e: SearchEvent?) {
@@ -143,10 +148,15 @@ private fun FrameWindowScope.KotlinExplorer(
             area.codeStyle = area.codeStyle.withShowLineNumbers(it)
         }
     }
-
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
         status = newStatus
         progress = newProgress
+    }
+    val onLogsUpdate: (String) -> Unit = { text ->
+        logs = text
+        if (text.isNotEmpty()) {
+            explorerState.showLogs = true
+        }
     }
 
     MainMenu(
@@ -155,6 +165,7 @@ private fun FrameWindowScope.KotlinExplorer(
         byteCodeTextArea::setContent,
         dexTextArea::setContent,
         oatTextArea::setContent,
+        onLogsUpdate,
         onProgressUpdate,
         { findDialog.isVisible = true },
         { SearchEngine.find(activeTextArea, findDialog.searchContext) },
@@ -174,15 +185,39 @@ private fun FrameWindowScope.KotlinExplorer(
     }
 
     Column(modifier = Modifier.background(JewelTheme.globalColors.paneBackground)) {
-        MultiSplitter(modifier = Modifier.weight(1.0f), panels)
+        VerticalOptionalPanel(
+            modifier = Modifier.weight(1.0f),
+            showOptionalPanel = explorerState.showLogs,
+            optionalPanel = { LogsPanel(logs) }
+        ) {
+            MultiSplitter(modifier = Modifier.weight(1.0f), panels = panels)
+        }
         StatusBar(status, progress)
+    }
+}
+
+@Composable
+private fun LogsPanel(logs: String) {
+    Column {
+        Title("Logs")
+        Text(
+            text = logs,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier
+                .weight(1.0f)
+                .fillMaxSize()
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
+                .border(1.dp, JewelTheme.globalColors.borders.normal)
+                .padding(8.dp)
+        )
     }
 }
 
 @Composable
 private fun StatusBar(status: String, progress: Float) {
     Row(verticalAlignment = CenterVertically) {
-        val width = 160.dp
+        val width = 190.dp
         Text(
             modifier = Modifier
                 .widthIn(min = width, max = width)
@@ -299,6 +334,7 @@ private fun FrameWindowScope.MainMenu(
     onByteCodeUpdate: (CodeContent) -> Unit,
     onDexUpdate: (CodeContent) -> Unit,
     onOatUpdate: (CodeContent) -> Unit,
+    onLogsUpdate: (String) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
     onFindClicked: () -> Unit,
     onFindNextClicked: () -> Unit,
@@ -311,17 +347,29 @@ private fun FrameWindowScope.MainMenu(
 
     val compileAndDisassemble: () -> Unit = {
         scope.launch {
-            disassemble(
+            buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
                 onByteCodeUpdate,
                 onDexUpdate,
                 onOatUpdate,
+                onLogsUpdate,
                 onStatusUpdate,
                 explorerState.optimize
             )
         }
     }
+    val compileAndRun: () -> Unit = {
+        scope.launch {
+            buildAndRun(
+                explorerState.toolPaths,
+                sourceTextArea.text,
+                onLogsUpdate,
+                onStatusUpdate
+            )
+        }
+    }
+
     MenuBar {
         Menu("File") {
             Item("Settings…", onClick = onOpenSettings)
@@ -339,14 +387,23 @@ private fun FrameWindowScope.MainMenu(
                 onShowLineNumberChanged(it)
             }
             Separator()
+            MenuCheckboxItem("Show Logs", Ctrl(L), explorerState::showLogs)
+            Separator()
             MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode) {
                 onPresentationModeChanged(it)
             }
         }
-        Menu("Compilation") {
+        Menu("Build") {
+            MenuItem(
+                "Run",
+                CtrlOnly(R),
+                onClick = compileAndRun,
+                enabled = explorerState.toolPaths.isValid
+            )
+            Separator()
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
             MenuItem(
-                "Compile & Disassemble",
+                "Build & Disassemble",
                 CtrlShift(D),
                 onClick = compileAndDisassemble,
                 enabled = explorerState.toolPaths.isValid

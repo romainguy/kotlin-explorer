@@ -30,28 +30,26 @@ import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
 
-private const val TotalSteps = 6
+private const val TotalDisassemblySteps = 6
+private const val TotalRunSteps = 2
 private const val Done = 1f
 
 private val byteCodeParser = ByteCodeParser()
 private val dexDumpParser = DexDumpParser()
 private val oatDumpParser = OatDumpParser()
 
-suspend fun disassemble(
+suspend fun buildAndRun(
     toolPaths: ToolPaths,
     source: String,
-    onByteCode: (CodeContent) -> Unit,
-    onDex: (CodeContent) -> Unit,
-    onOat: (CodeContent) -> Unit,
-    onStatusUpdate: (String, Float) -> Unit,
-    optimize: Boolean
+    onLogs: (String) -> Unit,
+    onStatusUpdate: (String, Float) -> Unit
 ) = coroutineScope {
     val ui = currentCoroutineContext()
 
     launch(Dispatchers.IO) {
         var step = 0f
 
-        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalSteps) }
+        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalRunSteps) }
 
         val directory = toolPaths.tempDirectory
         cleanupClasses(directory)
@@ -66,13 +64,71 @@ suspend fun disassemble(
 
         if (kotlinc.exitCode != 0) {
             launch(ui) {
-                onDex(Error(kotlinc.output.replace(path.parent.toString() + "/", "")))
+                onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
                 onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Disassembling ByteCode…", step++ / TotalSteps) }
+        launch(ui) { onStatusUpdate("Running…", step++ / TotalRunSteps) }
+
+        val java = process(
+            *buildJavaCommand(toolPaths),
+            directory = directory
+        )
+
+        if (java.exitCode != 0) {
+            launch(ui) {
+                onLogs(java.output)
+                onStatusUpdate("Ready", Done)
+            }
+            return@launch
+        }
+
+        launch(ui) {
+            onLogs(java.output)
+            onStatusUpdate("Ready", Done)
+        }
+    }
+}
+
+suspend fun buildAndDisassemble(
+    toolPaths: ToolPaths,
+    source: String,
+    onByteCode: (CodeContent) -> Unit,
+    onDex: (CodeContent) -> Unit,
+    onOat: (CodeContent) -> Unit,
+    onLogs: (String) -> Unit,
+    onStatusUpdate: (String, Float) -> Unit,
+    optimize: Boolean
+) = coroutineScope {
+    val ui = currentCoroutineContext()
+
+    launch(Dispatchers.IO) {
+        var step = 0f
+
+        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalDisassemblySteps) }
+
+        val directory = toolPaths.tempDirectory
+        cleanupClasses(directory)
+
+        val path = directory.resolve("KotlinExplorer.kt")
+        Files.writeString(path, source)
+
+        val kotlinc = process(
+            *buildKotlincCommand(toolPaths, path),
+            directory = directory
+        )
+
+        if (kotlinc.exitCode != 0) {
+            launch(ui) {
+                onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
+                onStatusUpdate("Ready", Done)
+            }
+            return@launch
+        }
+
+        launch(ui) { onStatusUpdate("Disassembling ByteCode…", step++ / TotalDisassemblySteps) }
 
         val javap = process(
             *buildJavapCommand(directory),
@@ -83,6 +139,7 @@ suspend fun disassemble(
 
         if (javap.exitCode != 0) {
             launch(ui) {
+                onLogs(javap.output)
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -90,7 +147,7 @@ suspend fun disassemble(
 
         launch(ui) {
             val status = if (optimize) "Optimizing with R8…" else "Compiling with D8…"
-            onStatusUpdate(status, step++ / TotalSteps)
+            onStatusUpdate(status, step++ / TotalDisassemblySteps)
         }
 
         writeR8Rules(directory)
@@ -102,13 +159,13 @@ suspend fun disassemble(
 
         if (r8.exitCode != 0) {
             launch(ui) {
-                onDex(Error(r8.output))
+                onLogs(r8.output)
                 onStatusUpdate("Ready", Done)
             }
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Disassembling DEX…", step++ / TotalSteps) }
+        launch(ui) { onStatusUpdate("Disassembling DEX…", step++ / TotalDisassemblySteps) }
 
         val dexdump = process(
             toolPaths.dexdump.toString(),
@@ -119,7 +176,7 @@ suspend fun disassemble(
 
         if (dexdump.exitCode != 0) {
             launch(ui) {
-                onDex(Error(dexdump.output))
+                onLogs(dexdump.output)
                 onStatusUpdate("Ready", Done)
             }
             return@launch
@@ -127,7 +184,7 @@ suspend fun disassemble(
 
         launch(ui) {
             onDex(dexDumpParser.parse(dexdump.output))
-            onStatusUpdate("AOT compilation…", step++ / TotalSteps)
+            onStatusUpdate("AOT compilation…", step++ / TotalDisassemblySteps)
         }
 
         val push = process(
@@ -163,7 +220,7 @@ suspend fun disassemble(
             return@launch
         }
 
-        launch(ui) { onStatusUpdate("Disassembling OAT…", step++ / TotalSteps) }
+        launch(ui) { onStatusUpdate("Disassembling OAT…", step++ / TotalDisassemblySteps) }
 
         val oatdump = process(
             toolPaths.adb.toString(),
@@ -182,6 +239,15 @@ suspend fun disassemble(
 
         launch(ui) { onStatusUpdate("Ready", Done) }
     }
+}
+
+private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
+    val command = mutableListOf(
+        "java",
+        "-classpath",
+        toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() } + ":${toolPaths.platform}" + ":.",
+        "KotlinExplorerKt")
+    return command.toTypedArray()
 }
 
 private fun buildJavapCommand(directory: Path): Array<String> {
