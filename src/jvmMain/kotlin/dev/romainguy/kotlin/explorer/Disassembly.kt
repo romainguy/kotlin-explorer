@@ -22,18 +22,14 @@ import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
 import dev.romainguy.kotlin.explorer.oat.OatDumpParser
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 import kotlin.io.path.extension
 
-private const val TotalDisassemblySteps = 6
+private const val TotalDisassemblySteps = 7
 private const val TotalRunSteps = 2
-private const val Done = 1f
 
 private val byteCodeDecompiler = ByteCodeDecompiler()
 private val byteCodeParser = ByteCodeParser()
@@ -49,44 +45,43 @@ suspend fun buildAndRun(
     val ui = currentCoroutineContext()
 
     launch(Dispatchers.IO) {
-        var step = 0f
+        val updater = ProgressUpdater(TotalRunSteps, onStatusUpdate)
+        try {
+            updater.addJob(launch(ui) { updater.update("Compiling Kotlin…") })
 
-        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalRunSteps) }
+            val directory = toolPaths.tempDirectory
+            cleanupClasses(directory)
 
-        val directory = toolPaths.tempDirectory
-        cleanupClasses(directory)
-
-        val path = directory.resolve("KotlinExplorer.kt")
-        Files.writeString(path, source)
+            val path = directory.resolve("KotlinExplorer.kt")
+            Files.writeString(path, source)
 
         val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
-        if (kotlinc.exitCode != 0) {
-            launch(ui) {
-                onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
-                onStatusUpdate("Ready", Done)
+            if (kotlinc.exitCode != 0) {
+                withContext(ui) {
+                    onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
+                    updater.advance("Error compiling Kotlin", 2)
+                }
+                return@launch
             }
-            return@launch
-        }
 
-        launch(ui) { onStatusUpdate("Running…", step++ / TotalRunSteps) }
+            withContext(ui) { updater.advance("Running…") }
 
-        val java = process(
-            *buildJavaCommand(toolPaths),
-            directory = directory
-        )
+            val java = process(
+                *buildJavaCommand(toolPaths),
+                directory = directory
+            )
 
-        if (java.exitCode != 0) {
-            launch(ui) {
+            withContext(ui) {
                 onLogs(java.output)
-                onStatusUpdate("Ready", Done)
+                val status = if (java.exitCode != 0) "Error running code" else "Run completed"
+                updater.advance(status)
             }
-            return@launch
-        }
 
-        launch(ui) {
-            onLogs(java.output)
-            onStatusUpdate("Ready", Done)
+        } finally {
+            withContext(ui) {
+                updater.finish()
+            }
         }
     }
 }
@@ -104,132 +99,135 @@ suspend fun buildAndDisassemble(
     val ui = currentCoroutineContext()
 
     launch(Dispatchers.IO) {
-        var step = 0f
+        val updater = ProgressUpdater(TotalDisassemblySteps, onStatusUpdate)
+        try {
+            updater.addJob(launch(ui) { updater.update("Compiling and disassembling…") })
 
-        launch(ui) { onStatusUpdate("Compiling Kotlin…", step++ / TotalDisassemblySteps) }
+            val directory = toolPaths.tempDirectory
+            cleanupClasses(directory)
 
-        val directory = toolPaths.tempDirectory
-        cleanupClasses(directory)
-
-        val path = directory.resolve("KotlinExplorer.kt")
-        Files.writeString(path, source)
+            val path = directory.resolve("KotlinExplorer.kt")
+            Files.writeString(path, source)
 
         val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
-        if (kotlinc.exitCode != 0) {
-            launch(ui) {
-                onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
-                onStatusUpdate("Ready", Done)
+            if (kotlinc.exitCode != 0) {
+                updater.addJob(launch(ui) {
+                    onLogs(kotlinc.output.replace(path.parent.toString() + "/", ""))
+                    updater.advance("Error compiling Kotlin", updater.steps)
+                })
+                return@launch
             }
-            return@launch
-        }
+            updater.addJob(launch(ui) { updater.advance("Kotlin compiled") })
 
-        launch(ui) { onStatusUpdate("Disassembling ByteCode…", step++ / TotalDisassemblySteps) }
+            updater.addJob(launch {
+                val javap = byteCodeDecompiler.decompile(directory)
+                withContext(ui) {
+                    val status = if (javap.exitCode != 0) {
+                        onLogs(javap.output)
+                        "Error Disassembling Java ByteCode"
+                    } else {
+                        onByteCode(byteCodeParser.parse(javap.output))
+                        "Disassembled Java ByteCode"
+                    }
+                    updater.advance(status)
+                }
+            })
 
-        val javap = byteCodeDecompiler.decompile(directory)
-        launch { onByteCode(byteCodeParser.parse(javap.output)) }
+            writeR8Rules(directory)
 
-        if (javap.exitCode != 0) {
-            launch(ui) {
-                onLogs(javap.output)
-                onStatusUpdate("Ready", Done)
+            val r8 = process(
+                *buildR8Command(toolPaths, directory, optimize),
+                directory = directory
+            )
+
+            if (r8.exitCode != 0) {
+                updater.addJob(launch(ui) {
+                    onLogs(r8.output)
+                    updater.advance("Error creating DEX", 5)
+                })
+                return@launch
             }
-            return@launch
-        }
+            updater.addJob(launch(ui) {
+                updater.advance(if (optimize) "Optimized DEX with R8" else "Compiled DEX with D8")
+            })
 
-        launch(ui) {
-            val status = if (optimize) "Optimizing with R8…" else "Compiling with D8…"
-            onStatusUpdate(status, step++ / TotalDisassemblySteps)
-        }
+            updater.addJob(launch {
+                val dexdump = process(
+                    toolPaths.dexdump.toString(),
+                    "-d",
+                    "classes.dex",
+                    directory = directory
+                )
+                withContext(ui) {
+                    val status = if (dexdump.exitCode != 0) {
+                        onLogs(dexdump.output)
+                        "Error creating DEX dump"
+                    } else {
+                        onDex(dexDumpParser.parse(dexdump.output))
+                        "Created DEX dump"
+                    }
+                    updater.advance(status)
+                }
+            })
 
-        writeR8Rules(directory)
+            val push = process(
+                toolPaths.adb.toString(),
+                "push",
+                "classes.dex",
+                "/sdcard/classes.dex",
+                directory = directory
+            )
 
-        val r8 = process(
-            *buildR8Command(toolPaths, directory, optimize),
-            directory = directory
-        )
-
-        if (r8.exitCode != 0) {
-            launch(ui) {
-                onLogs(r8.output)
-                onStatusUpdate("Ready", Done)
+            if (push.exitCode != 0) {
+                updater.addJob(launch(ui) {
+                    onLogs(push.output)
+                    updater.advance("Error pushing code to device", 3)
+                })
+                return@launch
             }
-            return@launch
-        }
 
-        launch(ui) { onStatusUpdate("Disassembling DEX…", step++ / TotalDisassemblySteps) }
+            updater.addJob(launch(ui) { updater.advance("Pushed code to device…") })
 
-        val dexdump = process(
-            toolPaths.dexdump.toString(),
-            "-d",
-            "classes.dex",
-            directory = directory
-        )
+            val dex2oat = process(
+                toolPaths.adb.toString(),
+                "shell",
+                "dex2oat",
+                "--dex-file=/sdcard/classes.dex",
+                "--oat-file=/sdcard/classes.oat",
+                directory = directory
+            )
 
-        if (dexdump.exitCode != 0) {
-            launch(ui) {
-                onLogs(dexdump.output)
-                onStatusUpdate("Ready", Done)
+            if (dex2oat.exitCode != 0) {
+                updater.addJob(launch(ui) {
+                    onLogs(dex2oat.output)
+                    updater.advance("Ready", 2)
+                })
+                return@launch
             }
-            return@launch
-        }
 
-        launch(ui) {
-            onDex(dexDumpParser.parse(dexdump.output))
-            onStatusUpdate("AOT compilation…", step++ / TotalDisassemblySteps)
-        }
+            updater.addJob(launch(ui) { updater.advance("Disassembling OAT…") })
 
-        val push = process(
-            toolPaths.adb.toString(),
-            "push",
-            "classes.dex",
-            "/sdcard/classes.dex",
-            directory = directory
-        )
+            val oatdump = process(
+                toolPaths.adb.toString(),
+                "shell",
+                "oatdump",
+                "--oat-file=/sdcard/classes.oat",
+                directory = directory
+            )
 
-        if (push.exitCode != 0) {
-            launch(ui) {
-                onLogs(push.output)
-                onStatusUpdate("Ready", Done)
+            updater.addJob(launch(ui) { onOat(oatDumpParser.parse(oatdump.output)) })
+
+            val status = if (oatdump.exitCode != 0) {
+                onLogs(oatdump.output)
+                "Error creating oat dump"
+            } else {
+                "Created oat dump"
             }
-            return@launch
+            withContext(ui) { updater.advance(status) }
+        } finally {
+            updater.finish()
         }
-
-        val dex2oat = process(
-            toolPaths.adb.toString(),
-            "shell",
-            "dex2oat",
-            "--dex-file=/sdcard/classes.dex",
-            "--oat-file=/sdcard/classes.oat",
-            directory = directory
-        )
-
-        if (dex2oat.exitCode != 0) {
-            launch(ui) {
-                onLogs(dex2oat.output)
-                onStatusUpdate("Ready", Done)
-            }
-            return@launch
-        }
-
-        launch(ui) { onStatusUpdate("Disassembling OAT…", step++ / TotalDisassemblySteps) }
-
-        val oatdump = process(
-            toolPaths.adb.toString(),
-            "shell",
-            "oatdump",
-            "--oat-file=/sdcard/classes.oat",
-            directory = directory
-        )
-
-        launch(ui) { onOat(oatDumpParser.parse(oatdump.output)) }
-
-        if (oatdump.exitCode != 0) {
-            launch(ui) { onStatusUpdate("Ready", Done) }
-            return@launch
-        }
-
-        launch(ui) { onStatusUpdate("Ready", Done) }
     }
 }
 
