@@ -24,27 +24,32 @@ package dev.romainguy.kotlin.explorer.code
  * * Disassembled text with optional line number annotations
  * * Jump information for branch instructions
  */
-class Code(private val classes: List<Class>, codeStyle: CodeStyle) {
-    private val jumps: Map<Int, Int>
-
-    val text: String
-
-    init {
-        val code = buildCode(codeStyle) {
-            classes.forEach { clazz ->
-                startClass(clazz)
-                clazz.methods.forEach { method ->
-                    startMethod(method)
-                    method.instructions.forEach { instruction ->
-                        writeInstruction(instruction)
-                    }
-                    endMethod()
-                }
-            }
-        }
-        text = code.toString()
-        jumps = code.getJumps()
-    }
-
+class Code(
+    val text: String,
+    private val jumps: Map<Int, Int>,
+    private val sourceToCodeLine: Map<Int, Int>,
+    private val codeToSourceToLine: Map<Int, Int>,
+) {
     fun getJumpTargetOfLine(line: Int) = jumps[line]
+
+    fun getCodeLine(sourceLine: Int) = sourceToCodeLine[sourceLine]
+
+    fun getSourceLine(codeLine: Int) = codeToSourceToLine[codeLine]
+
+    companion object {
+        fun fromClasses(classes: List<Class>, codeStyle: CodeStyle = CodeStyle()): Code {
+            return buildCode(codeStyle) {
+                classes.forEach { clazz ->
+                    startClass(clazz)
+                    clazz.methods.forEach { method ->
+                        startMethod(method)
+                        method.instructions.forEach { instruction ->
+                            writeInstruction(instruction)
+                        }
+                        endMethod()
+                    }
+                }
+            }.build()
+        }
+    }
 }
