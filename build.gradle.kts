@@ -47,6 +47,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(libs.junit4)
+                implementation(libs.kotlin.test)
                 implementation(libs.truth)
             }
         }

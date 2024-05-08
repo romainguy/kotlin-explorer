@@ -16,6 +16,8 @@
 
 package dev.romainguy.kotlin.explorer
 
+import dev.romainguy.kotlin.explorer.build.ByteCodeDecompiler
+import dev.romainguy.kotlin.explorer.build.KotlinCompiler
 import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
@@ -33,6 +35,7 @@ private const val TotalDisassemblySteps = 6
 private const val TotalRunSteps = 2
 private const val Done = 1f
 
+private val byteCodeDecompiler = ByteCodeDecompiler()
 private val byteCodeParser = ByteCodeParser()
 private val dexDumpParser = DexDumpParser()
 private val oatDumpParser = OatDumpParser()
@@ -56,10 +59,7 @@ suspend fun buildAndRun(
         val path = directory.resolve("KotlinExplorer.kt")
         Files.writeString(path, source)
 
-        val kotlinc = process(
-            *buildKotlincCommand(toolPaths, path),
-            directory = directory
-        )
+        val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
         if (kotlinc.exitCode != 0) {
             launch(ui) {
@@ -114,10 +114,7 @@ suspend fun buildAndDisassemble(
         val path = directory.resolve("KotlinExplorer.kt")
         Files.writeString(path, source)
 
-        val kotlinc = process(
-            *buildKotlincCommand(toolPaths, path),
-            directory = directory
-        )
+        val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
         if (kotlinc.exitCode != 0) {
             launch(ui) {
@@ -129,11 +126,7 @@ suspend fun buildAndDisassemble(
 
         launch(ui) { onStatusUpdate("Disassembling ByteCode…", step++ / TotalDisassemblySteps) }
 
-        val javap = process(
-            *buildJavapCommand(directory),
-            directory = directory
-        )
-
+        val javap = byteCodeDecompiler.decompile(directory)
         launch { onByteCode(byteCodeParser.parse(javap.output)) }
 
         if (javap.exitCode != 0) {
@@ -249,18 +242,6 @@ private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
     return command.toTypedArray()
 }
 
-private fun buildJavapCommand(directory: Path): Array<String> {
-    val command = mutableListOf("javap", "-p", "-l", "-c")
-    val classFiles = Files
-        .list(directory)
-        .filter { path -> path.extension == "class" }
-        .map { file -> file.fileName.toString() }
-        .sorted()
-        .collect(Collectors.toList())
-    command.addAll(classFiles)
-    return command.toTypedArray()
-}
-
 private fun buildR8Command(
     toolPaths: ToolPaths,
     directory: Path,
@@ -318,22 +299,6 @@ private fun buildR8Command(
     return command.toTypedArray()
 }
 
-private fun buildKotlincCommand(toolPaths: ToolPaths, path: Path): Array<String> {
-    val command = mutableListOf(
-        toolPaths.kotlinc.toString(),
-        path.toString(),
-        "-Xmulti-platform",
-        "-Xno-param-assertions",
-        "-Xno-call-assertions",
-        "-Xno-receiver-assertions",
-        "-classpath",
-        toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() }
-            + ":${toolPaths.platform}"
-    )
-
-    return command.toTypedArray()
-}
-
 private fun writeR8Rules(directory: Path) {
     // Match $ANDROID_HOME/tools/proguard/proguard-android-optimize.txt
     Files.writeString(
@@ -343,7 +308,7 @@ private fun writeR8Rules(directory: Path) {
         -allowaccessmodification
         -dontpreverify
         -dontobfuscate
-        -keep,allowoptimization class !kotlin.**,!kotlinx.** {
+        -keep,allow optimization class !kotlin.**,!kotlinx.** {
           <methods>;
         }""".trimIndent()
     )
