@@ -19,6 +19,8 @@ package dev.romainguy.kotlin.explorer.testing
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.build.ByteCodeDecompiler
 import dev.romainguy.kotlin.explorer.build.KotlinCompiler
+import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
+import dev.romainguy.kotlin.explorer.code.CodeContent
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 import java.util.*
@@ -127,3 +129,11 @@ private fun getAndroidHome(properties: Properties): Path {
     return path
 }
 
+private fun CodeContent.asSuccess(): CodeContent.Success {
+    if (this !is CodeContent.Success) {
+        fail("Expected Success but got: $this")
+    }
+    return this
+}
+
+fun ByteCodeParser.parseSuccess(text: String) = parse(text).asSuccess()

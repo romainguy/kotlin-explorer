@@ -16,7 +16,9 @@
 
 package dev.romainguy.kotlin.explorer.bytecode
 
+import com.google.common.truth.Truth.assertThat
 import dev.romainguy.kotlin.explorer.testing.Builder
+import dev.romainguy.kotlin.explorer.testing.parseSuccess
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -30,8 +32,20 @@ class ByteCodeParserTest {
 
     @Test
     fun issue_45() {
-        val byteCode = builder.generateByteCode("Issue_45.kt")
-        val content = byteCodeParser.parse(byteCode)
-        println(content)
+        val content = byteCodeParser.parseSuccess(builder.generateByteCode("Issue_45.kt"))
+
+        assertThat(content.classes.map { it.header }).containsExactly(
+            "final class testData.Issue_45Kt\$main$1",
+            "public final class testData.Issue_45Kt",
+        )
+        assertThat(content.classes.flatMap { it.methods }.map { it.header }).containsExactly(
+            "testData.Issue_45Kt\$main\$1()",
+            "public final void invoke()",
+            "public java.lang.Object invoke()",
+            "public static final void main()",
+            "public static final void f1(kotlin.jvm.functions.Function0<kotlin.Unit>)",
+            "public static final void f2()",
+            "public static void main(java.lang.String[])",
+        )
     }
 }
