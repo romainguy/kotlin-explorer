@@ -47,11 +47,11 @@ sealed class Shortcut(
 @Composable
 fun MenuScope.MenuCheckboxItem(
     text: String,
-    shortcut: Shortcut,
+    shortcut: Shortcut?,
     property: KMutableProperty0<Boolean>,
     onCheckedChanged: (Boolean) -> Unit = {}
 ) {
-    CheckboxItem(text, property.get(), shortcut = shortcut.asKeyShortcut(), onCheckedChange = {
+    CheckboxItem(text, property.get(), shortcut = shortcut?.asKeyShortcut(), onCheckedChange = {
         property.set(it)
         onCheckedChanged(it)
     })
