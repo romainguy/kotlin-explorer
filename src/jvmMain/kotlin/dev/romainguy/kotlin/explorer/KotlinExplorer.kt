@@ -240,7 +240,7 @@ private fun LogsPanel(logs: String) {
 @Composable
 private fun StatusBar(status: String, progress: Float) {
     Row(verticalAlignment = CenterVertically) {
-        val width = 190.dp
+        val width = 220.dp
         Text(
             modifier = Modifier
                 .widthIn(min = width, max = width)
