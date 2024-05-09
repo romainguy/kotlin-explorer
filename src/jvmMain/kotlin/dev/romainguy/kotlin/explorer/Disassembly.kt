@@ -308,7 +308,7 @@ private fun writeR8Rules(directory: Path) {
         -allowaccessmodification
         -dontpreverify
         -dontobfuscate
-        -keep,allow optimization class !kotlin.**,!kotlinx.** {
+        -keep,allowoptimization class !kotlin.**,!kotlinx.** {
           <methods>;
         }""".trimIndent()
     )
