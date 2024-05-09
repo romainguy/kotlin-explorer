@@ -29,7 +29,7 @@ import dev.romainguy.kotlin.explorer.getValue
  * public final class KotlinExplorerKt {
  * ```
  */
-private val ClassRegex = Regex("^.* class [_a-zA-Z][_\\w]+ \\{$")
+private val ClassRegex = Regex("^.* class [_a-zA-Z][_\\w.]+ \\{$")
 
 /**
  * Examples:

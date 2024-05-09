@@ -1,0 +1,1175 @@
+Compiled from "Issue_45.kt"
+public final class testData.Grid {
+  private final long cells;
+
+  public static void getCells$annotations();
+    Code:
+       0: return
+
+  public static final void forEach-impl(long, kotlin.jvm.functions.Function2<? super java.lang.Integer, ? super java.lang.Integer, kotlin.Unit>);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: lload_0
+       3: lstore        4
+       5: lload         4
+       7: lstore        6
+       9: iconst_0
+      10: istore        8
+      12: lload         6
+      14: lconst_0
+      15: lcmp
+      16: ifeq          23
+      19: iconst_1
+      20: goto          24
+      23: iconst_0
+      24: ifeq          85
+      27: lload         4
+      29: lstore        7
+      31: iconst_0
+      32: istore        9
+      34: bipush        63
+      36: lload         7
+      38: invokestatic  #17                 // Method java/lang/Long.numberOfTrailingZeros:(J)I
+      41: isub
+      42: istore        6
+      44: aload_2
+      45: iload         6
+      47: bipush        7
+      49: iand
+      50: invokestatic  #23                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      53: iload         6
+      55: iconst_3
+      56: iushr
+      57: invokestatic  #23                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      60: invokeinterface #29,  3           // InterfaceMethod kotlin/jvm/functions/Function2.invoke:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      65: pop
+      66: lload         4
+      68: lstore        7
+      70: iconst_0
+      71: istore        9
+      73: lload         7
+      75: lload         7
+      77: lconst_1
+      78: lsub
+      79: land
+      80: lstore        4
+      82: goto          5
+      85: return
+    LineNumberTable:
+      line 47: 2
+      line 48: 5
+      line 100: 12
+      line 49: 27
+      line 101: 34
+      line 101: 41
+      line 49: 42
+      line 50: 44
+      line 51: 66
+      line 102: 73
+      line 51: 80
+      line 53: 85
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         12      12     8 $i$f$hasNext   I
+          9      15     6 $this$hasNext$iv   J
+         34       8     9 $i$f$get   I
+         31      11     7 $this$get$iv   J
+         73       7     9 $i$f$next   I
+         70      10     7 $this$next$iv   J
+         44      38     6 index   I
+          2      84     3 $i$f$forEach-impl   I
+          5      81     4     v   J
+          0      86     0  arg0   J
+          0      86     2 block   Lkotlin/jvm/functions/Function2;
+
+  public static final boolean get-impl(long, int, int);
+    Code:
+       0: iconst_0
+       1: istore        4
+       3: lload_0
+       4: bipush        7
+       6: iload_3
+       7: isub
+       8: iconst_3
+       9: ishl
+      10: lushr
+      11: lconst_1
+      12: bipush        7
+      14: iload_2
+      15: isub
+      16: lshl
+      17: land
+      18: lconst_0
+      19: lcmp
+      20: ifeq          27
+      23: iconst_1
+      24: goto          28
+      27: iconst_0
+      28: ireturn
+    LineNumberTable:
+      line 56: 3
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          3      26     4 $i$f$get-impl   I
+          0      29     0  arg0   J
+          0      29     2     x   I
+          0      29     3     y   I
+
+  public static final long plus-VMe-PFo(long, short);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: lload_0
+       3: iconst_0
+       4: istore        4
+       6: iload_2
+       7: bipush        12
+       9: iushr
+      10: iconst_0
+      11: istore        4
+      13: iload_2
+      14: bipush        8
+      16: ishr
+      17: bipush        15
+      19: iand
+      20: iconst_0
+      21: istore        4
+      23: iload_2
+      24: iconst_4
+      25: ishr
+      26: bipush        15
+      28: iand
+      29: iconst_0
+      30: istore        4
+      32: iload_2
+      33: bipush        15
+      35: iand
+      36: invokestatic  #56                 // Method testData/Issue_45Kt.rasterize:(IIII)J
+      39: lor
+      40: invokestatic  #60                 // Method "constructor-impl":(J)J
+      43: lreturn
+    LineNumberTable:
+      line 59: 2
+      line 103: 6
+      line 59: 10
+      line 104: 13
+      line 59: 20
+      line 105: 23
+      line 59: 29
+      line 106: 32
+      line 59: 36
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          6       4     4 $i$f$getL-impl   I
+         13       7     4 $i$f$getT-impl   I
+         23       6     4 $i$f$getR-impl   I
+         32       4     4 $i$f$getB-impl   I
+          2      42     3 $i$f$plus-VMe-PFo   I
+          0      44     0  arg0   J
+          0      44     2     r   S
+
+  public static final long minus-VMe-PFo(long, short);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: lload_0
+       3: iconst_0
+       4: istore        4
+       6: iload_2
+       7: bipush        12
+       9: iushr
+      10: iconst_0
+      11: istore        4
+      13: iload_2
+      14: bipush        8
+      16: ishr
+      17: bipush        15
+      19: iand
+      20: iconst_0
+      21: istore        4
+      23: iload_2
+      24: iconst_4
+      25: ishr
+      26: bipush        15
+      28: iand
+      29: iconst_0
+      30: istore        4
+      32: iload_2
+      33: bipush        15
+      35: iand
+      36: invokestatic  #56                 // Method testData/Issue_45Kt.rasterize:(IIII)J
+      39: ldc2_w        #69                 // long -1l
+      42: lxor
+      43: land
+      44: invokestatic  #60                 // Method "constructor-impl":(J)J
+      47: lreturn
+    LineNumberTable:
+      line 62: 2
+      line 107: 6
+      line 62: 10
+      line 108: 13
+      line 62: 20
+      line 109: 23
+      line 62: 29
+      line 110: 32
+      line 62: 36
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          6       4     4 $i$f$getL-impl   I
+         13       7     4 $i$f$getT-impl   I
+         23       6     4 $i$f$getR-impl   I
+         32       4     4 $i$f$getB-impl   I
+          2      46     3 $i$f$minus-VMe-PFo   I
+          0      48     0  arg0   J
+          0      48     2     r   S
+
+  public static final long and-VMe-PFo(long, short);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: lload_0
+       3: iconst_0
+       4: istore        4
+       6: iload_2
+       7: bipush        12
+       9: iushr
+      10: iconst_0
+      11: istore        4
+      13: iload_2
+      14: bipush        8
+      16: ishr
+      17: bipush        15
+      19: iand
+      20: iconst_0
+      21: istore        4
+      23: iload_2
+      24: iconst_4
+      25: ishr
+      26: bipush        15
+      28: iand
+      29: iconst_0
+      30: istore        4
+      32: iload_2
+      33: bipush        15
+      35: iand
+      36: invokestatic  #56                 // Method testData/Issue_45Kt.rasterize:(IIII)J
+      39: land
+      40: invokestatic  #60                 // Method "constructor-impl":(J)J
+      43: lreturn
+    LineNumberTable:
+      line 65: 2
+      line 111: 6
+      line 65: 10
+      line 112: 13
+      line 65: 20
+      line 113: 23
+      line 65: 29
+      line 114: 32
+      line 65: 36
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          6       4     4 $i$f$getL-impl   I
+         13       7     4 $i$f$getT-impl   I
+         23       6     4 $i$f$getR-impl   I
+         32       4     4 $i$f$getB-impl   I
+          2      42     3 $i$f$and-VMe-PFo   I
+          0      44     0  arg0   J
+          0      44     2     r   S
+
+  public static final boolean intersects-Ifm3e3E(long, short);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: lload_0
+       3: iconst_0
+       4: istore        4
+       6: iload_2
+       7: bipush        12
+       9: iushr
+      10: iconst_0
+      11: istore        4
+      13: iload_2
+      14: bipush        8
+      16: ishr
+      17: bipush        15
+      19: iand
+      20: iconst_0
+      21: istore        4
+      23: iload_2
+      24: iconst_4
+      25: ishr
+      26: bipush        15
+      28: iand
+      29: iconst_0
+      30: istore        4
+      32: iload_2
+      33: bipush        15
+      35: iand
+      36: invokestatic  #56                 // Method testData/Issue_45Kt.rasterize:(IIII)J
+      39: land
+      40: lconst_0
+      41: lcmp
+      42: ifeq          49
+      45: iconst_1
+      46: goto          50
+      49: iconst_0
+      50: ireturn
+    LineNumberTable:
+      line 68: 2
+      line 115: 6
+      line 68: 10
+      line 116: 13
+      line 68: 20
+      line 117: 23
+      line 68: 29
+      line 118: 32
+      line 68: 36
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          6       4     4 $i$f$getL-impl   I
+         13       7     4 $i$f$getT-impl   I
+         23       6     4 $i$f$getR-impl   I
+         32       4     4 $i$f$getB-impl   I
+          2      49     3 $i$f$intersects-Ifm3e3E   I
+          0      51     0  arg0   J
+          0      51     2     r   S
+
+  public static java.lang.String toString-impl(long);
+    Code:
+       0: new           #80                 // class java/lang/StringBuilder
+       3: dup
+       4: invokespecial #83                 // Method java/lang/StringBuilder."<init>":()V
+       7: astore_2
+       8: aload_2
+       9: astore_3
+      10: iconst_0
+      11: istore        4
+      13: iconst_0
+      14: istore        5
+      16: iload         5
+      18: bipush        8
+      20: if_icmpge     88
+      23: lload_0
+      24: bipush        56
+      26: iload         5
+      28: isub
+      29: iconst_3
+      30: ishl
+      31: lushr
+      32: ldc2_w        #84                 // long 255l
+      35: land
+      36: iconst_2
+      37: invokestatic  #91                 // Method kotlin/text/CharsKt.checkRadix:(I)I
+      40: invokestatic  #95                 // Method java/lang/Long.toString:(JI)Ljava/lang/String;
+      43: dup
+      44: ldc           #97                 // String toString(...)
+      46: invokestatic  #103                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      49: bipush        8
+      51: bipush        48
+      53: invokestatic  #109                // Method kotlin/text/StringsKt.padStart:(Ljava/lang/String;IC)Ljava/lang/String;
+      56: astore        6
+      58: aload_3
+      59: aload         6
+      61: invokevirtual #113                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      64: dup
+      65: ldc           #115                // String append(...)
+      67: invokestatic  #103                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      70: bipush        10
+      72: invokevirtual #118                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+      75: dup
+      76: ldc           #115                // String append(...)
+      78: invokestatic  #103                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      81: pop
+      82: iinc          5, 1
+      85: goto          16
+      88: nop
+      89: aload_2
+      90: invokevirtual #121                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      93: dup
+      94: ldc           #97                 // String toString(...)
+      96: invokestatic  #103                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      99: areturn
+    LineNumberTable:
+      line 70: 0
+      line 71: 13
+      line 72: 23
+      line 72: 49
+      line 73: 58
+      line 71: 82
+      line 75: 88
+      line 70: 89
+      line 75: 99
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         58      24     6  line   Ljava/lang/String;
+         16      72     5     y   I
+         13      76     4 $i$a$-buildString-Grid$toString$1   I
+         10      79     3 $this$toString_impl_u24lambda_u240   Ljava/lang/StringBuilder;
+          0     100     0  arg0   J
+
+  public java.lang.String toString();
+    Code:
+       0: aload_0
+       1: getfield      #129                // Field cells:J
+       4: invokestatic  #131                // Method "toString-impl":(J)Ljava/lang/String;
+       7: areturn
+    LineNumberTable:
+      line 70: 0
+      line 75: 7
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       8     0  this   LtestData/Grid;
+
+  public static int hashCode-impl(long);
+    Code:
+       0: lload_0
+       1: invokestatic  #137                // Method java/lang/Long.hashCode:(J)I
+       4: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       5     0  arg0   J
+
+  public int hashCode();
+    Code:
+       0: aload_0
+       1: getfield      #129                // Field cells:J
+       4: invokestatic  #140                // Method "hashCode-impl":(J)I
+       7: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       8     0  this   LtestData/Grid;
+
+  public static boolean equals-impl(long, java.lang.Object);
+    Code:
+       0: aload_2
+       1: instanceof    #2                  // class testData/Grid
+       4: ifne          9
+       7: iconst_0
+       8: ireturn
+       9: aload_2
+      10: checkcast     #2                  // class testData/Grid
+      13: invokevirtual #146                // Method "unbox-impl":()J
+      16: lstore_3
+      17: lload_0
+      18: lload_3
+      19: lcmp
+      20: ifeq          25
+      23: iconst_0
+      24: ireturn
+      25: iconst_1
+      26: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      27     0  arg0   J
+          0      27     2 other   Ljava/lang/Object;
+
+  public boolean equals(java.lang.Object);
+    Code:
+       0: aload_0
+       1: getfield      #129                // Field cells:J
+       4: aload_1
+       5: invokestatic  #152                // Method "equals-impl":(JLjava/lang/Object;)Z
+       8: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       9     0  this   LtestData/Grid;
+          0       9     1 other   Ljava/lang/Object;
+
+  private testData.Grid(long);
+    Code:
+       0: aload_0
+       1: invokespecial #154                // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: lload_1
+       6: putfield      #129                // Field cells:J
+       9: return
+    LineNumberTable:
+      line 45: 0
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      10     0  this   LtestData/Grid;
+          0      10     1 cells   J
+
+  public static long constructor-impl(long);
+    Code:
+       0: lload_0
+       1: lreturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       2     0 cells   J
+
+  public static final testData.Grid box-impl(long);
+    Code:
+       0: new           #2                  // class testData/Grid
+       3: dup
+       4: lload_0
+       5: invokespecial #158                // Method "<init>":(J)V
+       8: areturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       9     0     v   J
+
+  public final long unbox-impl();
+    Code:
+       0: aload_0
+       1: getfield      #129                // Field cells:J
+       4: lreturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       5     0  this   LtestData/Grid;
+
+  public static final boolean equals-impl0(long, long);
+    Code:
+       0: lload_0
+       1: lload_2
+       2: lcmp
+       3: ifne          10
+       6: iconst_1
+       7: goto          11
+      10: iconst_0
+      11: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      12     0    p1   J
+          0      12     2    p2   J
+}
+Compiled from "Issue_45.kt"
+public final class testData.Issue_45Kt {
+  public static final int uncheckedCoerceIn(int, int, int);
+    Code:
+       0: iconst_0
+       1: istore_3
+       2: iload_0
+       3: iload_1
+       4: invokestatic  #12                 // Method kotlin/ranges/RangesKt.coerceAtLeast:(II)I
+       7: iload_2
+       8: invokestatic  #15                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      11: ireturn
+    LineNumberTable:
+      line 20: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2      10     3 $i$f$uncheckedCoerceIn   I
+          0      12     0 $this$uncheckedCoerceIn   I
+          0      12     1 minimumValue   I
+          0      12     2 maximumValue   I
+
+  public static final short Rect(int, int, int, int);
+    Code:
+       0: iconst_0
+       1: istore        4
+       3: iload_0
+       4: istore        5
+       6: iconst_0
+       7: istore        6
+       9: bipush        8
+      11: istore        7
+      13: iconst_0
+      14: istore        8
+      16: iload         5
+      18: iload         6
+      20: invokestatic  #12                 // Method kotlin/ranges/RangesKt.coerceAtLeast:(II)I
+      23: iload         7
+      25: invokestatic  #15                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      28: bipush        15
+      30: iand
+      31: bipush        12
+      33: ishl
+      34: iload_1
+      35: istore        5
+      37: iconst_0
+      38: istore        6
+      40: bipush        8
+      42: istore        7
+      44: iconst_0
+      45: istore        8
+      47: iload         5
+      49: iload         6
+      51: invokestatic  #12                 // Method kotlin/ranges/RangesKt.coerceAtLeast:(II)I
+      54: iload         7
+      56: invokestatic  #15                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      59: bipush        15
+      61: iand
+      62: bipush        8
+      64: ishl
+      65: ior
+      66: iload_2
+      67: istore        5
+      69: iconst_0
+      70: istore        6
+      72: bipush        8
+      74: istore        7
+      76: iconst_0
+      77: istore        8
+      79: iload         5
+      81: iload         6
+      83: invokestatic  #12                 // Method kotlin/ranges/RangesKt.coerceAtLeast:(II)I
+      86: iload         7
+      88: invokestatic  #15                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      91: bipush        15
+      93: iand
+      94: iconst_4
+      95: ishl
+      96: ior
+      97: iload_3
+      98: istore        5
+     100: iconst_0
+     101: istore        6
+     103: bipush        8
+     105: istore        7
+     107: iconst_0
+     108: istore        8
+     110: iload         5
+     112: iload         6
+     114: invokestatic  #12                 // Method kotlin/ranges/RangesKt.coerceAtLeast:(II)I
+     117: iload         7
+     119: invokestatic  #15                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+     122: bipush        15
+     124: iand
+     125: ior
+     126: i2s
+     127: invokestatic  #28                 // Method testData/Rect."constructor-impl":(S)S
+     130: ireturn
+    LineNumberTable:
+      line 24: 3
+      line 100: 16
+      line 24: 28
+      line 25: 34
+      line 101: 47
+      line 25: 59
+      line 24: 65
+      line 26: 66
+      line 102: 79
+      line 26: 91
+      line 24: 96
+      line 27: 97
+      line 103: 110
+      line 27: 122
+      line 24: 125
+      line 28: 126
+      line 23: 127
+      line 28: 130
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         16      12     8 $i$f$uncheckedCoerceIn   I
+         13      15     5 $this$uncheckedCoerceIn$iv   I
+         13      15     6 minimumValue$iv   I
+         13      15     7 maximumValue$iv   I
+         47      12     8 $i$f$uncheckedCoerceIn   I
+         44      15     5 $this$uncheckedCoerceIn$iv   I
+         44      15     6 minimumValue$iv   I
+         44      15     7 maximumValue$iv   I
+         79      12     8 $i$f$uncheckedCoerceIn   I
+         76      15     5 $this$uncheckedCoerceIn$iv   I
+         76      15     6 minimumValue$iv   I
+         76      15     7 maximumValue$iv   I
+        110      12     8 $i$f$uncheckedCoerceIn   I
+        107      15     5 $this$uncheckedCoerceIn$iv   I
+        107      15     6 minimumValue$iv   I
+        107      15     7 maximumValue$iv   I
+          3     128     4 $i$f$Rect   I
+          0     131     0     l   I
+          0     131     1     t   I
+          0     131     2     r   I
+          0     131     3     b   I
+
+  public static final long Grid();
+    Code:
+       0: iconst_0
+       1: istore_0
+       2: lconst_0
+       3: invokestatic  #43                 // Method testData/Grid."constructor-impl":(J)J
+       6: lreturn
+    LineNumberTable:
+      line 40: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       5     0 $i$f$Grid   I
+
+  public static final long Grid-Ifm3e3E(short);
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: iconst_0
+       3: istore_2
+       4: iload_0
+       5: bipush        12
+       7: iushr
+       8: iconst_0
+       9: istore_2
+      10: iload_0
+      11: bipush        8
+      13: ishr
+      14: bipush        15
+      16: iand
+      17: iconst_0
+      18: istore_2
+      19: iload_0
+      20: iconst_4
+      21: ishr
+      22: bipush        15
+      24: iand
+      25: iconst_0
+      26: istore_2
+      27: iload_0
+      28: bipush        15
+      30: iand
+      31: invokestatic  #50                 // Method rasterize:(IIII)J
+      34: invokestatic  #43                 // Method testData/Grid."constructor-impl":(J)J
+      37: lreturn
+    LineNumberTable:
+      line 41: 2
+      line 104: 4
+      line 41: 8
+      line 105: 10
+      line 41: 17
+      line 106: 19
+      line 41: 25
+      line 107: 27
+      line 41: 31
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          4       4     2 $i$f$getL-impl   I
+         10       7     2 $i$f$getT-impl   I
+         19       6     2 $i$f$getR-impl   I
+         27       4     2 $i$f$getB-impl   I
+          2      36     1 $i$f$Grid-Ifm3e3E   I
+          0      38     0     r   S
+
+  public static final long Grid(int, int, int, int);
+    Code:
+       0: iconst_0
+       1: istore        4
+       3: iload_0
+       4: iload_1
+       5: iload_2
+       6: iload_3
+       7: invokestatic  #50                 // Method rasterize:(IIII)J
+      10: invokestatic  #43                 // Method testData/Grid."constructor-impl":(J)J
+      13: lreturn
+    LineNumberTable:
+      line 42: 3
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          3      11     4 $i$f$Grid   I
+          0      14     0     l   I
+          0      14     1     t   I
+          0      14     2     r   I
+          0      14     3     b   I
+
+  public static final int get(long);
+    Code:
+       0: iconst_0
+       1: istore_2
+       2: bipush        63
+       4: lload_0
+       5: invokestatic  #64                 // Method java/lang/Long.numberOfTrailingZeros:(J)I
+       8: isub
+       9: ireturn
+    LineNumberTable:
+      line 79: 2
+      line 79: 8
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       8     2 $i$f$get   I
+          0      10     0 $this$get   J
+
+  public static final boolean hasNext(long);
+    Code:
+       0: iconst_0
+       1: istore_2
+       2: lload_0
+       3: lconst_0
+       4: lcmp
+       5: ifeq          12
+       8: iconst_1
+       9: goto          13
+      12: iconst_0
+      13: ireturn
+    LineNumberTable:
+      line 82: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2      12     2 $i$f$hasNext   I
+          0      14     0 $this$hasNext   J
+
+  public static final long next(long);
+    Code:
+       0: iconst_0
+       1: istore_2
+       2: lload_0
+       3: lload_0
+       4: lconst_1
+       5: lsub
+       6: land
+       7: lreturn
+    LineNumberTable:
+      line 84: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       6     2 $i$f$next   I
+          0       8     0 $this$next   J
+
+  public static final long rasterize(int, int, int, int);
+    Code:
+       0: iload_2
+       1: iload_0
+       2: isub
+       3: istore        4
+       5: iload_3
+       6: iload_1
+       7: isub
+       8: istore        5
+      10: ldc2_w        #75                 // long 255l
+      13: bipush        8
+      15: iload         4
+      17: isub
+      18: lushr
+      19: bipush        8
+      21: iload_2
+      22: isub
+      23: lshl
+      24: lstore        6
+      26: ldc2_w        #77                 // long 72340172838076673l
+      29: bipush        8
+      31: iload         5
+      33: isub
+      34: iconst_3
+      35: ishl
+      36: lushr
+      37: bipush        8
+      39: iload_3
+      40: isub
+      41: iconst_3
+      42: ishl
+      43: lshl
+      44: lstore        8
+      46: lload         8
+      48: lload         6
+      50: lmul
+      51: lreturn
+    LineNumberTable:
+      line 88: 0
+      line 89: 5
+      line 90: 10
+      line 91: 26
+      line 92: 46
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          5      47     4     w   I
+         10      42     5     h   I
+         26      26     6 scanline   J
+         46       6     8  rows   J
+          0      52     0     l   I
+          0      52     1     t   I
+          0      52     2     r   I
+          0      52     3     b   I
+
+  public static final void main();
+    Code:
+       0: iconst_1
+       1: istore_2
+       2: iconst_1
+       3: istore_3
+       4: iconst_5
+       5: istore        4
+       7: iconst_5
+       8: istore        5
+      10: iconst_0
+      11: istore        6
+      13: iload_2
+      14: iload_3
+      15: iload         4
+      17: iload         5
+      19: invokestatic  #50                 // Method rasterize:(IIII)J
+      22: invokestatic  #43                 // Method testData/Grid."constructor-impl":(J)J
+      25: lstore_0
+      26: lload_0
+      27: invokestatic  #88                 // Method testData/Grid."box-impl":(J)LtestData/Grid;
+      30: astore_2
+      31: getstatic     #94                 // Field java/lang/System.out:Ljava/io/PrintStream;
+      34: aload_2
+      35: invokevirtual #100                // Method java/io/PrintStream.println:(Ljava/lang/Object;)V
+      38: return
+    LineNumberTable:
+      line 96: 0
+      line 108: 13
+      line 96: 25
+      line 97: 31
+      line 98: 38
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         13      12     6 $i$f$Grid   I
+         10      15     2  l$iv   I
+         10      15     3  t$iv   I
+         10      15     4  r$iv   I
+         10      15     5  b$iv   I
+         26      13     0  grid   J
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: invokestatic  #108                // Method main:()V
+       3: return
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       4     0  args   [Ljava/lang/String;
+}
+Compiled from "Issue_45.kt"
+public final class testData.Rect {
+  private final short points;
+
+  public static void getPoints$annotations();
+    Code:
+       0: return
+
+  public static final int getL-impl(short);
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: iload_0
+       3: bipush        12
+       5: iushr
+       6: ireturn
+    LineNumberTable:
+      line 32: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       5     1 $i$f$getL-impl   I
+          0       7     0  arg0   S
+
+  public static final int getT-impl(short);
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: iload_0
+       3: bipush        8
+       5: ishr
+       6: bipush        15
+       8: iand
+       9: ireturn
+    LineNumberTable:
+      line 33: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       8     1 $i$f$getT-impl   I
+          0      10     0  arg0   S
+
+  public static final int getR-impl(short);
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: iload_0
+       3: iconst_4
+       4: ishr
+       5: bipush        15
+       7: iand
+       8: ireturn
+    LineNumberTable:
+      line 34: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       7     1 $i$f$getR-impl   I
+          0       9     0  arg0   S
+
+  public static final int getB-impl(short);
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: iload_0
+       3: bipush        15
+       5: iand
+       6: ireturn
+    LineNumberTable:
+      line 35: 2
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          2       5     1 $i$f$getB-impl   I
+          0       7     0  arg0   S
+
+  public static java.lang.String toString-impl(short);
+    Code:
+       0: new           #24                 // class java/lang/StringBuilder
+       3: dup
+       4: invokespecial #27                 // Method java/lang/StringBuilder."<init>":()V
+       7: ldc           #29                 // String Rect(
+       9: invokevirtual #33                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      12: iconst_0
+      13: istore_1
+      14: iload_0
+      15: bipush        12
+      17: iushr
+      18: invokevirtual #36                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      21: ldc           #38                 // String ,
+      23: invokevirtual #33                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      26: iconst_0
+      27: istore_1
+      28: iload_0
+      29: bipush        8
+      31: ishr
+      32: bipush        15
+      34: iand
+      35: invokevirtual #36                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      38: ldc           #38                 // String ,
+      40: invokevirtual #33                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      43: iconst_0
+      44: istore_1
+      45: iload_0
+      46: iconst_4
+      47: ishr
+      48: bipush        15
+      50: iand
+      51: invokevirtual #36                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      54: ldc           #38                 // String ,
+      56: invokevirtual #33                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      59: iconst_0
+      60: istore_1
+      61: iload_0
+      62: bipush        15
+      64: iand
+      65: invokevirtual #36                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      68: bipush        41
+      70: invokevirtual #41                 // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+      73: invokevirtual #45                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      76: areturn
+    LineNumberTable:
+      line 37: 0
+      line 100: 14
+      line 37: 18
+      line 101: 28
+      line 37: 35
+      line 102: 45
+      line 37: 51
+      line 103: 61
+      line 37: 65
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         14       4     1 $i$f$getL-impl   I
+         28       7     1 $i$f$getT-impl   I
+         45       6     1 $i$f$getR-impl   I
+         61       4     1 $i$f$getB-impl   I
+          0      77     0  arg0   S
+
+  public java.lang.String toString();
+    Code:
+       0: aload_0
+       1: getfield      #48                 // Field points:S
+       4: invokestatic  #50                 // Method "toString-impl":(S)Ljava/lang/String;
+       7: areturn
+    LineNumberTable:
+      line 37: 0
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       8     0  this   LtestData/Rect;
+
+  public static int hashCode-impl(short);
+    Code:
+       0: iload_0
+       1: invokestatic  #58                 // Method java/lang/Short.hashCode:(S)I
+       4: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       5     0  arg0   S
+
+  public int hashCode();
+    Code:
+       0: aload_0
+       1: getfield      #48                 // Field points:S
+       4: invokestatic  #61                 // Method "hashCode-impl":(S)I
+       7: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       8     0  this   LtestData/Rect;
+
+  public static boolean equals-impl(short, java.lang.Object);
+    Code:
+       0: aload_1
+       1: instanceof    #2                  // class testData/Rect
+       4: ifne          9
+       7: iconst_0
+       8: ireturn
+       9: aload_1
+      10: checkcast     #2                  // class testData/Rect
+      13: invokevirtual #67                 // Method "unbox-impl":()S
+      16: istore_2
+      17: iload_0
+      18: iload_2
+      19: if_icmpeq     24
+      22: iconst_0
+      23: ireturn
+      24: iconst_1
+      25: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      26     0  arg0   S
+          0      26     1 other   Ljava/lang/Object;
+
+  public boolean equals(java.lang.Object);
+    Code:
+       0: aload_0
+       1: getfield      #48                 // Field points:S
+       4: aload_1
+       5: invokestatic  #73                 // Method "equals-impl":(SLjava/lang/Object;)Z
+       8: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       9     0  this   LtestData/Rect;
+          0       9     1 other   Ljava/lang/Object;
+
+  private testData.Rect(short);
+    Code:
+       0: aload_0
+       1: invokespecial #75                 // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: iload_1
+       6: putfield      #48                 // Field points:S
+       9: return
+    LineNumberTable:
+      line 31: 0
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      10     0  this   LtestData/Rect;
+          0      10     1 points   S
+
+  public static short constructor-impl(short);
+    Code:
+       0: iload_0
+       1: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       2     0 points   S
+
+  public static final testData.Rect box-impl(short);
+    Code:
+       0: new           #2                  // class testData/Rect
+       3: dup
+       4: iload_0
+       5: invokespecial #81                 // Method "<init>":(S)V
+       8: areturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       9     0     v   S
+
+  public final short unbox-impl();
+    Code:
+       0: aload_0
+       1: getfield      #48                 // Field points:S
+       4: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       5     0  this   LtestData/Rect;
+
+  public static final boolean equals-impl0(short, short);
+    Code:
+       0: iload_0
+       1: iload_1
+       2: if_icmpne     9
+       5: iconst_1
+       6: goto          10
+       9: iconst_0
+      10: ireturn
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0      11     0    p1   S
+          0      11     1    p2   S
+}

@@ -1,8 +1,7 @@
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+!**/src/**/build/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -41,3 +40,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+/local.properties
