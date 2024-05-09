@@ -16,23 +16,27 @@
 
 package dev.romainguy.kotlin.explorer.code
 
+import dev.romainguy.kotlin.explorer.SourceTextArea
+import dev.romainguy.kotlin.explorer.centerCaretInView
 import dev.romainguy.kotlin.explorer.code.CodeContent.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.BasicStroke
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.awt.geom.GeneralPath
 import javax.swing.event.CaretEvent
-import javax.swing.event.CaretListener
 
-open class CodeTextArea(
+class CodeTextArea(
     presentationMode: Boolean = false,
     codeStyle: CodeStyle,
+    var isSyncLinesEnabled: Boolean,
+    private val sourceTextArea: SourceTextArea?,
 ) : RSyntaxTextArea() {
     private var code: Code? = null
     private var jumpOffsets: JumpOffsets? = null
-
     private var content: CodeContent = Empty
 
     var presentationMode = presentationMode
@@ -52,8 +56,30 @@ open class CodeTextArea(
 
     init {
         addCaretListener(::caretUpdate)
+
+        if (sourceTextArea != null) {
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(event: MouseEvent) {
+                    println(size)
+                    val codeLine = getLineOfOffset(viewToModel2D(event.point))
+                    val line = code?.getSourceLine(codeLine) ?: return
+                    sourceTextArea.gotoLine(this@CodeTextArea, line - 1)
+                }
+            })
+        }
     }
 
+
+    fun setContent(value: CodeContent) {
+        content = value
+        updateContent()
+    }
+
+    fun gotoSourceLine(sourceLine: Int) {
+        val line = code?.getCodeLine(sourceLine + 1) ?: return
+        caretPosition = getLineStartOffset(line.coerceIn(0 until lineCount))
+        centerCaretInView()
+    }
 
     private fun updatePreservingCaretLine() {
         val line = getLineOfOffset(caretPosition)
@@ -63,11 +89,6 @@ open class CodeTextArea(
             caretPosition = getLineStartOffset(line)
             caretUpdate(line)
         }
-    }
-
-    fun setContent(value: CodeContent) {
-        content = value
-        updateContent()
     }
 
     private fun updateContent() {
@@ -84,10 +105,6 @@ open class CodeTextArea(
             }
         }
         caretPosition = minOf(position, document.length)
-    }
-
-    final override fun addCaretListener(listener: CaretListener?) {
-        super.addCaretListener(listener)
     }
 
     override fun paintComponent(g: Graphics?) {

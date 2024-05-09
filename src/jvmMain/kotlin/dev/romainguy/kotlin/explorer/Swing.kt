@@ -31,7 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import java.awt.Component
 import java.awt.GraphicsEnvironment
+import java.awt.Point
 import java.awt.image.BufferedImage
+import javax.swing.JTextArea
+import javax.swing.JViewport
 
 /**
  * A [SwingPanel] that supports a Dialog rendered over it
@@ -67,6 +70,12 @@ fun <T : Component> DialogSupportingSwingPanel(
     } else {
         SwingPanel(background, { component }, modifier, update)
     }
+}
+
+fun JTextArea.centerCaretInView() {
+    val viewport = parent as? JViewport ?: return
+    val linePos = modelToView2D(caretPosition).bounds.centerY.toInt()
+    viewport.viewPosition = Point(0, maxOf(0, linePos - viewport.height / 2))
 }
 
 private fun Component.getScreenShot(): BufferedImage? {

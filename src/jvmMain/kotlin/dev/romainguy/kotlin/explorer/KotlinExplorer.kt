@@ -37,6 +37,7 @@ import androidx.compose.ui.input.key.Key.Companion.L
 import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
 import androidx.compose.ui.input.key.Key.Companion.R
+import androidx.compose.ui.input.key.Key.Companion.S
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.unit.DpSize
@@ -131,17 +132,22 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
         }
     }
 
-    val sourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
-    val byteCodeTextArea = byteCodeTextArea(explorerState, focusTracker)
-    val dexTextArea = dexTextArea(explorerState, focusTracker)
+    val sourceTextArea: SourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
+    val byteCodeTextArea = byteCodeTextArea(explorerState, focusTracker, sourceTextArea)
+    val dexTextArea = dexTextArea(explorerState, focusTracker, sourceTextArea)
     val oatTextArea = oatTextArea(explorerState, focusTracker)
+
     val codeTextAreas = listOf(byteCodeTextArea, dexTextArea, oatTextArea)
 
     val findDialog = FindDialog(window, searchListener).apply { searchContext.searchWrap = true }
     var showSettings by DialogState(!explorerState.toolPaths.isValid)
 
     val updatePresentationMode: (Boolean) -> Unit = {
-        listOf(dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
+        listOf(byteCodeTextArea, dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
+    }
+    val updateSyncLinesEnabled: (Boolean) -> Unit = {
+        listOf(byteCodeTextArea, dexTextArea).forEach { area -> area.isSyncLinesEnabled = it }
+        sourceTextArea.isSyncLinesEnabled = it
     }
 
     val updateShowLineNumbers: (Boolean) -> Unit = {
@@ -169,6 +175,8 @@ private fun FrameWindowScope.KotlinExplorer(
 ) {
     val uiState = remember { UiState(explorerState, window) }
 
+    uiState.sourceTextArea.addCodeTextAreas(uiState.byteCodeTextArea, uiState.dexTextArea)
+
     val sourcePanel: @Composable () -> Unit =
         { SourcePanel(uiState.sourceTextArea, explorerState, uiState.showSettings) }
     val byteCodePanel: @Composable () -> Unit =
@@ -193,6 +201,7 @@ private fun FrameWindowScope.KotlinExplorer(
         { panels = explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel) },
         uiState.updateShowLineNumbers,
         uiState.updatePresentationMode,
+        uiState.updateSyncLinesEnabled,
     )
 
     if (uiState.showSettings) {
@@ -322,19 +331,19 @@ private fun Title(text: String) {
     )
 }
 
-private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): RSyntaxTextArea {
-    return RSyntaxTextArea().apply {
+private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): SourceTextArea {
+    return SourceTextArea(explorerState.syncLines).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN, focusTracker)
         SwingUtilities.invokeLater { requestFocusInWindow() }
         document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
     }
 }
 
-private fun byteCodeTextArea(state: ExplorerState, focusTracker: FocusListener) =
-    codeTextArea(state, focusTracker)
+private fun byteCodeTextArea(state: ExplorerState, focusTracker: FocusListener, sourceTextArea: SourceTextArea) =
+    codeTextArea(state, focusTracker, sourceTextArea = sourceTextArea)
 
-private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener) =
-    codeTextArea(state, focusTracker)
+private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener, sourceTextArea: SourceTextArea) =
+    codeTextArea(state, focusTracker, sourceTextArea = sourceTextArea)
 
 private fun oatTextArea(state: ExplorerState, focusTracker: FocusListener) =
     codeTextArea(state, focusTracker, hasLineNumbers = false)
@@ -342,10 +351,11 @@ private fun oatTextArea(state: ExplorerState, focusTracker: FocusListener) =
 private fun codeTextArea(
     state: ExplorerState,
     focusTracker: FocusListener,
-    hasLineNumbers: Boolean = true
+    hasLineNumbers: Boolean = true,
+    sourceTextArea: SourceTextArea? = null,
 ): CodeTextArea {
     val codeStyle = CodeStyle(state.indent, state.showLineNumbers && hasLineNumbers, state.lineNumberWidth)
-    return CodeTextArea(state.presentationMode, codeStyle).apply {
+    return CodeTextArea(state.presentationMode, codeStyle, state.syncLines, sourceTextArea).apply {
         configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE, focusTracker)
     }
 }
@@ -365,6 +375,7 @@ private fun FrameWindowScope.MainMenu(
     onPanelsUpdated: () -> Unit,
     onShowLineNumberChanged: (Boolean) -> Unit,
     onPresentationModeChanged: (Boolean) -> Unit,
+    onSyncLinesChanged: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -409,6 +420,7 @@ private fun FrameWindowScope.MainMenu(
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
                 onShowLineNumberChanged(it)
             }
+            MenuCheckboxItem("Sync lines", Ctrl(S), explorerState::syncLines, onSyncLinesChanged)
             Separator()
             MenuCheckboxItem("Show Logs", Ctrl(L), explorerState::showLogs)
             Separator()
@@ -442,7 +454,6 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTr
     tabsEmulated = true
     tabSize = 4
     applyTheme(this)
-    currentLineHighlightColor = java.awt.Color.decode("#F5F8FF")
     addFocusListener(focusTracker)
 }
 

@@ -6,7 +6,7 @@
    <background color="ffffff" />
    <caret color="000000" />
    <selection fg="ffffff" bg="526da5" />
-   <currentLineHighlight color="f5f8fe" fade="false" />
+   <currentLineHighlight color="f2f6fe" fade="false" />
    <marginLine fg="b0b4b9" />
    <markAllHighlight color="edebfc" />
    <markOccurrencesHighlight color="edebfc" border="false" />
