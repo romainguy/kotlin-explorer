@@ -29,7 +29,25 @@ import dev.romainguy.kotlin.explorer.getValue
  * public final class KotlinExplorerKt {
  * ```
  */
-private val ClassRegex = Regex("^.* class [_a-zA-Z][_\\w.]+ \\{$")
+private val ClassRegex = Regex("^(?<header>.* class [_a-zA-Z][_.$\\w]+).*\\{$")
+
+/**
+ * Example:
+ * ```
+ *   testData.InnerClassKt$main$1();
+ * ```
+ */
+private val MethodRegex = Regex("^ {2}(?<header>.*\\));$")
+
+/**
+ * Example:
+ *
+ * ```
+ *     10: ifne          16
+ * ```
+ */
+
+private val InstructionRegex = Regex("^(?<address>\\d+): +(?<code>.*)$")
 
 /**
  * Examples:
@@ -50,7 +68,7 @@ class ByteCodeParser {
             val classes = buildList {
                 while (lines.hasNext()) {
                     val match = lines.consumeUntil(ClassRegex) ?: break
-                    val clazz = lines.readClass(match.value)
+                    val clazz = lines.readClass(match.getValue("header"))
                     add(clazz)
                 }
             }
@@ -62,20 +80,28 @@ class ByteCodeParser {
 
     private fun PeekingIterator<String>.readClass(classHeader: String): Class {
         val methods = buildList {
-            add(readMethod()) // There is always at least one method
             while (hasNext()) {
-                when (next()) {
-                    "}" -> break
-                    "" -> add(readMethod())
+                val line = peek()
+                when {
+                    line == "}" -> break
+                    MethodRegex.matches(line) -> add(readMethod())
+                    else -> next()
                 }
+            }
+            if (next() != "}") {
+                throw IllegalStateException("Expected '}' but got '${peek()}'")
             }
         }
         return Class(classHeader, methods)
     }
 
     private fun PeekingIterator<String>.readMethod(): Method {
-        val header = next().trim()
-        next() // "  Code:"
+        val match = MethodRegex.matchEntire(next())
+            ?: throw IllegalStateException("Expected method but got '${peek()}'")
+        val header = match.getValue("header")
+        if (next().trim() != "Code:") {
+            throw IllegalStateException("Expected 'Code:' but got '${peek()}'")
+        }
         val instructions = readInstructions()
         val lineNumbers = readLineNumbers()
 
@@ -86,10 +112,9 @@ class ByteCodeParser {
         return buildList {
             while (hasNext()) {
                 val line = next().trim()
-                if (line == "LineNumberTable:") {
-                    break
-                }
-                val (address, code) = line.split(": ", limit = 2)
+                val match = InstructionRegex.matchEntire(line) ?: break
+                val address = match.getValue("address")
+                val code = match.getValue("code")
                 val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt()
 
                 add(Instruction(address.toInt(), line, jumpAddress))
