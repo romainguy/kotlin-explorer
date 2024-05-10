@@ -13,4 +13,6 @@ plugins {
 }
 
 rootProject.name = "kotlin-explorer"
+
 include("tests")
+include("token-markers")

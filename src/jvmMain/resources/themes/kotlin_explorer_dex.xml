@@ -32,15 +32,15 @@
       <style token="ANNOTATION" fg="9e880d" />
       <style token="COMMENT_DOCUMENTATION" fg="8c8c8c" italic="true" />
       <style token="COMMENT_EOL" fg="8c8c8c" italic="true" />
-      <style token="COMMENT_MULTILINE" fg="8c8c8c" italic="true" />
+      <style token="COMMENT_MULTILINE" fg="8c8c8c" />
       <style token="COMMENT_KEYWORD" fg="8c8c8c" underline="true" italic="true" />
       <style token="COMMENT_MARKUP" fg="8c8c8c" bg="e2ffe2" italic="true" />
-      <style token="DATA_TYPE" fg="871094" />
+      <style token="DATA_TYPE" fg="94105A" />
       <style token="FUNCTION" fg="00627a" />
       <style token="LITERAL_BOOLEAN" fg="000080" />
-      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="1750eb" />
-      <style token="LITERAL_NUMBER_FLOAT" fg="1750eb" />
-      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="1750eb" />
+      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="43A220" />
+      <style token="LITERAL_NUMBER_FLOAT" fg="43A220" />
+      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="43A220" />
       <style token="LITERAL_STRING_DOUBLE_QUOTE" fg="067d17" />
       <style token="LITERAL_CHAR" fg="067d17" />
       <style token="LITERAL_BACKQUOTE" fg="067d17" bg="ffcccc" />
@@ -55,7 +55,7 @@
       <style token="MARKUP_CDATA_DELIMITER" fg="008080"/>
       <style token="MARKUP_ENTITY_REFERENCE" fg="008000"/>
       <style token="OPERATOR" fg="000000" />
-      <style token="PREPROCESSOR" fg="9e880d" />
+      <style token="PREPROCESSOR" fg="089887" />
       <style token="REGEX" fg="871094" />
       <style token="SEPARATOR" fg="000000" />
       <style token="VARIABLE" fg="871094" />

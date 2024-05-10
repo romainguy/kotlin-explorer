@@ -48,6 +48,7 @@ import dev.romainguy.kotlin.explorer.Shortcut.*
 import dev.romainguy.kotlin.explorer.code.CodeContent
 import dev.romainguy.kotlin.explorer.code.CodeStyle
 import dev.romainguy.kotlin.explorer.code.CodeTextArea
+import dev.romainguy.kotlin.explorer.code.SyntaxStyle
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -340,23 +341,24 @@ private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerS
 }
 
 private fun byteCodeTextArea(state: ExplorerState, focusTracker: FocusListener, sourceTextArea: SourceTextArea) =
-    codeTextArea(state, focusTracker, sourceTextArea = sourceTextArea)
+    codeTextArea(state, focusTracker, syntaxStyle = SyntaxStyle.ByteCode, sourceTextArea = sourceTextArea)
 
 private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener, sourceTextArea: SourceTextArea) =
-    codeTextArea(state, focusTracker, sourceTextArea = sourceTextArea)
+    codeTextArea(state, focusTracker, syntaxStyle = SyntaxStyle.Dex, sourceTextArea = sourceTextArea)
 
 private fun oatTextArea(state: ExplorerState, focusTracker: FocusListener) =
-    codeTextArea(state, focusTracker, hasLineNumbers = false)
+    codeTextArea(state, focusTracker, hasLineNumbers = false, syntaxStyle = SyntaxStyle.Oat)
 
 private fun codeTextArea(
     state: ExplorerState,
     focusTracker: FocusListener,
     hasLineNumbers: Boolean = true,
+    syntaxStyle: String = SyntaxConstants.SYNTAX_STYLE_NONE,
     sourceTextArea: SourceTextArea? = null,
 ): CodeTextArea {
     val codeStyle = CodeStyle(state.indent, state.showLineNumbers && hasLineNumbers, state.lineNumberWidth)
     return CodeTextArea(state.presentationMode, codeStyle, state.syncLines, sourceTextArea).apply {
-        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_NONE, focusTracker)
+        configureSyntaxTextArea(syntaxStyle, focusTracker)
     }
 }
 
@@ -462,15 +464,16 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTr
     antiAliasingEnabled = true
     tabsEmulated = true
     tabSize = 4
-    applyTheme(this)
+    applyTheme(this, syntaxStyle)
     addFocusListener(focusTracker)
 }
 
-private fun applyTheme(textArea: RSyntaxTextArea) {
+private fun applyTheme(textArea: RSyntaxTextArea, syntaxStyle: String) {
     try {
-        val theme = Theme.load(UiState::class.java.getResourceAsStream(
-            "/themes/kotlin_explorer.xml")
-        )
+        val theme = Theme.load(UiState::class.java.getResourceAsStream(when (syntaxStyle) {
+            SyntaxStyle.Dex -> "/themes/kotlin_explorer_dex.xml"
+            else -> "/themes/kotlin_explorer.xml"
+        }))
         theme.apply(textArea)
     } catch (ioe: IOException) {
         ioe.printStackTrace()

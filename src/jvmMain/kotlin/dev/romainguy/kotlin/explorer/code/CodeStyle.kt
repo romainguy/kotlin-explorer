@@ -20,4 +20,4 @@ data class CodeStyle(
     val indent: Int = 4,
     val showLineNumbers: Boolean = true,
     val lineNumberWidth: Int = 4,
-    )
+)

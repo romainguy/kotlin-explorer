@@ -3,6 +3,9 @@
 -dontwarn androidx.compose.desktop.DesktopTheme*
 -dontwarn kotlinx.datetime.**
 
+-keep class dev.romainguy.kotlin.explorer.code.*TokenMarker { *; }
+-dontnote dev.romainguy.kotlin.explorer.code.*TokenMarker
+
 -keep class org.fife.** { *; }
 -dontnote org.fife.**
 
