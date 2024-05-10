@@ -367,7 +367,6 @@ private fun FrameWindowScope.MainMenu(
     onPresentationModeChanged: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-
     val compileAndDisassemble: () -> Unit = {
         scope.launch {
             buildAndDisassemble(
@@ -390,6 +389,14 @@ private fun FrameWindowScope.MainMenu(
                 onLogsUpdate,
                 onStatusUpdate
             )
+        }
+    }
+
+    var firstRun by remember { mutableStateOf(true) }
+    if (firstRun) {
+        firstRun = false
+        if (explorerState.autoBuildOnStartup) {
+            compileAndDisassemble()
         }
     }
 
@@ -425,6 +432,7 @@ private fun FrameWindowScope.MainMenu(
             )
             Separator()
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
+            MenuCheckboxItem("Auto build on startup", shortcut = null, explorerState::autoBuildOnStartup)
             MenuItem(
                 "Build & Disassemble",
                 CtrlShift(D),

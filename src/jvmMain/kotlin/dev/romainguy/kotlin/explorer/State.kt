@@ -28,6 +28,7 @@ import kotlin.io.path.readLines
 private const val AndroidHome = "ANDROID_HOME"
 private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
+private const val AutoBuildOnStartup = "AUTO_BUILD_ON_STARTUP"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
 private const val ShowByteCode = "SHOW_BYTE_CODE"
@@ -51,6 +52,7 @@ class ExplorerState {
     var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
+    var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, true)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, true)
     var showByteCode by BooleanState(ShowByteCode, false)
