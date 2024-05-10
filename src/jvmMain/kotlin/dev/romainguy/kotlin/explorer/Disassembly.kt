@@ -17,6 +17,7 @@
 package dev.romainguy.kotlin.explorer
 
 import dev.romainguy.kotlin.explorer.build.ByteCodeDecompiler
+import dev.romainguy.kotlin.explorer.build.DexCompiler
 import dev.romainguy.kotlin.explorer.build.KotlinCompiler
 import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
@@ -25,7 +26,6 @@ import dev.romainguy.kotlin.explorer.oat.OatDumpParser
 import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.stream.Collectors
 import kotlin.io.path.extension
 
 private const val TotalDisassemblySteps = 7
@@ -55,7 +55,7 @@ suspend fun buildAndRun(
             val path = directory.resolve("KotlinExplorer.kt")
             Files.writeString(path, source)
 
-        val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
             if (kotlinc.exitCode != 0) {
                 withContext(ui) {
@@ -109,7 +109,7 @@ suspend fun buildAndDisassemble(
             val path = directory.resolve("KotlinExplorer.kt")
             Files.writeString(path, source)
 
-        val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
             if (kotlinc.exitCode != 0) {
                 updater.addJob(launch(ui) {
@@ -134,16 +134,13 @@ suspend fun buildAndDisassemble(
                 }
             })
 
-            writeR8Rules(directory)
+            val dexCompiler = DexCompiler(toolPaths, directory)
 
-            val r8 = process(
-                *buildR8Command(toolPaths, directory, optimize),
-                directory = directory
-            )
+            val dex = dexCompiler.buildDex(optimize)
 
-            if (r8.exitCode != 0) {
+            if (dex.exitCode != 0) {
                 updater.addJob(launch(ui) {
-                    onLogs(r8.output)
+                    onLogs(dex.output)
                     updater.advance("Error creating DEX", 5)
                 })
                 return@launch
@@ -153,12 +150,7 @@ suspend fun buildAndDisassemble(
             })
 
             updater.addJob(launch {
-                val dexdump = process(
-                    toolPaths.dexdump.toString(),
-                    "-d",
-                    "classes.dex",
-                    directory = directory
-                )
+                val dexdump = dexCompiler.dumpDex()
                 withContext(ui) {
                     val status = if (dexdump.exitCode != 0) {
                         onLogs(dexdump.output)
@@ -240,77 +232,6 @@ private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
     return command.toTypedArray()
 }
 
-private fun buildR8Command(
-    toolPaths: ToolPaths,
-    directory: Path,
-    optimize: Boolean
-): Array<String> {
-    val command = if (optimize) {
-        mutableListOf(
-            "java",
-            "-classpath",
-            toolPaths.d8.toString(),
-            "com.android.tools.r8.R8",
-            "--min-api",
-            "21",
-            "--pg-conf",
-            "rules.txt",
-            "--output",
-            ".",
-            "--lib",
-            toolPaths.platform.toString()
-        )
-    } else {
-        mutableListOf(
-            "java",
-            "-classpath",
-            toolPaths.d8.toString(),
-            "com.android.tools.r8.D8",
-            "--min-api",
-            "21",
-            "--output",
-            ".",
-            "--lib",
-            toolPaths.platform.toString()
-        ).apply {
-            toolPaths.kotlinLibs.forEach { jar ->
-                this += "--lib"
-                this += jar.toString()
-            }
-        }
-    }
-
-    val classFiles = Files
-        .list(directory)
-        .filter { path -> path.extension == "class" }
-        .map { file -> file.fileName.toString() }
-        .sorted()
-        .collect(Collectors.toList())
-    command.addAll(classFiles)
-
-    if (optimize) {
-        toolPaths.kotlinLibs.forEach { jar ->
-            command += jar.toString()
-        }
-    }
-
-    return command.toTypedArray()
-}
-
-private fun writeR8Rules(directory: Path) {
-    // Match $ANDROID_HOME/tools/proguard/proguard-android-optimize.txt
-    Files.writeString(
-        directory.resolve("rules.txt"),
-        """-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
-        -optimizationpasses 5
-        -allowaccessmodification
-        -dontpreverify
-        -dontobfuscate
-        -keep,allowoptimization class !kotlin.**,!kotlinx.** {
-          <methods>;
-        }""".trimIndent()
-    )
-}
 
 private fun cleanupClasses(directory: Path) {
     Files
