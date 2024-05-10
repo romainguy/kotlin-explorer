@@ -427,7 +427,8 @@ private fun FrameWindowScope.MainMenu(
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
                 onShowLineNumberChanged(it)
             }
-            MenuCheckboxItem("Sync lines", Ctrl(S), explorerState::syncLines, onSyncLinesChanged)
+            Separator()
+            MenuCheckboxItem("Sync Lines", Ctrl(S), explorerState::syncLines, onSyncLinesChanged)
             Separator()
             MenuCheckboxItem("Show Logs", Ctrl(L), explorerState::showLogs)
             Separator()
@@ -444,7 +445,7 @@ private fun FrameWindowScope.MainMenu(
             )
             Separator()
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
-            MenuCheckboxItem("Auto build on startup", shortcut = null, explorerState::autoBuildOnStartup)
+            MenuCheckboxItem("Build on Startup", shortcut = null, explorerState::autoBuildOnStartup)
             MenuItem(
                 "Build & Disassemble",
                 CtrlShift(D),

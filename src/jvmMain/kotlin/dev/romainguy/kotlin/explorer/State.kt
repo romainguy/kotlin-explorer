@@ -53,7 +53,7 @@ class ExplorerState {
     var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
-    var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, true)
+    var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, true)
     var showByteCode by BooleanState(ShowByteCode, false)
