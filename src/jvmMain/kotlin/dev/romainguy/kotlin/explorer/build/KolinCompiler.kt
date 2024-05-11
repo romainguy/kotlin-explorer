@@ -33,7 +33,7 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
             "-classpath",
-            (toolPaths.kotlinLibs + toolPaths.platform).joinToString(":") { jar -> jar.toString() }
+            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() }
         )
 
         return command.toTypedArray()
