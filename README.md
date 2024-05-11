@@ -25,6 +25,8 @@ which panels are visible using the *View* menu.
   panels. This feature may require R8 optimizations to be turned off to work properly.
 - *View > Presentation Mode*: increase the font size to make the content more visible
   when projected.
+- *Build > Build on Startup*: to automatically launch a compilation when launching the
+  app.
 - Clicking a jump instruction will show an arrow to the jump destination.
 
 # Running Kotlin Explorer

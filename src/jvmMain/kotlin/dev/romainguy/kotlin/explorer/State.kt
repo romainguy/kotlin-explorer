@@ -55,7 +55,7 @@ class ExplorerState {
     var optimize by BooleanState(Optimize, true)
     var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)
     var presentationMode by BooleanState(Presentation, false)
-    var showLineNumbers by BooleanState(ShowLineNumbers, true)
+    var showLineNumbers by BooleanState(ShowLineNumbers, false)
     var showByteCode by BooleanState(ShowByteCode, false)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
