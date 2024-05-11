@@ -1,17 +1,31 @@
 # Kotlin Explorer
 
 Kotlin Explorer is a desktop tool to quickly and easily disassemble Kotlin code into:
+- Java bytecode
 - Android DEX bytecode
 - Android OAT assembly
 
 After launching Kotlin Explorer, type valid Kotlin code in the left pane, then click
-*Compilation > Compile & Disassemble* or use `Cmd-Shift-D` on macOS, `Ctrl-Shift-D`
+*Build > Build & Disassemble* or use `Cmd-Shift-D` on macOS, `Ctrl-Shift-D`
 on Linux and Windows.
 
-The middle pane will show the Android DEX bytecode, and the right panel
-the native assembly resulting from ahead of time compilation (AOT).
+By default, the middle pane will show the Android DEX bytecode, and the right panel
+the native assembly resulting from ahead of time compilation (AOT). You can control
+which panels are visible using the *View* menu.
 
 ![./art/kotlin-explorer.png](./art/kotlin-explorer.png)
+
+# Features
+
+- *Build > Run*: compile the Kotlin source code and run it locally. Any output is sent
+  to the logs panel.
+- *Build > Optimize with R8*: turn on R8 optimizations. Turning this on will affect the
+  ability to see corresponding source line numbers in the byte code and DEX outputs.
+- *View > Sync Lines*: synchronize the current line in the source, byte code, and DEX
+  panels. This feature may require R8 optimizations to be turned off to work properly.
+- *View > Presentation Mode*: increase the font size to make the content more visible
+  when projected.
+- Clicking a jump instruction will show an arrow to the jump destination.
 
 # Running Kotlin Explorer
 

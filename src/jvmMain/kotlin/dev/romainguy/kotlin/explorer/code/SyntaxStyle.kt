@@ -11,7 +11,9 @@ class SyntaxStyle private constructor() {
 
         init {
             val factory = TokenMakerFactory.getDefaultInstance() as AbstractTokenMakerFactory
+            factory.putMapping(ByteCode, DexTokenMarker::class.java.canonicalName)
             factory.putMapping(Dex, DexTokenMarker::class.java.canonicalName)
+            factory.putMapping(Oat, OatTokenMarker::class.java.canonicalName)
         }
     }
 }

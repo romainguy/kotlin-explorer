@@ -423,7 +423,7 @@ private fun FrameWindowScope.MainMenu(
         }
         Menu("View") {
             val onShowPanelChanged: (Boolean) -> Unit = { onPanelsUpdated() }
-            MenuCheckboxItem("Show ByteCode", Ctrl(B), explorerState::showByteCode, onShowPanelChanged)
+            MenuCheckboxItem("Show Byte Code", Ctrl(B), explorerState::showByteCode, onShowPanelChanged)
             MenuCheckboxItem("Show DEX", Ctrl(D), explorerState::showDex, onShowPanelChanged)
             MenuCheckboxItem("Show OAT", Ctrl(O), explorerState::showOat, onShowPanelChanged)
             MenuCheckboxItem("Show Line Numbers", CtrlShift(L), explorerState::showLineNumbers) {
@@ -471,7 +471,9 @@ private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTr
 private fun applyTheme(textArea: RSyntaxTextArea, syntaxStyle: String) {
     try {
         val theme = Theme.load(UiState::class.java.getResourceAsStream(when (syntaxStyle) {
-            SyntaxStyle.Dex -> "/themes/kotlin_explorer_dex.xml"
+            SyntaxStyle.ByteCode -> "/themes/kotlin_explorer_disassembly.xml"
+            SyntaxStyle.Dex -> "/themes/kotlin_explorer_disassembly.xml"
+            SyntaxStyle.Oat -> "/themes/kotlin_explorer_disassembly.xml"
             else -> "/themes/kotlin_explorer.xml"
         }))
         theme.apply(textArea)

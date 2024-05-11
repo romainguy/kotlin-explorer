@@ -28,7 +28,7 @@
    <tokenStyles>
       <style token="IDENTIFIER" fg="000000" />
       <style token="RESERVED_WORD" fg="0033b3" />
-      <style token="RESERVED_WORD_2" fg="0033b3" />
+      <style token="RESERVED_WORD_2" fg="d07a01" />
       <style token="ANNOTATION" fg="9e880d" />
       <style token="COMMENT_DOCUMENTATION" fg="8c8c8c" italic="true" />
       <style token="COMMENT_EOL" fg="8c8c8c" italic="true" />
