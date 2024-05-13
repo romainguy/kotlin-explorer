@@ -18,10 +18,7 @@ package dev.romainguy.kotlin.explorer
 
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.stream.Stream
-import kotlin.io.path.exists
-import kotlin.io.path.extension
-import kotlin.jvm.optionals.getOrElse
+import kotlin.io.path.*
 
 class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
     constructor(settingsDirectory: Path, androidHome: String, kotlinHome: String) : this(
@@ -46,21 +43,17 @@ class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
         private set
 
     init {
-        val buildToolsDirectory = listIfExists(androidHome.resolve("build-tools"))
-            .sorted { p1, p2 ->
-                p2.toString().compareTo(p1.toString())
-            }
-            .findFirst()
-            .getOrElse { androidHome }
-        d8 = buildToolsDirectory.resolve("lib/d8.jar")
+        val buildToolsDirectory = androidHome.resolve("build-tools")
+            .listIfExists()
+            .maxByOrNull { it.pathString }
+            ?: androidHome
+        d8 = System.getenv("D8_PATH")?.toPath() ?: buildToolsDirectory.resolve("lib/d8.jar")
         dexdump = buildToolsDirectory.resolve(if (isWindows) "dexdump.exe" else "dexdump")
 
-        val platformsDirectory = listIfExists(androidHome.resolve("platforms"))
-            .sorted { p1, p2 ->
-                p2.toString().compareTo(p1.toString())
-            }
-            .findFirst()
-            .getOrElse { androidHome }
+        val platformsDirectory = androidHome.resolve("platforms")
+            .listIfExists()
+            .maxByOrNull { it.pathString }
+            ?: androidHome
         platform = platformsDirectory.resolve("android.jar")
 
         kotlinc = kotlinHome.resolve(if (isWindows) "bin/kotlinc.bat" else "bin/kotlinc")
@@ -71,13 +64,10 @@ class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
             lib.resolve("kotlin-stdlib.jar"),
             lib.resolve("kotlin-annotations-jvm.jar"),
             lib.resolve("kotlinx-coroutines-core-jvm.jar"),
-            listIfExists(lib)
-                .filter { path ->
-                    path.extension == "jar" && path.fileName.toString().startsWith("annotations-")
-                }
-                .sorted()
-                .findFirst()
-                .getOrElse { lib.resolve("annotations.jar") }
+            lib.listIfExists()
+                .filter { path -> path.extension == "jar" && path.name.startsWith("annotations-") }
+                .maxByOrNull { it.pathString }
+                ?: lib.resolve("annotations.jar")
         )
 
         sourceFile = settingsDirectory.resolve("source-code.kt")
@@ -88,4 +78,6 @@ class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
     }
 }
 
-private fun listIfExists(path: Path) = if (path.exists()) Files.list(path) else Stream.empty()
+private fun Path.listIfExists() = if (exists()) listDirectoryEntries() else emptyList()
+
+private fun String.toPath() = Path.of(this)
