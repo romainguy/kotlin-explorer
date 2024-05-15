@@ -38,6 +38,7 @@ import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
 import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.input.key.Key.Companion.S
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.unit.DpSize
@@ -84,7 +85,7 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     var previousActiveTextArea by mutableStateOf<RSyntaxTextArea?>(null)
     var status by mutableStateOf("Ready")
     var progress by mutableStateOf(1f)
-    var logs by mutableStateOf("")
+    var logs by mutableStateOf(AnnotatedString(""))
 
     val searchListener = object : SearchListener {
         override fun searchEvent(e: SearchEvent?) {
@@ -162,7 +163,7 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
         progress = newProgress
     }
 
-    val onLogsUpdate: (String) -> Unit = { text ->
+    val onLogsUpdate: (AnnotatedString) -> Unit = { text ->
         logs = text
         if (text.isNotEmpty()) {
             explorerState.showLogs = true
@@ -227,7 +228,7 @@ private fun FrameWindowScope.KotlinExplorer(
 }
 
 @Composable
-private fun LogsPanel(logs: String) {
+private fun LogsPanel(logs: AnnotatedString) {
     Column {
         Title("Logs")
         SelectionContainer {
@@ -259,8 +260,8 @@ private fun StatusBar(status: String, progress: Float) {
         if (progress < 1) {
             LinearProgressIndicator(
                 progress = { progress },
-                color = Color(0xff3369d6),
-                trackColor = Color(0xffc4c4c4),
+                color = ProgressColor,
+                trackColor = ProgressTrackColor,
                 strokeCap = StrokeCap.Round
             )
         }
@@ -368,7 +369,7 @@ private fun FrameWindowScope.MainMenu(
     onByteCodeUpdate: (CodeContent) -> Unit,
     onDexUpdate: (CodeContent) -> Unit,
     onOatUpdate: (CodeContent) -> Unit,
-    onLogsUpdate: (String) -> Unit,
+    onLogsUpdate: (AnnotatedString) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
     onFindClicked: () -> Unit,
     onFindNextClicked: () -> Unit,
@@ -492,7 +493,16 @@ fun main() = application {
 
     val explorerState = remember { ExplorerState() }
 
-    Runtime.getRuntime().addShutdownHook(Thread { explorerState.writeState() })
+    val windowState = rememberWindowState(
+        size = explorerState.getWindowSize(),
+        position = explorerState.getWindowPosition(),
+        placement = explorerState.windowPlacement,
+    )
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        explorerState.setWindowState(windowState)
+        explorerState.writeState()
+    })
 
     val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
         JewelTheme.darkThemeDefinition()
@@ -510,11 +520,6 @@ fun main() = application {
         ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
         false
     ) {
-        val windowState = rememberWindowState(
-            size = explorerState.getWindowSize(),
-            position = explorerState.getWindowPosition(),
-            placement = explorerState.windowPlacement,
-        )
         DecoratedWindow(
             state = windowState,
             onCloseRequest = {

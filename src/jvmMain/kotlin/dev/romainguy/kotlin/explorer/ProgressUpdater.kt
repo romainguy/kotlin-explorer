@@ -52,10 +52,9 @@ class ProgressUpdater(
         if (step < steps) {
             Logger.warn("finish() called but progress is not yet finished: step=$step")
         }
-        sendUpdate("Ready", steps)
     }
 
-    /** Add a job that needs to be joined before finishing*/
+    /** Add a job that needs to be joined before finishing */
     fun addJob(job: Job) {
         jobs.add(job)
     }

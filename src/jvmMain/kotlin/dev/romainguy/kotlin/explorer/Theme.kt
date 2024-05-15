@@ -16,7 +16,12 @@
 
 package dev.romainguy.kotlin.explorer
 
+import androidx.compose.ui.graphics.Color
 import org.jetbrains.skiko.SystemTheme
+
+val ErrorColor = Color(0xffa04646)
+val ProgressColor = Color(0xff3369d6)
+val ProgressTrackColor = Color(0xffc4c4c4)
 
 enum class KotlinExplorerTheme {
     Dark, Light, System;
