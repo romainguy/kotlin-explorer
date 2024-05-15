@@ -16,18 +16,20 @@
 
 package dev.romainguy.kotlin.explorer.build
 
+import dev.romainguy.kotlin.explorer.ProcessResult
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.extension
-import kotlin.io.path.pathString
-import kotlin.io.path.walk
+import kotlin.io.path.*
 
 class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
 
-    suspend fun buildDex(optimize: Boolean) = process(*buildDexCommand(optimize), directory = outputDirectory)
+    suspend fun buildDex(optimize: Boolean): ProcessResult {
+        println(outputDirectory)
+        println(buildDexCommand(optimize).joinToString(" "))
+        return process(*buildDexCommand(optimize), directory = outputDirectory)
+    }
 
     suspend fun dumpDex() = process(
         toolPaths.dexdump.toString(),
@@ -62,8 +64,9 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
                 }
             }
             outputDirectory.walk()
-                .filter { path -> path.extension == "class" }
-                .forEach { path -> add(outputDirectory.relativize(path).pathString) }
+                .map { path -> outputDirectory.relativize(path) }
+                .filter { path -> path.extension == "class" && path.first().name != "META-INF" }
+                .forEach { path -> add(path.pathString) }
 
             if (optimize) {
                 addAll(toolPaths.kotlinLibs.map { it.toString() })

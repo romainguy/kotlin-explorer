@@ -146,7 +146,7 @@ class CodeTextArea(
     }
 
     private fun caretUpdate(event: CaretEvent) {
-        caretUpdate(getLineOfOffset(event.dot))
+        caretUpdate(getLineOfOffset(minOf(event.dot, document.length)))
     }
 
     private fun caretUpdate(line: Int) {
