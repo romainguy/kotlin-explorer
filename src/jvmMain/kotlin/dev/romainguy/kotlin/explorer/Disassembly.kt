@@ -77,11 +77,8 @@ suspend fun buildAndRun(
                 val status = if (java.exitCode != 0) "Error running code" else "Run completed"
                 updater.advance(status)
             }
-
         } finally {
-            withContext(ui) {
-                updater.finish()
-            }
+            withContext(ui) { updater.finish() }
         }
     }
 }
@@ -218,7 +215,7 @@ suspend fun buildAndDisassemble(
             }
             withContext(ui) { updater.advance(status) }
         } finally {
-            updater.finish()
+            withContext(ui) { updater.finish() }
         }
     }
 }
@@ -232,7 +229,6 @@ private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
     return command.toTypedArray()
 }
 
-
 private fun cleanupClasses(directory: Path) {
     Files
         .list(directory)
@@ -241,4 +237,3 @@ private fun cleanupClasses(directory: Path) {
 }
 
 internal val BuiltInKotlinClass = Regex("^(kotlin|kotlinx|java|javax|org\\.(intellij|jetbrains))\\..+")
-
