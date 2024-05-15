@@ -25,11 +25,7 @@ import kotlin.io.path.*
 
 class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
 
-    suspend fun buildDex(optimize: Boolean): ProcessResult {
-        println(outputDirectory)
-        println(buildDexCommand(optimize).joinToString(" "))
-        return process(*buildDexCommand(optimize), directory = outputDirectory)
-    }
+    suspend fun buildDex(optimize: Boolean) = process(*buildDexCommand(optimize), directory = outputDirectory)
 
     suspend fun dumpDex() = process(
         toolPaths.dexdump.toString(),
