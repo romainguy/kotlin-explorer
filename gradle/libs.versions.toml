@@ -1,7 +1,7 @@
 [versions]
 collection = "1.4.0"
 compose = "1.6.10-rc02"
-jewel = "0.18.1"
+jewel = "0.19.3"
 jna = "5.14.0"
 junit4 = "4.13.2"
 kotlin = "1.9.23"

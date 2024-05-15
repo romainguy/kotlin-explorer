@@ -214,7 +214,7 @@ private fun FrameWindowScope.KotlinExplorer(
         })
     }
 
-    Column(modifier = Modifier.background(JewelTheme.globalColors.paneBackground)) {
+    Column(modifier = Modifier.background(JewelTheme.globalColors.panelBackground)) {
         VerticalOptionalPanel(
             modifier = Modifier.weight(1.0f),
             showOptionalPanel = explorerState.showLogs,
@@ -235,7 +235,6 @@ private fun LogsPanel(logs: String) {
                 text = logs,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier
-                    .weight(1.0f)
                     .fillMaxSize()
                     .background(Color.White)
                     .verticalScroll(rememberScrollState())
