@@ -16,7 +16,6 @@
 
 package dev.romainguy.kotlin.explorer.build
 
-import dev.romainguy.kotlin.explorer.ProcessResult
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
 import java.nio.file.Files
@@ -24,7 +23,6 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
-
     suspend fun buildDex(optimize: Boolean) = process(*buildDexCommand(optimize), directory = outputDirectory)
 
     suspend fun dumpDex() = process(
