@@ -7,13 +7,13 @@ class CodeBuilderTest {
     @Test
     fun sourceToCodeMapping() {
         val code = buildCode {
-            writeInstruction(Instruction(address = 1, code = "m1 1", jumpAddress = null, lineNumber = 1))
-            writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = null, lineNumber = null))
-            writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = null, lineNumber = 2))
+            writeInstruction(Instruction(address = 1, code = "m1 1", jumpAddress = -1, lineNumber = 1))
+            writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = -1, lineNumber = -1))
+            writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = -1, lineNumber = 2))
             endMethod()
-            writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = null, lineNumber = 3))
-            writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = null, lineNumber = null))
-            writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = null, lineNumber = 4))
+            writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = -1, lineNumber = 3))
+            writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = -1, lineNumber = -1))
+            writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = -1, lineNumber = 4))
         }.build()
 
         assertThat(code.text.trimIndent()).isEqualTo(
@@ -33,13 +33,13 @@ class CodeBuilderTest {
     @Test
     fun codeToSourceMapping() {
         val code = buildCode {
-            writeInstruction(Instruction(address = 1, code = "m1 1", jumpAddress = null, lineNumber = 1))
-            writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = null, lineNumber = null))
-            writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = null, lineNumber = 2))
+            writeInstruction(Instruction(address = 1, code = "m1 1", jumpAddress = -1, lineNumber = 1))
+            writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = -1, lineNumber = -1))
+            writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = -1, lineNumber = 2))
             endMethod()
-            writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = null, lineNumber = 3))
-            writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = null, lineNumber = null))
-            writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = null, lineNumber = 4))
+            writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = -1, lineNumber = 3))
+            writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = -1, lineNumber = -1))
+            writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = -1, lineNumber = 4))
         }.build()
 
         val text = code.text.trimIndent()
