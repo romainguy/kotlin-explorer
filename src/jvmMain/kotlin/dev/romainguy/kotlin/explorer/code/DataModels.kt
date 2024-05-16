@@ -17,7 +17,7 @@
 package dev.romainguy.kotlin.explorer.code
 
 enum class ISA(val branchInstructions: Array<String>) {
-    ByteCode(arrayOf("")),
+    ByteCode(arrayOf("if")),
     Dex(arrayOf("if-")),
     X86_64(
         arrayOf(
