@@ -35,7 +35,6 @@ private const val Instructions = "insns size"
 private const val Positions = "positions"
 
 internal class DexDumpParser {
-
     fun parse(text: String): CodeContent {
         return try {
             val lines = text.lineSequence().iterator()
@@ -73,9 +72,14 @@ internal class DexDumpParser {
     private fun Iterator<String>.readMethod(className: String): Method {
         val (name, type) = next().substringAfterLast(".").split(':', limit = 2)
         val instructions = readInstructions()
+
         consumeUntil(Positions)
+
         val positions = readPositions()
-        return Method("$name$type // $className.$name()", instructions.withLineNumbers(positions))
+        val returnType = returnTypeFromType(type)
+        val paramTypes = paramTypesFromType(type).joinToString(", ")
+
+        return Method("$returnType $className.$name($paramTypes)", instructions.withLineNumbers(positions))
     }
 
     private fun Iterator<String>.readInstructions(): List<Instruction> {
@@ -117,3 +121,53 @@ private fun String.getValue(name: String): String {
     }
     return substringAfter('\'').substringBefore('\'')
 }
+
+private fun paramTypesFromType(type: String): List<String> {
+    val types = mutableListOf<String>()
+    val paramTypes = type.substringAfter('(').substringBeforeLast(')')
+
+    var i = 0
+    while (i < paramTypes.length) {
+        when (paramTypes[i]) {
+            '[' -> {
+                val result = jniTypeToJavaType(paramTypes, i + 1)
+                types += result.first + "[]"
+                i = result.second
+            }
+            else -> {
+                val result = jniTypeToJavaType(paramTypes, i)
+                types += result.first
+                i = result.second
+            }
+        }
+    }
+
+    return types
+}
+
+private fun jniTypeToJavaType(
+    type: String,
+    index: Int
+): Pair<String, Int> {
+    var endIndex = index
+    return when (type[index]) {
+        'B' -> "byte"
+        'C' -> "char"
+        'D' -> "double"
+        'I' -> "int"
+        'J' -> "long"
+        'L' -> {
+            endIndex = type.indexOf(';', index)
+            type.substring(index + 1, endIndex)
+                .replace('/', '.')
+                .replace("java.lang.", "")
+        }
+
+        'S' -> "short"
+        'V' -> "void"
+        'Z' -> "boolean"
+        else -> "<unknown>"
+    } to endIndex + 1
+}
+
+private fun returnTypeFromType(type: String): String = jniTypeToJavaType(type, type.lastIndexOf(')') + 1).first

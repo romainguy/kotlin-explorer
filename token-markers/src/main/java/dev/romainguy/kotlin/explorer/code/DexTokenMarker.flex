@@ -97,6 +97,7 @@ UnclosedCharLiteral		= ([\'][^\']*)
 CharLiteral			    = ({UnclosedCharLiteral}[\'])
 
 CommentBegin			= ("//")
+MetadataBegin			= ("--")
 
 LineTerminator			= (\n)
 WhiteSpace			    = ([ \t\f])
@@ -104,39 +105,44 @@ WhiteSpace			    = ([ \t\f])
 Label				    = ({Digit}({Letter}|{Digit})*[\:])
 
 %state CODE
+%state CLASS
 %state FUNCTION_SIGNATURE
 
 %%
 
 <YYINITIAL> {
-    "class"		                    { addToken(Token.RESERVED_WORD); }
-}
+    "class"		                    { addToken(Token.RESERVED_WORD); yybegin(CLASS); }
 
-<YYINITIAL> {
     {LineTerminator}				{ addNullToken(); return firstToken; }
 
     {WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
     {Label}					    	{ addToken(Token.PREPROCESSOR); yybegin(CODE); }
 
-    ^{WhiteSpace}+({Letter}|[<])({Letter}|{Digit}|[-\>$])* {
-            String text = yytext();
-            int index = text.indexOf('-');
-            if (index == -1) {
-                addToken(Token.FUNCTION);
-            } else {
-                int start = zzStartRead;
-                addToken(start, start + index - 1, Token.FUNCTION);
-                addToken(start + index, zzMarkedPos-1, Token.COMMENT_MULTILINE);
-            }
-            yybegin(FUNCTION_SIGNATURE);
+    ^{WhiteSpace}+{Letter}({Letter}|{Digit}|[.])* {
+        addToken(Token.DATA_TYPE);
+        yybegin(FUNCTION_SIGNATURE);
     }
 
+    {MetadataBegin}.*				{ addToken(Token.MARKUP_CDATA); addNullToken(); return firstToken; }
     {CommentBegin}.*				{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }
 
     <<EOF>>						    { addNullToken(); return firstToken; }
 
     {Identifier}					{ addToken(Token.IDENTIFIER); }
+    .							    { addToken(Token.IDENTIFIER); }
+}
+
+<CLASS> {
+    {LineTerminator}				{ addNullToken(); return firstToken; }
+
+    {WhiteSpace}+					{ addToken(Token.WHITESPACE); }
+
+    {CommentBegin}.*				{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }
+
+    <<EOF>>						    { addNullToken(); return firstToken; }
+
+    {Identifier}					{ addToken(Token.FUNCTION); }
     .							    { addToken(Token.IDENTIFIER); }
 }
 
@@ -146,6 +152,16 @@ Label				    = ({Digit}({Letter}|{Digit})*[\:])
     {WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
     {CommentBegin}.*				{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }
+
+    {Letter}({Letter}|{Digit}|[$.\<\>])+ {
+        addToken(Token.FUNCTION);
+    }
+
+    (-({Letter}|{Digit}|[$.])+) {
+        addToken(Token.COMMENT_MULTILINE);
+    }
+
+    ([\(].+[\)])					{ addToken(Token.IDENTIFIER); }
 
     <<EOF>>						    { addNullToken(); return firstToken; }
 

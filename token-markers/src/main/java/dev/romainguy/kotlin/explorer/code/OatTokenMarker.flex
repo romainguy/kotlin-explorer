@@ -100,7 +100,8 @@ StringLiteral			= ({UnclosedStringLiteral}[\"])
 UnclosedCharLiteral		= ([\'][^\']*)
 CharLiteral			    = ({UnclosedCharLiteral}[\'])
 
-CommentBegin			= (";")
+CommentBegin			= ((";")|("//"))
+MetadataBegin			= ("--")
 
 LineTerminator			= (\n)
 WhiteSpace			    = ([ \t\f])
@@ -127,14 +128,18 @@ Label				    = (0x({Digit}|{HexLetter})+[\:])
         yybegin(FUNCTION_SIGNATURE);
     }
 
+    {MetadataBegin}.*				{ addToken(Token.MARKUP_CDATA); addNullToken(); return firstToken; }
     {CommentBegin}.*				{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }
 
     <<EOF>>						    { addNullToken(); return firstToken; }
 
+    {Identifier}					{ addToken(Token.IDENTIFIER); }
     .							    { addToken(Token.IDENTIFIER); }
 }
 
 <CLASS> {
+    {LineTerminator}				{ addNullToken(); return firstToken; }
+
     {WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
     {CommentBegin}.*				{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }

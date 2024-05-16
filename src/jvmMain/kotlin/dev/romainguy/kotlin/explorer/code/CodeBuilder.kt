@@ -45,6 +45,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     fun startMethod(method: Method) {
         sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
+        sb.append("  ".repeat(codeStyle.indent))
+        writeLine("-- ${method.instructions.size} instructions")
     }
 
     fun endMethod() {

@@ -51,11 +51,11 @@
       <style token="MARKUP_COMMENT" fg="808080" italic="true"/>
       <style token="MARKUP_DTD" fg="808080"/>
       <style token="MARKUP_PROCESSING_INSTRUCTION"  fg="808080"/>
-      <style token="MARKUP_CDATA" fg="cc6600"/>
+      <style token="MARKUP_CDATA" fg="8c8c8c" fontSize="10" />
       <style token="MARKUP_CDATA_DELIMITER" fg="008080"/>
       <style token="MARKUP_ENTITY_REFERENCE" fg="008000"/>
       <style token="OPERATOR" fg="000000" />
-      <style token="PREPROCESSOR" fg="089887" />
+      <style token="PREPROCESSOR" fg="089887" fontSize="10" />
       <style token="REGEX" fg="871094" />
       <style token="SEPARATOR" fg="000000" />
       <style token="VARIABLE" fg="871094" />
