@@ -106,7 +106,7 @@ internal class OatDumpParser {
         val match = CodeRegex.matchEntire(next()) ?: throw IllegalStateException("Should not happen")
         val address = match.getValue("address")
         val code = match.getValue("code")
-        val jumpAddress = jumpRegex.matchEntire(code)?.getValue("address")?.toInt(16)
+        val jumpAddress = jumpRegex.matchEntire(code)?.getValue("address")?.toInt(16) ?: -1
         return Instruction(address.toInt(16), "0x$address: $code", jumpAddress)
     }
 }

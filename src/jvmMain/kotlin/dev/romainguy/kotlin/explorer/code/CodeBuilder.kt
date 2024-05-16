@@ -48,8 +48,11 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     fun startMethod(method: Method) {
         sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
+
         sb.append("  ".repeat(codeStyle.indent))
-        writeLine("-- ${method.instructionSet.instructions.size} instructions")
+        val instructionCount = method.instructionSet.instructions.size
+        writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""}")
+
         val branches = countBranches(method.instructionSet)
         if (branches > 0) {
             sb.append("  ".repeat(codeStyle.indent))
@@ -59,12 +62,13 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
 
     private fun countBranches(instructionSet: InstructionSet): Int {
         var count = 0
+        val branchInstructions = instructionSet.isa.branchInstructions
         instructionSet.instructions.forEach { instruction ->
             val code = instruction.code
             val start = code.indexOf(": ") + 2
             val end = code.indexOfFirst(start) { c -> !c.isLetter() }
             val opCode = code.substring(start, end)
-            if (instructionSet.isa.branchInstructions.contains(opCode)) {
+            if (branchInstructions.contains(opCode)) {
                 count++
             }
         }
@@ -87,17 +91,17 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     fun writeInstruction(instruction: Instruction) {
         sb.append("  ".repeat(codeStyle.indent))
         methodAddresses[instruction.address] = line
-        if (instruction.jumpAddress != null) {
+        if (instruction.jumpAddress > -1) {
             methodJumps.add(IntIntPair(line, instruction.jumpAddress))
         }
         val lineNumber = instruction.lineNumber
-        if (lineNumber != null) {
+        if (lineNumber > -1) {
             sourceToCodeLine[lineNumber] = line
             lastMethodLineNumber = lineNumber
         }
         codeToSourceToLine[line] = lastMethodLineNumber
         if (codeStyle.showLineNumbers) {
-            val prefix = if (lineNumber != null) "$lineNumber:" else " "
+            val prefix = if (lineNumber > -1) "$lineNumber:" else " "
             sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
         writeLine(instruction.code)

@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer.code
 
+import androidx.collection.IntIntMap
 import androidx.collection.ScatterSet
 import androidx.collection.scatterSetOf
 
@@ -57,8 +58,8 @@ data class Method(val header: String, val instructionSet: InstructionSet)
 
 data class InstructionSet(val instructions: List<Instruction>, val isa: ISA)
 
-data class Instruction(val address: Int, val code: String, val jumpAddress: Int?, val lineNumber: Int? = null)
+data class Instruction(val address: Int, val code: String, val jumpAddress: Int, val lineNumber: Int = -1)
 
-fun List<Instruction>.withLineNumbers(lineNumbers: Map<Int, Int>): List<Instruction> {
-    return map { it.copy(lineNumber = lineNumbers[it.address]) }
+fun List<Instruction>.withLineNumbers(lineNumbers: IntIntMap): List<Instruction> {
+    return map { it.copy(lineNumber = lineNumbers.getOrDefault(it.address, -1)) }
 }

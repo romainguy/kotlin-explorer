@@ -16,6 +16,8 @@
 
 package dev.romainguy.kotlin.explorer.bytecode
 
+import androidx.collection.IntIntMap
+import androidx.collection.mutableIntIntMapOf
 import dev.romainguy.kotlin.explorer.PeekingIterator
 import dev.romainguy.kotlin.explorer.code.*
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
@@ -115,23 +117,23 @@ class ByteCodeParser {
                 val match = InstructionRegex.matchEntire(line) ?: break
                 val address = match.getValue("address")
                 val code = match.getValue("code")
-                val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt()
+                val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt() ?: -1
 
                 add(Instruction(address.toInt(), line, jumpAddress))
             }
         }
     }
 
-    private fun PeekingIterator<String>.readLineNumbers(): Map<Int, Int> {
-        return buildMap {
-            while (hasNext()) {
-                val line = next().trim()
-                if (!line.startsWith("line")) {
-                    break
-                }
-                val (lineNumber, address) = line.substringAfter(' ').split(": ", limit = 2)
-                put(address.toInt(), lineNumber.toInt())
+    private fun PeekingIterator<String>.readLineNumbers(): IntIntMap {
+        val map = mutableIntIntMapOf()
+        while (hasNext()) {
+            val line = next().trim()
+            if (!line.startsWith("line")) {
+                break
             }
+            val (lineNumber, address) = line.substringAfter(' ').split(": ", limit = 2)
+            map.put(address.toInt(), lineNumber.toInt())
         }
+        return map
     }
 }

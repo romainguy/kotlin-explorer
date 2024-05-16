@@ -16,6 +16,8 @@
 
 package dev.romainguy.kotlin.explorer.dex
 
+import androidx.collection.IntIntMap
+import androidx.collection.mutableIntIntMapOf
 import dev.romainguy.kotlin.explorer.BuiltInKotlinClass
 import dev.romainguy.kotlin.explorer.HexDigit
 import dev.romainguy.kotlin.explorer.code.*
@@ -95,21 +97,20 @@ internal class DexDumpParser {
                 val code = line.substringAfter('|')
                 val address = code.substringBefore(": ")
                 val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")
-                add(Instruction(address.toInt(16), code, jumpAddress?.toInt(16)))
+                add(Instruction(address.toInt(16), code, jumpAddress?.toInt(16) ?: -1))
             }
         }
     }
 
-    private fun Iterator<String>.readPositions(): Map<Int, Int> {
-        return buildMap {
-            while (hasNext()) {
-                val line = next()
-                val match = PositionRegex.matchEntire(line) ?: break
-                put(match.getValue("address").toInt(16), match.getValue("line").toInt())
-            }
+    private fun Iterator<String>.readPositions(): IntIntMap {
+        val map = mutableIntIntMapOf()
+        while (hasNext()) {
+            val line = next()
+            val match = PositionRegex.matchEntire(line) ?: break
+            map.put(match.getValue("address").toInt(16), match.getValue("line").toInt())
         }
+        return map
     }
-
 }
 
 private fun String.getClassName() =
