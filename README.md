@@ -28,6 +28,7 @@ which panels are visible using the *View* menu.
 - *Build > Build on Startup*: to automatically launch a compilation when launching the
   app.
 - Clicking a jump instruction will show an arrow to the jump destination.
+- Shows the number of instructions and branches per method.
 
 # Running Kotlin Explorer
 
