@@ -29,7 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.key.Key.Companion.A
 import androidx.compose.ui.input.key.Key.Companion.B
+import androidx.compose.ui.input.key.Key.Companion.C
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -38,6 +40,9 @@ import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
 import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.input.key.Key.Companion.S
+import androidx.compose.ui.input.key.Key.Companion.V
+import androidx.compose.ui.input.key.Key.Companion.X
+import androidx.compose.ui.input.key.Key.Companion.Z
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
@@ -57,6 +62,7 @@ import org.fife.rsta.ui.search.SearchListener
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rsyntaxtextarea.Theme
+import org.fife.ui.rtextarea.RTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
 import org.fife.ui.rtextarea.SearchEngine
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
@@ -74,6 +80,8 @@ import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
 import org.jetbrains.jewel.window.styling.TitleBarStyle
+import java.awt.KeyboardFocusManager
+import java.awt.event.ActionEvent
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
@@ -422,6 +430,15 @@ private fun FrameWindowScope.MainMenu(
             Item("Settings…", onClick = onOpenSettings)
         }
         Menu("Edit") {
+            MenuItem("Undo", Ctrl(Z), onClick = { performSwingMenuAction(RTextArea.UNDO_ACTION) })
+            MenuItem("Redo", CtrlShift(Z), onClick = { performSwingMenuAction(RTextArea.REDO_ACTION) })
+            Separator()
+            MenuItem("Cut", Ctrl(X), onClick = { performSwingMenuAction(RTextArea.CUT_ACTION) })
+            MenuItem("Copy", Ctrl(C), onClick = { performSwingMenuAction(RTextArea.COPY_ACTION) })
+            MenuItem("Paste", Ctrl(V), onClick = { performSwingMenuAction(RTextArea.PASTE_ACTION) })
+            Separator()
+            MenuItem("Select All", Ctrl(A), onClick = { performSwingMenuAction(RTextArea.SELECT_ALL_ACTION) })
+            Separator()
             MenuItem("Find…", Ctrl(F), onClick = onFindClicked)
             MenuItem("Find Next Occurrence", Ctrl(G), onClick = onFindNextClicked)
         }
@@ -460,6 +477,14 @@ private fun FrameWindowScope.MainMenu(
             )
         }
     }
+}
+
+private fun performSwingMenuAction(actionType: Int) {
+    RTextArea.getAction(actionType).actionPerformed(
+        ActionEvent(
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner, 0, ""
+        )
+    )
 }
 
 private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTracker: FocusListener) {
