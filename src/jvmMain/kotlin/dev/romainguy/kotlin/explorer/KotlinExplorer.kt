@@ -59,6 +59,8 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rsyntaxtextarea.Theme
 import org.fife.ui.rtextarea.RTextScrollPane
 import org.fife.ui.rtextarea.SearchEngine
+import org.jetbrains.jewel.foundation.ExperimentalJewelApi
+import org.jetbrains.jewel.foundation.enableNewSwingCompositing
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.jetbrains.jewel.intui.standalone.theme.darkThemeDefinition
@@ -489,9 +491,10 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
     font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
+@OptIn(ExperimentalJewelApi::class)
 fun main() = application {
-    // TODO: Needed to properly composite Compose on top of Swing
-    // System.setProperty("compose.interop.blending", "true")
+    // Faster scrolling in Swing components
+    enableNewSwingCompositing()
 
     val explorerState = remember { ExplorerState() }
 
