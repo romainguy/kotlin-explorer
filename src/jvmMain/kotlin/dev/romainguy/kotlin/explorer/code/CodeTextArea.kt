@@ -62,6 +62,7 @@ class CodeTextArea(
                 override fun mouseClicked(event: MouseEvent) {
                     val codeLine = getLineOfOffset(viewToModel2D(event.point))
                     val line = code?.getSourceLine(codeLine) ?: return
+                    if (line == -1) return
                     sourceTextArea.gotoLine(this@CodeTextArea, line - 1)
                 }
             })
@@ -76,6 +77,7 @@ class CodeTextArea(
 
     fun gotoSourceLine(sourceLine: Int) {
         val line = code?.getCodeLine(sourceLine + 1) ?: return
+        if (line == -1) return
         caretPosition = getLineStartOffset(line.coerceIn(0 until lineCount))
         centerCaretInView()
     }
@@ -154,7 +156,8 @@ class CodeTextArea(
         val oldJumpOffsets = jumpOffsets
         try {
             jumpOffsets = null
-            val dstLine = codeModel.getJumpTargetOfLine(line) ?: return
+            val dstLine = codeModel.getJumpTargetOfLine(line)
+            if (dstLine == -1) return
 
             val srcOffset = getLineStartOffset(line) + getLine(line).countPadding()
             val dstOffset = getLineStartOffset(dstLine) + getLine(dstLine).countPadding()

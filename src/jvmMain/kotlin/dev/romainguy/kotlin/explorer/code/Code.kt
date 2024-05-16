@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer.code
 
+import androidx.collection.IntIntMap
 
 /**
  * A data model representing disassembled code
@@ -26,15 +27,15 @@ package dev.romainguy.kotlin.explorer.code
  */
 class Code(
     val text: String,
-    private val jumps: Map<Int, Int>,
-    private val sourceToCodeLine: Map<Int, Int>,
-    private val codeToSourceToLine: Map<Int, Int>,
+    private val jumps: IntIntMap,
+    private val sourceToCodeLine: IntIntMap,
+    private val codeToSourceToLine: IntIntMap,
 ) {
-    fun getJumpTargetOfLine(line: Int) = jumps[line]
+    fun getJumpTargetOfLine(line: Int) = jumps.getOrDefault(line, -1)
 
-    fun getCodeLine(sourceLine: Int) = sourceToCodeLine[sourceLine]
+    fun getCodeLine(sourceLine: Int) = sourceToCodeLine.getOrDefault(sourceLine, -1)
 
-    fun getSourceLine(codeLine: Int) = codeToSourceToLine[codeLine]
+    fun getSourceLine(codeLine: Int) = codeToSourceToLine.getOrDefault(codeLine, -1)
 
     companion object {
         fun fromClasses(classes: List<Class>, codeStyle: CodeStyle = CodeStyle()): Code {

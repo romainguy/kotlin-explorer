@@ -16,6 +16,9 @@
 
 package dev.romainguy.kotlin.explorer.code
 
+import androidx.collection.IntIntPair
+import androidx.collection.mutableIntIntMapOf
+
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
     return CodeBuilder(codeStyle).apply(builderAction)
 }
@@ -29,13 +32,13 @@ fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() 
 class CodeBuilder(private val codeStyle: CodeStyle) {
     private var line = 0
     private val sb = StringBuilder()
-    private val jumps = mutableMapOf<Int, Int>()
-    private val sourceToCodeLine = mutableMapOf<Int, Int>()
-    private val codeToSourceToLine = mutableMapOf<Int, Int>()
+    private val jumps = mutableIntIntMapOf()
+    private val sourceToCodeLine = mutableIntIntMapOf()
+    private val codeToSourceToLine = mutableIntIntMapOf()
 
     // These 3 fields collect method scope data. They are reset when a method is added
-    private val methodAddresses = mutableMapOf<Int, Int>()
-    private val methodJumps = mutableListOf<Pair<Int, Int>>()
+    private val methodAddresses = mutableIntIntMapOf()
+    private val methodJumps = mutableListOf<IntIntPair>()
     private var lastMethodLineNumber: Int = -1
 
     fun startClass(clazz: Class) {
@@ -71,7 +74,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
 
     fun endMethod() {
         methodJumps.forEach { (line, address) ->
-            val targetLine = methodAddresses[address] ?: return@forEach
+            val targetLine = methodAddresses.getOrDefault(address, -1)
+            if (targetLine == -1) return@forEach
             jumps[line] = targetLine
         }
         methodAddresses.clear()
@@ -85,7 +89,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append("  ".repeat(codeStyle.indent))
         methodAddresses[instruction.address] = line
         if (instruction.jumpAddress != null) {
-            methodJumps.add(line to instruction.jumpAddress)
+            methodJumps.add(IntIntPair(line, instruction.jumpAddress))
         }
         val lineNumber = instruction.lineNumber
         if (lineNumber != null) {
