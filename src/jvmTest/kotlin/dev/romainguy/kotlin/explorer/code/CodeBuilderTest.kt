@@ -55,7 +55,8 @@ class CodeBuilderTest {
             """.trimIndent().trimEnd()
         )
         assertThat(code.getCodeLines(1..4)).containsExactly(0, 2, 4, 6).inOrder()
-        assertThat(code.getSourceLines(0 until text.lines().size)).containsExactly(1, 1, 2, null, 3, 3, 4)
+        assertThat(code.getSourceLines(0 until text.lines().size))
+            .containsExactly(1, 1, 2, -1, 3, 3, 4)
             .inOrder()
     }
 }
