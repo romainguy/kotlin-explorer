@@ -76,6 +76,8 @@ import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
 import javax.swing.SwingUtilities
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.deleteRecursively
 
 private const val FontSizeEditingMode = 12.0f
 private const val FontSizePresentationMode = 20.0f
@@ -500,8 +502,7 @@ fun main() = application {
     )
 
     Runtime.getRuntime().addShutdownHook(Thread {
-        explorerState.setWindowState(windowState)
-        explorerState.writeState()
+        shutdown(explorerState, windowState)
     })
 
     val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
@@ -534,6 +535,16 @@ fun main() = application {
             KotlinExplorer(explorerState)
         }
     }
+}
+
+@OptIn(ExperimentalPathApi::class)
+private fun shutdown(
+    explorerState: ExplorerState,
+    windowState: WindowState
+) {
+    explorerState.setWindowState(windowState)
+    explorerState.writeState()
+    explorerState.toolPaths.tempDirectory.deleteRecursively()
 }
 
 private fun ExplorerState.getWindowSize() = DpSize(windowWidth.dp, windowHeight.dp)
