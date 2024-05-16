@@ -16,11 +16,14 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-enum class ISA(val branchInstructions: Array<String>) {
-    ByteCode(arrayOf("if")),
-    Dex(arrayOf("if-")),
+import androidx.collection.ScatterSet
+import androidx.collection.scatterSetOf
+
+enum class ISA(val branchInstructions: ScatterSet<String>) {
+    ByteCode(scatterSetOf("if")),
+    Dex(scatterSetOf("if")),
     X86_64(
-        arrayOf(
+        scatterSetOf(
             "je",
             "jz",
             "jne",
@@ -45,7 +48,7 @@ enum class ISA(val branchInstructions: Array<String>) {
             "jna"
         )
     ),
-    Arm64(arrayOf("b.", "b ", "bl", "cbz", "cbnz", "tbz", "tbnz"))
+    Arm64(scatterSetOf("b", "bl", "cbz", "cbnz", "tbz", "tbnz"))
 }
 
 data class Class(val header: String, val methods: List<Method>)

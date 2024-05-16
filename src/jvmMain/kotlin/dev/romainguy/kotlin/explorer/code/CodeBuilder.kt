@@ -61,12 +61,11 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         var count = 0
         instructionSet.instructions.forEach { instruction ->
             val code = instruction.code
-            val index = code.indexOf(": ")
-            instructionSet.isa.branchInstructions.forEach out@ { opCode ->
-                if (code.startsWith(opCode, index + 2)) {
-                    count++
-                    return@out
-                }
+            val start = code.indexOf(": ") + 2
+            val end = code.indexOfFirst(start) { c -> !c.isLetter() }
+            val opCode = code.substring(start, end)
+            if (instructionSet.isa.branchInstructions.contains(opCode)) {
+                count++
             }
         }
         return count
@@ -115,4 +114,14 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append('\n')
         line++
     }
+}
+
+private inline fun CharSequence.indexOfFirst(start: Int, predicate: (Char) -> Boolean): Int {
+    val end = length
+    for (index in start..<end ) {
+        if (predicate(this[index])) {
+            return index
+        }
+    }
+    return end
 }
