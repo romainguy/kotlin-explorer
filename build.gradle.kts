@@ -68,7 +68,7 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg)
 
             packageName = "Kotlin Explorer"
-            packageVersion = "1.0.1"
+            packageVersion = "1.1.0"
             description = "Kotlin Explorer"
             vendor = "Romain Guy"
             licenseFile = rootProject.file("LICENSE")

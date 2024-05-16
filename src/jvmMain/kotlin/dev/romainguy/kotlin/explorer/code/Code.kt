@@ -21,8 +21,8 @@ package dev.romainguy.kotlin.explorer.code
  * A data model representing disassembled code
  *
  * Given a list [Class]'s constructs a mode that provides:
- * * Disassembled text with optional line number annotations
- * * Jump information for branch instructions
+ * - Disassembled text with optional line number annotations
+ * - Jump information for branch instructions
  */
 class Code(
     val text: String,
@@ -43,7 +43,7 @@ class Code(
                     startClass(clazz)
                     clazz.methods.forEach { method ->
                         startMethod(method)
-                        method.instructions.forEach { instruction ->
+                        method.instructionSet.instructions.forEach { instruction ->
                             writeInstruction(instruction)
                         }
                         endMethod()

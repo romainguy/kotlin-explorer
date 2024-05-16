@@ -46,7 +46,27 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
         sb.append("  ".repeat(codeStyle.indent))
-        writeLine("-- ${method.instructions.size} instructions")
+        writeLine("-- ${method.instructionSet.instructions.size} instructions")
+        val branches = countBranches(method.instructionSet)
+        if (branches > 0) {
+            sb.append("  ".repeat(codeStyle.indent))
+            writeLine("-- $branches branch${if (branches > 1) "es" else ""}")
+        }
+    }
+
+    private fun countBranches(instructionSet: InstructionSet): Int {
+        var count = 0
+        instructionSet.instructions.forEach { instruction ->
+            val code = instruction.code
+            val index = code.indexOf(": ")
+            instructionSet.isa.branchInstructions.forEach out@ { opCode ->
+                if (code.startsWith(opCode, index + 2)) {
+                    count++
+                    return@out
+                }
+            }
+        }
+        return count
     }
 
     fun endMethod() {

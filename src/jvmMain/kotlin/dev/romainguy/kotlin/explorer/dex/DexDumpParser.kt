@@ -79,7 +79,10 @@ internal class DexDumpParser {
         val returnType = returnTypeFromType(type)
         val paramTypes = paramTypesFromType(type).joinToString(", ")
 
-        return Method("$returnType $className.$name($paramTypes)", instructions.withLineNumbers(positions))
+        return Method(
+            "$returnType $className.$name($paramTypes)",
+            InstructionSet(instructions.withLineNumbers(positions), ISA.Dex)
+        )
     }
 
     private fun Iterator<String>.readInstructions(): List<Instruction> {

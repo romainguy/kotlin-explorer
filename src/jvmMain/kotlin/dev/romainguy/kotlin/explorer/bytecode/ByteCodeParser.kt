@@ -105,7 +105,7 @@ class ByteCodeParser {
         val instructions = readInstructions()
         val lineNumbers = readLineNumbers()
 
-        return Method(header, instructions.withLineNumbers(lineNumbers))
+        return Method(header, InstructionSet(instructions.withLineNumbers(lineNumbers), ISA.ByteCode))
     }
 
     private fun PeekingIterator<String>.readInstructions(): List<Instruction> {

@@ -16,13 +16,46 @@
 
 package dev.romainguy.kotlin.explorer.code
 
+enum class ISA(val branchInstructions: Array<String>) {
+    ByteCode(arrayOf("")),
+    Dex(arrayOf("if-")),
+    X86_64(
+        arrayOf(
+            "je",
+            "jz",
+            "jne",
+            "jnz",
+            "js",
+            "jns",
+            "jg",
+            "jnle",
+            "jge",
+            "jnl",
+            "jl",
+            "jnge",
+            "jle",
+            "jng",
+            "ja",
+            "jnbe",
+            "jae",
+            "jnb",
+            "jb",
+            "jnae",
+            "jbe",
+            "jna"
+        )
+    ),
+    Arm64(arrayOf("b.", "b ", "bl", "cbz", "cbnz", "tbz", "tbnz"))
+}
+
 data class Class(val header: String, val methods: List<Method>)
 
-data class Method(val header: String, val instructions: List<Instruction>)
+data class Method(val header: String, val instructionSet: InstructionSet)
+
+data class InstructionSet(val instructions: List<Instruction>, val isa: ISA)
 
 data class Instruction(val address: Int, val code: String, val jumpAddress: Int?, val lineNumber: Int? = null)
 
 fun List<Instruction>.withLineNumbers(lineNumbers: Map<Int, Int>): List<Instruction> {
     return map { it.copy(lineNumber = lineNumbers[it.address]) }
-
 }
