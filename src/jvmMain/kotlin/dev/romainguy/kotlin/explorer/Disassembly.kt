@@ -101,6 +101,8 @@ suspend fun buildAndDisassemble(
 ) = coroutineScope {
     val ui = currentCoroutineContext()
 
+    onLogs(showLogs(""))
+
     launch(Dispatchers.IO) {
         val updater = ProgressUpdater(TotalDisassemblySteps, onStatusUpdate)
         try {

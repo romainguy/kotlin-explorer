@@ -166,7 +166,6 @@ private fun jniTypeToJavaType(
                 .replace('/', '.')
                 .replace("java.lang.", "")
         }
-
         'S' -> "short"
         'V' -> "void"
         'Z' -> "boolean"
@@ -174,4 +173,14 @@ private fun jniTypeToJavaType(
     } to endIndex + 1
 }
 
-private fun returnTypeFromType(type: String): String = jniTypeToJavaType(type, type.lastIndexOf(')') + 1).first
+private fun returnTypeFromType(type: String): String {
+    val index = type.lastIndexOf(')') + 1
+    when (type[index]) {
+        '[' -> {
+            return jniTypeToJavaType(type, index + 1).first + "[]"
+        }
+        else -> {
+            return jniTypeToJavaType(type, index).first
+        }
+    }
+}
