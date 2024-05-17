@@ -40,7 +40,7 @@ kotlin {
                 implementation(libs.skiko.mac)
                 implementation(libs.rsyntaxtextarea)
                 implementation(libs.rstaui)
-                implementation(project(":token-markers"))
+                implementation(project(":token-makers"))
                 runtimeOnly(libs.skiko.linux)
             }
         }

@@ -34,7 +34,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.Key.Companion.A
 import androidx.compose.ui.input.key.Key.Companion.B
 import androidx.compose.ui.input.key.Key.Companion.C
-import androidx.compose.ui.input.key.Key.Companion.Comma
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -378,7 +377,7 @@ private fun Title(text: String) {
 
 private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): SourceTextArea {
     return SourceTextArea(explorerState.syncLines).apply {
-        configureSyntaxTextArea(SyntaxConstants.SYNTAX_STYLE_KOTLIN, focusTracker)
+        configureSyntaxTextArea(SyntaxStyle.Kotlin, focusTracker)
         SwingUtilities.invokeLater { requestFocusInWindow() }
         document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
     }
