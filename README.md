@@ -1,3 +1,5 @@
+![image](art/app-icon/icon.iconset/icon_512x512.png)
+
 # Kotlin Explorer
 
 Kotlin Explorer is a desktop tool to quickly and easily disassemble Kotlin code into:

@@ -67,7 +67,7 @@ compose.desktop {
 
             targetFormats(TargetFormat.Dmg)
 
-            packageVersion = "1.2.1"
+            packageVersion = "1.2.2"
             packageName = "Kotlin Explorer"
             description = "Kotlin Explorer"
             vendor = "Romain Guy"
@@ -75,6 +75,7 @@ compose.desktop {
 
             macOS {
                 dockName = "Kotlin Explorer"
+                iconFile = file("art/app-icon/icon.icns")
                 bundleID = "dev.romainguy.kotlin.explorer"
             }
         }
