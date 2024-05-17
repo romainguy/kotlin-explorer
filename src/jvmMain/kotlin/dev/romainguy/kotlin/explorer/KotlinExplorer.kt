@@ -551,50 +551,54 @@ private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
 }
 
 @OptIn(ExperimentalJewelApi::class)
-fun main() = application {
-    // Faster scrolling in Swing components
-    enableNewSwingCompositing()
+fun main() {
+    System.setProperty("apple.awt.application.name", "Kotlin Explorer")
 
-    val explorerState = remember { ExplorerState() }
+    application {
+        // Faster scrolling in Swing components
+        enableNewSwingCompositing()
 
-    val windowState = rememberWindowState(
-        size = explorerState.getWindowSize(),
-        position = explorerState.getWindowPosition(),
-        placement = explorerState.windowPlacement,
-    )
+        val explorerState = remember { ExplorerState() }
 
-    Runtime.getRuntime().addShutdownHook(Thread {
-        shutdown(explorerState, windowState)
-    })
+        val windowState = rememberWindowState(
+            size = explorerState.getWindowSize(),
+            position = explorerState.getWindowPosition(),
+            placement = explorerState.windowPlacement,
+        )
 
-    val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
-        JewelTheme.darkThemeDefinition()
-    } else {
-        JewelTheme.lightThemeDefinition()
-    }
-    val titleBarStyle = if (KotlinExplorerTheme.System.isDark()) {
-        TitleBarStyle.dark()
-    } else {
-        TitleBarStyle.light()
-    }
+        Runtime.getRuntime().addShutdownHook(Thread {
+            shutdown(explorerState, windowState)
+        })
 
-    IntUiTheme(
-        themeDefinition,
-        ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
-        false
-    ) {
-        DecoratedWindow(
-            state = windowState,
-            onCloseRequest = {
-                explorerState.setWindowState(windowState)
-                exitApplication()
-            },
-            title = "Kotlin Explorer"
+        val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
+            JewelTheme.darkThemeDefinition()
+        } else {
+            JewelTheme.lightThemeDefinition()
+        }
+        val titleBarStyle = if (KotlinExplorerTheme.System.isDark()) {
+            TitleBarStyle.dark()
+        } else {
+            TitleBarStyle.light()
+        }
+
+        IntUiTheme(
+            themeDefinition,
+            ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
+            false
         ) {
-            TitleBar(Modifier.newFullscreenControls()) {
-                Text("Kotlin Explorer")
+            DecoratedWindow(
+                state = windowState,
+                onCloseRequest = {
+                    explorerState.setWindowState(windowState)
+                    exitApplication()
+                },
+                title = "Kotlin Explorer"
+            ) {
+                TitleBar(Modifier.newFullscreenControls()) {
+                    Text("Kotlin Explorer")
+                }
+                KotlinExplorer(explorerState)
             }
-            KotlinExplorer(explorerState)
         }
     }
 }
