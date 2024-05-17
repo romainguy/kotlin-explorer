@@ -29,7 +29,7 @@
       <style token="IDENTIFIER" fg="000000" />
       <style token="RESERVED_WORD" fg="0033b3" />
       <style token="RESERVED_WORD_2" fg="0033b3" />
-      <style token="ANNOTATION" fg="9e880d" />
+      <style token="ANNOTATION" fg="089887" />
       <style token="COMMENT_DOCUMENTATION" fg="8c8c8c" italic="true" />
       <style token="COMMENT_EOL" fg="8c8c8c" italic="true" />
       <style token="COMMENT_MULTILINE" fg="8c8c8c" italic="true" />
@@ -38,9 +38,9 @@
       <style token="DATA_TYPE" fg="871094" />
       <style token="FUNCTION" fg="00627a" />
       <style token="LITERAL_BOOLEAN" fg="000080" />
-      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="1750eb" />
-      <style token="LITERAL_NUMBER_FLOAT" fg="1750eb" />
-      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="1750eb" />
+      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="43A220" />
+      <style token="LITERAL_NUMBER_FLOAT" fg="43A220" />
+      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="43A220" />
       <style token="LITERAL_STRING_DOUBLE_QUOTE" fg="067d17" />
       <style token="LITERAL_CHAR" fg="067d17" />
       <style token="LITERAL_BACKQUOTE" fg="067d17" bg="ffcccc" />
