@@ -76,7 +76,6 @@ compose.desktop {
             macOS {
                 dockName = "Kotlin Explorer"
                 bundleID = "dev.romainguy.kotlin.explorer"
-                iconFile = file("icons/jewel.icns")
             }
         }
     }
