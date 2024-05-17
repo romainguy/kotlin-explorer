@@ -29,9 +29,11 @@ sealed class Shortcut(
     private val key: Key,
     private val isShift: Boolean,
     private val isCtrl: Boolean,
+    private val isAlt: Boolean = false,
     private val metaOnMac: Boolean = true
 ) {
     class Ctrl(key: Key) : Shortcut(key, isCtrl = true, isShift = false)
+    class CtrlAlt(key: Key) : Shortcut(key, isCtrl = true, isShift = false, isAlt = true)
     class CtrlOnly(key: Key) : Shortcut(key, isCtrl = true, isShift = false, metaOnMac = false)
     class CtrlShift(key: Key) : Shortcut(key, isCtrl = true, isShift = true)
 
@@ -40,7 +42,8 @@ sealed class Shortcut(
             key = key,
             ctrl = isCtrl && (!isMac || !metaOnMac),
             shift = isShift,
-            meta = isCtrl && isMac && metaOnMac
+            meta = isCtrl && isMac && metaOnMac,
+            alt = isAlt
         )
 }
 

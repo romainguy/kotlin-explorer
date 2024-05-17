@@ -19,20 +19,13 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import org.jetbrains.jewel.ui.component.DefaultButton
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
@@ -40,17 +33,8 @@ import org.jetbrains.jewel.ui.component.TextField
 
 @Composable
 fun Settings(
-    explorerState: ExplorerState,
-    onDismissRequest: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismissRequest) {
-        SettingsContent(explorerState, onDismissRequest)
-    }
-}
-
-@Composable
-private fun SettingsContent(
     state: ExplorerState,
+    onSaveRequest: () -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val androidHome = remember { mutableStateOf(state.androidHome) }
@@ -59,39 +43,18 @@ private fun SettingsContent(
     val lineNumberWidth = remember { mutableStateOf(state.lineNumberWidth.toString()) }
     val onSaveClick = {
         state.saveState(androidHome, kotlinHome, indent, lineNumberWidth)
-        onDismissRequest()
+        onSaveRequest()
     }
 
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        // TODO: Use a theme
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
-            Title()
-
-            val toolPaths = ToolPaths(state.directory, androidHome.value, kotlinHome.value)
-            StringSetting("Android home directory: ", androidHome) { toolPaths.isAndroidHomeValid }
-            StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
-            IntSetting("Decompiled Code indent: ", indent, minValue = 2)
-            IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
-
-            Spacer(modifier = Modifier.height(32.dp))
-            Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
+        val toolPaths = ToolPaths(state.directory, androidHome.value, kotlinHome.value)
+        StringSetting("Android home directory: ", androidHome) { toolPaths.isAndroidHomeValid }
+        StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
+        IntSetting("Decompiled code indent: ", indent, minValue = 2)
+        IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
+        Spacer(modifier = Modifier.height(8.dp))
+        Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
     }
-}
-
-@Composable
-private fun Title() {
-    Text(
-        "Settings",
-        fontSize = 24.sp,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    )
 }
 
 @Composable
@@ -108,7 +71,6 @@ private fun ColumnScope.Buttons(
             Text("Save")
         }
     }
-
 }
 
 private fun ExplorerState.saveState(
@@ -131,7 +93,6 @@ private fun StringSetting(title: String, state: MutableState<String>, isValid: (
 
 @Composable
 private fun IntSetting(title: String, state: MutableState<String>, minValue: Int) {
-
     SettingRow(
         title,
         value = state.value,
@@ -164,14 +125,13 @@ private fun SettingRow(title: String, value: String, onValueChange: (String) -> 
     }
 }
 
-
 @Composable
 private fun ErrorIcon() {
     Icon(
         "icons/error.svg",
         iconClass = ExplorerState::class.java,
         contentDescription = "Error",
-        tint = Color(0xffee4056)
+        tint = IconErrorColor
     )
 }
 
@@ -181,6 +141,6 @@ private fun ValidIcon() {
         "icons/done.svg",
         iconClass = ExplorerState::class.java,
         contentDescription = "Valid",
-        tint = Color(0xff3369d6)
+        tint = IconValidColor
     )
 }

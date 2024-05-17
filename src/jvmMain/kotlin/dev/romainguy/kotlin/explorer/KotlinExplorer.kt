@@ -27,11 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.Key.Companion.A
 import androidx.compose.ui.input.key.Key.Companion.B
 import androidx.compose.ui.input.key.Key.Companion.C
+import androidx.compose.ui.input.key.Key.Companion.Comma
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
@@ -43,6 +46,7 @@ import androidx.compose.ui.input.key.Key.Companion.S
 import androidx.compose.ui.input.key.Key.Companion.V
 import androidx.compose.ui.input.key.Key.Companion.X
 import androidx.compose.ui.input.key.Key.Companion.Z
+import androidx.compose.ui.input.key.key
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
@@ -80,11 +84,12 @@ import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
 import org.jetbrains.jewel.window.styling.TitleBarStyle
-import java.awt.KeyboardFocusManager
+import java.awt.Desktop
 import java.awt.event.ActionEvent
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
+import javax.swing.FocusManager
 import javax.swing.SwingUtilities
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
@@ -154,7 +159,7 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     val codeTextAreas = listOf(byteCodeTextArea, dexTextArea, oatTextArea)
 
     val findDialog = FindDialog(window, searchListener).apply { searchContext.searchWrap = true }
-    var showSettings by DialogState(!explorerState.toolPaths.isValid)
+    var showSettings by mutableStateOf(!explorerState.toolPaths.isValid)
 
     val updatePresentationMode: (Boolean) -> Unit = {
         listOf(byteCodeTextArea, dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
@@ -192,13 +197,13 @@ private fun FrameWindowScope.KotlinExplorer(
     uiState.sourceTextArea.addCodeTextAreas(uiState.byteCodeTextArea, uiState.dexTextArea)
 
     val sourcePanel: @Composable () -> Unit =
-        { SourcePanel(uiState.sourceTextArea, explorerState, uiState.showSettings) }
+        { SourcePanel(uiState.sourceTextArea, explorerState) }
     val byteCodePanel: @Composable () -> Unit =
-        { TextPanel("Byte Code", uiState.byteCodeTextArea, explorerState, uiState.showSettings) }
+        { TextPanel(uiState.byteCodeTextArea, explorerState) }
     val dexPanel: @Composable () -> Unit =
-        { TextPanel("DEX", uiState.dexTextArea, explorerState, uiState.showSettings) }
+        { TextPanel(uiState.dexTextArea, explorerState) }
     val oatPanel: @Composable () -> Unit =
-        { TextPanel("OAT", uiState.oatTextArea, explorerState, uiState.showSettings) }
+        { TextPanel(uiState.oatTextArea, explorerState) }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
 
     MainMenu(
@@ -218,13 +223,14 @@ private fun FrameWindowScope.KotlinExplorer(
         uiState.updateSyncLinesEnabled,
     )
 
+    if (isMac) {
+        Desktop.getDesktop().setPreferencesHandler {
+            uiState.showSettings = true
+        }
+    }
+
     if (uiState.showSettings) {
-        Settings(explorerState, onDismissRequest = {
-            uiState.showSettings = false
-            uiState.codeTextAreas.forEach {
-                it.codeStyle = it.codeStyle.withSettings(explorerState.indent, explorerState.lineNumberWidth)
-            }
-        })
+        SettingsDialog(explorerState, uiState)
     }
 
     Column(modifier = Modifier.background(JewelTheme.globalColors.panelBackground)) {
@@ -236,6 +242,37 @@ private fun FrameWindowScope.KotlinExplorer(
             MultiSplitter(modifier = Modifier.weight(1.0f), panels)
         }
         StatusBar(uiState.status, uiState.progress)
+    }
+}
+
+@Composable
+private fun SettingsDialog(
+    explorerState: ExplorerState,
+    uiState: UiState
+) {
+    val onDismissRequest = { uiState.showSettings = false }
+    val onSaveRequest = {
+        uiState.showSettings = false
+        uiState.codeTextAreas.forEach {
+            it.codeStyle = it.codeStyle.withSettings(explorerState.indent, explorerState.lineNumberWidth)
+        }
+    }
+    DialogWindow(
+        onCloseRequest = onDismissRequest,
+        state = rememberDialogState(size = DpSize.Unspecified),
+        visible = uiState.showSettings,
+        title = "Settings",
+        resizable = false,
+        onPreviewKeyEvent = { keyEvent ->
+            if (keyEvent.key == Key.Escape) {
+                onDismissRequest()
+                true
+            } else {
+                false
+            }
+        }
+    ) {
+        Settings(explorerState, onSaveRequest = onSaveRequest, onDismissRequest = onDismissRequest)
     }
 }
 
@@ -301,10 +338,10 @@ private fun ExplorerState.getPanels(
 }
 
 @Composable
-private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState, showSettings: Boolean) {
+private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: ExplorerState) {
     Column {
         Title("Source")
-        DialogSupportingSwingPanel(
+        SwingPanel(
             modifier = Modifier.fillMaxSize(),
             factory = {
                 RTextScrollPane(sourceTextArea)
@@ -314,23 +351,18 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
                     sourceTextArea.text = explorerState.sourceCode
                 }
                 sourceTextArea.updateStyle(explorerState)
-            },
-            isDialogVisible = showSettings,
+            }
         )
     }
 }
 
 @Composable
-private fun TextPanel(title: String, textArea: RSyntaxTextArea, explorerState: ExplorerState, showSettings: Boolean) {
-    Column {
-        Title(title)
-        DialogSupportingSwingPanel(
-            modifier = Modifier.fillMaxSize(),
-            factory = { RTextScrollPane(textArea) },
-            update = { textArea.updateStyle(explorerState) },
-            isDialogVisible = showSettings
-        )
-    }
+private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState) {
+    SwingPanel(
+        modifier = Modifier.fillMaxSize(),
+        factory = { RTextScrollPane(textArea) },
+        update = { textArea.updateStyle(explorerState) }
+    )
 }
 
 @Composable
@@ -426,8 +458,10 @@ private fun FrameWindowScope.MainMenu(
     }
 
     MenuBar {
-        Menu("File") {
-            Item("Settings…", onClick = onOpenSettings)
+        if (!isMac) {
+            Menu("File") {
+                MenuItem("Settings…", CtrlAlt(S), onClick = onOpenSettings)
+            }
         }
         Menu("Edit") {
             MenuItem("Undo", Ctrl(Z), onClick = { performSwingMenuAction(RTextArea.UNDO_ACTION) })
@@ -482,7 +516,7 @@ private fun FrameWindowScope.MainMenu(
 private fun performSwingMenuAction(actionType: Int) {
     RTextArea.getAction(actionType).actionPerformed(
         ActionEvent(
-            KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner, 0, ""
+            FocusManager.getCurrentManager().focusOwner, 0, ""
         )
     )
 }

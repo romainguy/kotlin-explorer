@@ -19,6 +19,8 @@ package dev.romainguy.kotlin.explorer
 import androidx.compose.ui.graphics.Color
 import org.jetbrains.skiko.SystemTheme
 
+val IconErrorColor = Color(0xffee4056)
+val IconValidColor = Color(0xff3369d6)
 val ErrorColor = Color(0xffa04646)
 val ProgressColor = Color(0xff3369d6)
 val ProgressTrackColor = Color(0xffc4c4c4)
