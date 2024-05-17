@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.*
@@ -98,7 +99,6 @@ private const val FontSizePresentationMode = 20.0f
 
 private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     var activeTextArea by mutableStateOf<RSyntaxTextArea?>(null)
-    var previousActiveTextArea by mutableStateOf<RSyntaxTextArea?>(null)
     var status by mutableStateOf("Ready")
     var progress by mutableStateOf(1f)
     var logs by mutableStateOf(AnnotatedString(""))
@@ -133,20 +133,10 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     }
     val focusTracker = object : FocusListener {
         override fun focusGained(e: FocusEvent?) {
-            previousActiveTextArea = activeTextArea
             activeTextArea = e?.component as RSyntaxTextArea
         }
 
         override fun focusLost(e: FocusEvent?) {
-            // TODO: Bit of a hack to keep focus on the text areas. Without this, clicking
-            //       the background loses focus, so does opening/closing panels
-            if (e?.oppositeComponent !is RSyntaxTextArea) {
-                if (activeTextArea?.isShowing == true) {
-                    activeTextArea?.requestFocusInWindow()
-                } else {
-                    previousActiveTextArea?.requestFocusInWindow()
-                }
-            }
         }
     }
 
@@ -198,11 +188,11 @@ private fun FrameWindowScope.KotlinExplorer(
     val sourcePanel: @Composable () -> Unit =
         { SourcePanel(uiState.sourceTextArea, explorerState) }
     val byteCodePanel: @Composable () -> Unit =
-        { TextPanel(uiState.byteCodeTextArea, explorerState) }
+        { TextPanel(uiState.byteCodeTextArea, explorerState, "Byte Code") }
     val dexPanel: @Composable () -> Unit =
-        { TextPanel(uiState.dexTextArea, explorerState) }
+        { TextPanel(uiState.dexTextArea, explorerState, "DEX") }
     val oatPanel: @Composable () -> Unit =
-        { TextPanel(uiState.oatTextArea, explorerState) }
+        { TextPanel(uiState.oatTextArea, explorerState, "OAT") }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
 
     MainMenu(
@@ -283,6 +273,7 @@ private fun LogsPanel(logs: AnnotatedString) {
             Text(
                 text = logs,
                 fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
@@ -356,12 +347,15 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
 }
 
 @Composable
-private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState) {
-    SwingPanel(
-        modifier = Modifier.fillMaxSize(),
-        factory = { RTextScrollPane(textArea) },
-        update = { textArea.updateStyle(explorerState) }
-    )
+private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState, title: String) {
+    Column {
+        Title(title)
+        SwingPanel(
+            modifier = Modifier.fillMaxSize(),
+            factory = { RTextScrollPane(textArea) },
+            update = { textArea.updateStyle(explorerState) }
+        )
+    }
 }
 
 @Composable
