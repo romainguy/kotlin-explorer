@@ -23,7 +23,7 @@ class SyntaxStyle private constructor() {
     companion object {
         val Dex: String get() = "text/dex-bytecode"
         val ByteCode: String get() = "text/java-bytecode"
-        val Kotlin: String get() = "text/modified-kotlin"
+        val Kotlin: String get() = "text/kotlin"
         val Oat: String get() = "text/oat-assembly"
 
         init {

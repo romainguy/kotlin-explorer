@@ -378,8 +378,11 @@ private fun Title(text: String) {
 private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): SourceTextArea {
     return SourceTextArea(explorerState.syncLines).apply {
         configureSyntaxTextArea(SyntaxStyle.Kotlin, focusTracker)
-        SwingUtilities.invokeLater { requestFocusInWindow() }
+        isCodeFoldingEnabled = true
+        isMarginLineEnabled = true
+        marginLinePosition = 100
         document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
+        SwingUtilities.invokeLater { requestFocusInWindow() }
     }
 }
 
@@ -522,7 +525,6 @@ private fun performSwingMenuAction(actionType: Int) {
 
 private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTracker: FocusListener) {
     syntaxEditingStyle = syntaxStyle
-    isCodeFoldingEnabled = true
     antiAliasingEnabled = true
     tabsEmulated = true
     tabSize = 4
