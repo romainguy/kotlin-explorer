@@ -38,9 +38,9 @@
       <style token="DATA_TYPE" fg="871094" />
       <style token="FUNCTION" fg="00627a" />
       <style token="LITERAL_BOOLEAN" fg="000080" />
-      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="43A220" />
-      <style token="LITERAL_NUMBER_FLOAT" fg="43A220" />
-      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="43A220" />
+      <style token="LITERAL_NUMBER_DECIMAL_INT" fg="409A1E" />
+      <style token="LITERAL_NUMBER_FLOAT" fg="409A1E" />
+      <style token="LITERAL_NUMBER_HEXADECIMAL" fg="409A1E" />
       <style token="LITERAL_STRING_DOUBLE_QUOTE" fg="067d17" />
       <style token="LITERAL_CHAR" fg="067d17" />
       <style token="LITERAL_BACKQUOTE" fg="067d17" bg="ffcccc" />
