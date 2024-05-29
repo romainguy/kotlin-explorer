@@ -1,11 +1,11 @@
 [versions]
 collection = "1.4.0"
-compose = "1.6.10-rc03"
+compose = "1.6.10"
 jewel = "0.19.3"
 jna = "5.14.0"
 junit4 = "4.13.2"
-kotlin = "1.9.23"
-lifecycle = "2.8.0-rc02"
+kotlin = "2.0.0"
+lifecycle = "2.8.0"
 rstaui = "3.3.1"
 rsyntaxtextarea="3.4.0"
 skiko="0.8.4"
@@ -32,4 +32,5 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 [plugins]
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

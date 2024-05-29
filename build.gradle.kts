@@ -5,6 +5,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 repositories {
@@ -15,12 +16,13 @@ repositories {
 }
 
 kotlin {
-    jvm {
-        jvmToolchain {
-            vendor = JvmVendorSpec.JETBRAINS
-            languageVersion = JavaLanguageVersion.of(17)
-        }
+    jvm()
+
+    jvmToolchain {
+        vendor = JvmVendorSpec.JETBRAINS
+        languageVersion = JavaLanguageVersion.of(17)
     }
+
     sourceSets {
         val jvmMain by getting {
             dependencies {
@@ -52,7 +54,6 @@ kotlin {
                 implementation(libs.truth)
             }
         }
-
     }
 }
 
