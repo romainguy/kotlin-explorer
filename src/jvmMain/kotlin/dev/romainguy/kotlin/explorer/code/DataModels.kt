@@ -23,6 +23,7 @@ import androidx.collection.scatterSetOf
 enum class ISA(val branchInstructions: ScatterSet<String>) {
     ByteCode(scatterSetOf("if")),
     Dex(scatterSetOf("if")),
+    Oat(scatterSetOf()),
     X86_64(
         scatterSetOf(
             "je",

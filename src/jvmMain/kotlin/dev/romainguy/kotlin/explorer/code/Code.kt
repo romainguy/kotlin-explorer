@@ -40,14 +40,16 @@ class Code(
     companion object {
         fun fromClasses(classes: List<Class>, codeStyle: CodeStyle = CodeStyle()): Code {
             return buildCode(codeStyle) {
-                classes.forEach { clazz ->
+                classes.forEachIndexed { classIndex, clazz ->
                     startClass(clazz)
-                    clazz.methods.forEach { method ->
+                    val notLastClass = classIndex < classes.size - 1
+                    clazz.methods.forEachIndexed { methodIndex, method ->
                         startMethod(method)
                         method.instructionSet.instructions.forEach { instruction ->
                             writeInstruction(instruction)
                         }
                         endMethod()
+                        if (methodIndex < clazz.methods.size - 1 || notLastClass) writeLine("")
                     }
                 }
             }.build()

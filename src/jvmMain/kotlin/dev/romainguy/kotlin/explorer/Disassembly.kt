@@ -25,6 +25,7 @@ import dev.romainguy.kotlin.explorer.build.DexCompiler
 import dev.romainguy.kotlin.explorer.build.KotlinCompiler
 import dev.romainguy.kotlin.explorer.bytecode.ByteCodeParser
 import dev.romainguy.kotlin.explorer.code.CodeContent
+import dev.romainguy.kotlin.explorer.code.ISA
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
 import dev.romainguy.kotlin.explorer.oat.OatDumpParser
 import kotlinx.coroutines.*
@@ -92,6 +93,7 @@ suspend fun buildAndRun(
 suspend fun buildAndDisassemble(
     toolPaths: ToolPaths,
     source: String,
+    instructionSets: Map<ISA, Boolean>,
     onByteCode: (CodeContent) -> Unit,
     onDex: (CodeContent) -> Unit,
     onOat: (CodeContent) -> Unit,
@@ -125,19 +127,23 @@ suspend fun buildAndDisassemble(
             }
             updater.addJob(launch(ui) { updater.advance("Kotlin compiled") })
 
-            updater.addJob(launch {
-                val javap = byteCodeDecompiler.decompile(directory)
-                withContext(ui) {
-                    val status = if (javap.exitCode != 0) {
-                        onLogs(showError(javap.output))
-                        "Error Disassembling Java ByteCode"
-                    } else {
-                        onByteCode(byteCodeParser.parse(javap.output))
-                        "Disassembled Java ByteCode"
+            if (instructionSets.getOrDefault(ISA.ByteCode, true)) {
+                updater.addJob(launch {
+                    val javap = byteCodeDecompiler.decompile(directory)
+                    withContext(ui) {
+                        val status = if (javap.exitCode != 0) {
+                            onLogs(showError(javap.output))
+                            "Error Disassembling Java ByteCode"
+                        } else {
+                            onByteCode(byteCodeParser.parse(javap.output))
+                            "Disassembled Java ByteCode"
+                        }
+                        updater.advance(status)
                     }
-                    updater.advance(status)
-                }
-            })
+                })
+            } else {
+                launch(ui) { updater.advance("") }
+            }
 
             val dexCompiler = DexCompiler(toolPaths, directory)
 
@@ -146,7 +152,7 @@ suspend fun buildAndDisassemble(
             if (dex.exitCode != 0) {
                 updater.addJob(launch(ui) {
                     onLogs(showError(dex.output))
-                    updater.advance("Error creating DEX", 5)
+                    updater.advance("Error creating DEX", updater.steps)
                 })
                 return@launch
             }
@@ -154,19 +160,31 @@ suspend fun buildAndDisassemble(
                 updater.advance(if (optimize) "Optimized DEX with R8" else "Compiled DEX with D8")
             })
 
-            updater.addJob(launch {
-                val dexdump = dexCompiler.dumpDex()
-                withContext(ui) {
-                    val status = if (dexdump.exitCode != 0) {
-                        onLogs(showError(dexdump.output))
-                        "Error creating DEX dump"
-                    } else {
-                        onDex(dexDumpParser.parse(dexdump.output))
-                        "Created DEX dump"
+            if (instructionSets.getOrDefault(ISA.Dex, true)) {
+                updater.addJob(launch {
+                    val dexdump = dexCompiler.dumpDex()
+                    withContext(ui) {
+                        val status = if (dexdump.exitCode != 0) {
+                            onLogs(showError(dexdump.output))
+                            "Error creating DEX dump"
+                        } else {
+                            onDex(dexDumpParser.parse(dexdump.output))
+                            "Created DEX dump"
+                        }
+                        updater.advance(status)
                     }
-                    updater.advance(status)
+                })
+            } else {
+                launch(ui) { updater.advance("") }
+            }
+
+            if (!instructionSets.getOrDefault(ISA.Oat, true)) {
+                updater.waitForJobs()
+                withContext(ui) {
+                    updater.skipToEnd("Ready")
                 }
-            })
+                return@launch
+            }
 
             val push = process(
                 toolPaths.adb.toString(),
@@ -179,7 +197,7 @@ suspend fun buildAndDisassemble(
             if (push.exitCode != 0) {
                 updater.addJob(launch(ui) {
                     onLogs(showError(push.output))
-                    updater.advance("Error pushing code to device", 3)
+                    updater.advance("Error pushing code to device", updater.steps)
                 })
                 return@launch
             }
@@ -198,7 +216,7 @@ suspend fun buildAndDisassemble(
             if (dex2oat.exitCode != 0) {
                 updater.addJob(launch(ui) {
                     onLogs(showError(dex2oat.output))
-                    updater.advance("Error compiling OAT", 2)
+                    updater.advance("Error compiling OAT", updater.steps)
                 })
                 return@launch
             }

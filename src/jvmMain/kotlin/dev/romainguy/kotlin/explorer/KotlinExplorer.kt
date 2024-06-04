@@ -55,10 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.*
-import dev.romainguy.kotlin.explorer.code.CodeContent
-import dev.romainguy.kotlin.explorer.code.CodeStyle
-import dev.romainguy.kotlin.explorer.code.CodeTextArea
-import dev.romainguy.kotlin.explorer.code.SyntaxStyle
+import dev.romainguy.kotlin.explorer.code.*
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -165,7 +162,9 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     }
 
     val onProgressUpdate: (String, Float) -> Unit = { newStatus: String, newProgress: Float ->
-        status = newStatus
+        if (newStatus.isNotEmpty()) {
+            status = newStatus
+        }
         progress = newProgress
     }
 
@@ -338,7 +337,9 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
             },
             update = {
                 if (explorerState.sourceCode != sourceTextArea.text) {
-                    sourceTextArea.text = explorerState.sourceCode
+                    val killEdit = sourceTextArea.text.isEmpty()
+                    sourceTextArea.replaceRange(explorerState.sourceCode, 0, sourceTextArea.text.length)
+                    if (killEdit) sourceTextArea.discardAllEdits()
                 }
                 sourceTextArea.updateStyle(explorerState)
             }
@@ -421,10 +422,17 @@ private fun FrameWindowScope.MainMenu(
 ) {
     val scope = rememberCoroutineScope()
     val compileAndDisassemble: () -> Unit = {
+        val always = explorerState.decompileHiddenIsa
+        val instructionSets = mapOf(
+            ISA.ByteCode to (always || explorerState.showByteCode),
+            ISA.Dex to (always || explorerState.showDex),
+            ISA.Oat to (always || explorerState.showOat),
+        )
         scope.launch {
             buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                instructionSets,
                 onByteCodeUpdate,
                 onDexUpdate,
                 onOatUpdate,
@@ -454,8 +462,10 @@ private fun FrameWindowScope.MainMenu(
     }
 
     MenuBar {
-        if (!isMac) {
-            Menu("File") {
+        Menu("File") {
+            MenuItem("Save", Ctrl(S), onClick = explorerState::writeSourceCodeState)
+            if (!isMac) {
+                Separator()
                 MenuItem("Settings…", CtrlAlt(S), onClick = onOpenSettings)
             }
         }

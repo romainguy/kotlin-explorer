@@ -84,8 +84,6 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         methodAddresses.clear()
         methodJumps.clear()
         lastMethodLineNumber = -1
-
-        writeLine("")
     }
 
     fun writeInstruction(instruction: Instruction) {
@@ -113,7 +111,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
 
     override fun toString() = sb.toString()
 
-    private fun writeLine(text: String) {
+    fun writeLine(text: String) {
         sb.append(text)
         sb.append('\n')
         line++

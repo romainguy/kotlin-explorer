@@ -35,7 +35,8 @@ private const val ShowByteCode = "SHOW_BYTE_CODE"
 private const val ShowDex = "SHOW_DEX"
 private const val ShowOat = "SHOW_OAT"
 private const val SyncLines = "SYNC_LINES"
-private const val Indent = "Indent"
+private const val Indent = "INDENT"
+private const val DecompileHiddenIsa = "DECOMPILE_HIDDEN_ISA"
 private const val LineNumberWidth = "LINE_NUMBER_WIDTH"
 private const val WindowPosX = "WINDOW_X"
 private const val WindowPosY = "WINDOW_Y"
@@ -63,6 +64,7 @@ class ExplorerState {
     var syncLines by BooleanState(SyncLines, true)
     var lineNumberWidth by IntState(LineNumberWidth, 4)
     var indent by IntState(Indent, 4)
+    var decompileHiddenIsa by BooleanState(DecompileHiddenIsa, true)
     var sourceCode: String = readSourceCode(toolPaths)
     var windowWidth by IntState(WindowWidth, 1900)
     var windowHeight by IntState(WindowHeight, 1600)
@@ -100,8 +102,12 @@ class ExplorerState {
         override fun component2() = state.component2()
     }
 
-    fun writeState() {
+    fun writeSourceCodeState() {
         Files.writeString(toolPaths.sourceFile, sourceCode)
+    }
+
+    fun writeState() {
+        writeSourceCodeState()
         Files.writeString(file, entries.map { (key, value) -> "$key=$value" }.joinToString("\n"))
     }
 }

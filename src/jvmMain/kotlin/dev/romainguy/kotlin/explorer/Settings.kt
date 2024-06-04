@@ -26,10 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.jetbrains.jewel.ui.component.DefaultButton
-import org.jetbrains.jewel.ui.component.Icon
-import org.jetbrains.jewel.ui.component.Text
-import org.jetbrains.jewel.ui.component.TextField
+import org.jetbrains.jewel.ui.component.*
 
 @Composable
 fun Settings(
@@ -41,8 +38,15 @@ fun Settings(
     val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
     val indent = remember { mutableStateOf(state.indent.toString()) }
     val lineNumberWidth = remember { mutableStateOf(state.lineNumberWidth.toString()) }
+    val decompileHiddenIsa = remember { mutableStateOf(state.decompileHiddenIsa) }
     val onSaveClick = {
-        state.saveState(androidHome, kotlinHome, indent, lineNumberWidth)
+        state.saveState(
+            androidHome.value,
+            kotlinHome.value,
+            indent.value,
+            lineNumberWidth.value,
+            decompileHiddenIsa.value
+        )
         onSaveRequest()
     }
 
@@ -52,6 +56,7 @@ fun Settings(
         StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
         IntSetting("Decompiled code indent: ", indent, minValue = 2)
         IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
+        BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
         Spacer(modifier = Modifier.height(8.dp))
         Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
     }
@@ -74,15 +79,17 @@ private fun ColumnScope.Buttons(
 }
 
 private fun ExplorerState.saveState(
-    androidHome: MutableState<String>,
-    kotlinHome: MutableState<String>,
-    indent: MutableState<String>,
-    lineNumberWidth: MutableState<String>,
+    androidHome: String,
+    kotlinHome: String,
+    indent: String,
+    lineNumberWidth: String,
+    decompileHiddenIsa: Boolean,
 ) {
-    this.androidHome = androidHome.value
-    this.kotlinHome = kotlinHome.value
-    this.indent = indent.value.toInt()
-    this.lineNumberWidth = lineNumberWidth.value.toInt()
+    this.androidHome = androidHome
+    this.kotlinHome = kotlinHome
+    this.indent = indent.toInt()
+    this.lineNumberWidth = lineNumberWidth.toInt()
+    this.decompileHiddenIsa = decompileHiddenIsa
     this.reloadToolPathsFromSettings()
 }
 
@@ -103,6 +110,17 @@ private fun IntSetting(title: String, state: MutableState<String>, minValue: Int
         },
         isValid = { (state.value.toIntOrNull() ?: Int.MIN_VALUE) >= minValue }
     )
+}
+
+@Composable
+private fun BooleanSetting(title: String, state: MutableState<Boolean>) {
+    Row {
+        Checkbox(state.value, onCheckedChange = { state.value = it })
+        Text(
+            title,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        )
+    }
 }
 
 @Composable

@@ -6,6 +6,7 @@ jna = "5.14.0"
 junit4 = "4.13.2"
 kotlin = "2.0.0"
 lifecycle = "2.8.0"
+mpfilepicker = "3.1.0"
 rstaui = "3.3.1"
 rsyntaxtextarea="3.4.0"
 skiko="0.8.4"
@@ -24,6 +25,7 @@ lifecycle = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runt
 lifecycle-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle" }
 lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+mpfilepicker = { group = "com.darkrockstudios", name = "mpfilepicker", version.ref = "mpfilepicker" }
 rstaui = { group = "com.fifesoft", name = "rstaui", version.ref = "rstaui" }
 rsyntaxtextarea = { group = "com.fifesoft", name = "rsyntaxtextarea", version.ref = "rsyntaxtextarea" }
 skiko-linux = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-linux-arm64", version.ref = "skiko" }

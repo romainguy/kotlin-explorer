@@ -101,7 +101,9 @@ class CodeTextArea(
             is Success -> code = Code.fromClasses(content.classes, codeStyle).also {
                 val text = it.text
                 if (text != this.text) {
-                    this.text = text
+                    val killEdit = this.text.isEmpty()
+                    replaceRange(text, 0, this.text.length)
+                    if (killEdit) discardAllEdits()
                 }
             }
         }

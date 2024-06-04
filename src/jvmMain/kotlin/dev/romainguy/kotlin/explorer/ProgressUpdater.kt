@@ -19,6 +19,10 @@ package dev.romainguy.kotlin.explorer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.joinAll
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+import kotlin.math.min
 
 /** Helps manage updates to a status bar */
 class ProgressUpdater(
@@ -26,6 +30,7 @@ class ProgressUpdater(
     private val onUpdate: (String, Float) -> Unit,
 ) {
     private val stepCounter = AtomicInteger(0)
+    private val lock = ReentrantReadWriteLock()
     private val jobs = mutableListOf<Job>()
 
     /** Update without advancing progress */
@@ -43,11 +48,24 @@ class ProgressUpdater(
         sendUpdate(message, stepCounter.addAndGet(steps))
     }
 
+    suspend fun waitForJobs() {
+        lock.read {
+            jobs.joinAll()
+        }
+    }
+
+    fun skipToEnd(message: String) {
+        stepCounter.set(steps)
+        sendUpdate(message, steps)
+    }
+
     /**
      * Joins all threads and sends the last update
      */
     suspend fun finish() {
-        jobs.joinAll()
+        lock.read {
+            jobs.joinAll()
+        }
         val step = stepCounter.get()
         if (step < steps) {
             Logger.warn("finish() called but progress is not yet finished: step=$step")
@@ -56,7 +74,9 @@ class ProgressUpdater(
 
     /** Add a job that needs to be joined before finishing */
     fun addJob(job: Job) {
-        jobs.add(job)
+        lock.write {
+            jobs.add(job)
+        }
     }
 
     private fun sendUpdate(message: String, step: Int) {
@@ -64,7 +84,6 @@ class ProgressUpdater(
             Logger.warn("Progress already completed while sending: '$message'")
         }
         Logger.debug("Sending $step/$steps: '$message'")
-        onUpdate(message, step.toFloat() / steps)
+        onUpdate(message, min(steps, step).toFloat() / steps)
     }
-
 }
