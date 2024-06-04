@@ -16,7 +16,12 @@ repositories {
 }
 
 kotlin {
-    jvm()
+    jvm {
+        @Suppress("OPT_IN_USAGE")
+        mainRun {
+            mainClass = "dev.romainguy.kotlin.explorer.KotlinExplorerKt"
+        }
+    }
 
     jvmToolchain {
         vendor = JvmVendorSpec.JETBRAINS
