@@ -11,6 +11,7 @@ class CodeBuilderTest {
             writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = -1, lineNumber = -1))
             writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = -1, lineNumber = 2))
             endMethod()
+            writeLine("")
             writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = -1, lineNumber = 3))
             writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = -1, lineNumber = -1))
             writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = -1, lineNumber = 4))
@@ -21,7 +22,7 @@ class CodeBuilderTest {
                 1:    m1 1
                       m1 2
                 2:    m1 3
-                
+
                 3:    m2 1
                       m2 2
                 4:    m2 3
@@ -37,6 +38,7 @@ class CodeBuilderTest {
             writeInstruction(Instruction(address = 2, code = "m1 2", jumpAddress = -1, lineNumber = -1))
             writeInstruction(Instruction(address = 3, code = "m1 3", jumpAddress = -1, lineNumber = 2))
             endMethod()
+            writeLine("")
             writeInstruction(Instruction(address = 1, code = "m2 1", jumpAddress = -1, lineNumber = 3))
             writeInstruction(Instruction(address = 2, code = "m2 2", jumpAddress = -1, lineNumber = -1))
             writeInstruction(Instruction(address = 3, code = "m2 3", jumpAddress = -1, lineNumber = 4))
