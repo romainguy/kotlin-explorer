@@ -33,6 +33,8 @@ which panels are visible using the *View* menu.
 
 # Running Kotlin Explorer
 
+Run Kotlin Explorer with `./gradlew jvmRun`.
+
 Kotlin Explorer needs to be told where to find the Android SDK and the Kotlin compiler.
 Unless you've set `$ANDROID_HOME` and `$KOTLIN_HOME` properly, Kotlin Explorer will ask
 you to enter the path to those directories.
