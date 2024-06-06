@@ -32,6 +32,7 @@ import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.extension
+import kotlin.io.path.isDirectory
 
 private const val TotalDisassemblySteps = 7
 private const val TotalRunSteps = 2
@@ -260,8 +261,13 @@ private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
 private fun cleanupClasses(directory: Path) {
     Files
         .list(directory)
-        .filter { path -> path.extension == "class" }
-        .forEach { path -> path.toFile().delete() }
+        .forEach { path ->
+            if (path.extension == "class") {
+                path.toFile().delete()
+            } else if (path.isDirectory()) {
+                path.toFile().deleteRecursively()
+            }
+        }
 }
 
 private fun showError(error: String) = buildAnnotatedString {

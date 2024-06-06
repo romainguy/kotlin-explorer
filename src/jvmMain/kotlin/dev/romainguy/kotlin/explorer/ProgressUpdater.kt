@@ -30,7 +30,6 @@ class ProgressUpdater(
     private val onUpdate: (String, Float) -> Unit,
 ) {
     private val stepCounter = AtomicInteger(0)
-    private val lock = ReentrantReadWriteLock()
     private val jobs = mutableListOf<Job>()
 
     /** Update without advancing progress */
@@ -49,9 +48,7 @@ class ProgressUpdater(
     }
 
     suspend fun waitForJobs() {
-        lock.read {
-            jobs.joinAll()
-        }
+        jobs.joinAll()
     }
 
     fun skipToEnd(message: String) {
@@ -63,9 +60,7 @@ class ProgressUpdater(
      * Joins all threads and sends the last update
      */
     suspend fun finish() {
-        lock.read {
-            jobs.joinAll()
-        }
+        jobs.joinAll()
         val step = stepCounter.get()
         if (step < steps) {
             Logger.warn("finish() called but progress is not yet finished: step=$step")
@@ -74,9 +69,7 @@ class ProgressUpdater(
 
     /** Add a job that needs to be joined before finishing */
     fun addJob(job: Job) {
-        lock.write {
-            jobs.add(job)
-        }
+        jobs.add(job)
     }
 
     private fun sendUpdate(message: String, step: Int) {
