@@ -17,6 +17,7 @@
 package dev.romainguy.kotlin.explorer.code
 
 import androidx.collection.IntIntPair
+import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
@@ -45,11 +46,11 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         writeLine(clazz.header)
     }
 
-    fun writeMethod(method: Method) {
+    fun writeMethod(method: Method, indexedMethods: IntObjectMap<Method>) {
         startMethod(method)
         val instructionSet = method.instructionSet
         instructionSet.instructions.forEach { instruction ->
-            writeInstruction(instructionSet, instruction)
+            writeInstruction(instructionSet, instruction, indexedMethods)
         }
         endMethod()
     }
@@ -62,26 +63,41 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         val instructionCount = method.instructionSet.instructions.size
         writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""}")
 
-        val branches = countBranches(method.instructionSet)
+        val (pre, post) = countBranches(method.instructionSet)
+        val branches = pre + post
         if (branches > 0) {
             sb.append("  ".repeat(codeStyle.indent))
-            writeLine("-- $branches branch${if (branches > 1) "es" else ""}")
+            writeLine("-- $branches branch${if (branches > 1) "es" else ""} ($pre + $post)")
         }
     }
 
-    private fun countBranches(instructionSet: InstructionSet): Int {
-        var count = 0
+    private fun countBranches(instructionSet: InstructionSet): IntIntPair {
+        var preReturnCount = 0
+        var postReturnCount = 0
+        var returnSeen = false
+
         val branchInstructions = instructionSet.isa.branchInstructions
+        val returnInstructions = instructionSet.isa.returnInstructions
+
         instructionSet.instructions.forEach { instruction ->
             val code = instruction.code
             val start = code.indexOf(": ") + 2
             val end = code.indexOfFirst(start) { c -> !c.isLetter() }
             val opCode = code.substring(start, end)
-            if (branchInstructions.contains(opCode)) {
-                count++
+            if (returnInstructions.contains(opCode)) {
+                returnSeen = true
+            } else {
+                if (branchInstructions.contains(opCode)) {
+                    if (returnSeen) {
+                        postReturnCount++
+                    } else {
+                        preReturnCount++
+                    }
+                }
             }
         }
-        return count
+
+        return IntIntPair(preReturnCount, postReturnCount)
     }
 
     private fun endMethod() {
@@ -95,7 +111,11 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         lastMethodLineNumber = -1
     }
 
-    private fun writeInstruction(instructionSet: InstructionSet, instruction: Instruction) {
+    private fun writeInstruction(
+        instructionSet: InstructionSet,
+        instruction: Instruction,
+        indexedMethods: IntObjectMap<Method>
+    ) {
         sb.append("  ".repeat(codeStyle.indent))
 
         methodAddresses[instruction.address] = line
@@ -118,7 +138,12 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append(instruction.code)
 
         if (instruction.callAddress != -1) {
-            val callReference = instructionSet.methodReferences[instruction.callAddress]
+            val set = if (instruction.callAddressMethod == -1) {
+                instructionSet
+            } else {
+                indexedMethods[instruction.callAddressMethod]?.instructionSet
+            }
+            val callReference = set?.methodReferences?.get(instruction.callAddress)
             if (callReference != null) {
                 sb.append(" → ").append(callReference.name)
             }

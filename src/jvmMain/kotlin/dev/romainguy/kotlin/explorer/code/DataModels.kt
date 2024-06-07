@@ -18,10 +18,10 @@ package dev.romainguy.kotlin.explorer.code
 
 import androidx.collection.*
 
-enum class ISA(val branchInstructions: ScatterSet<String>) {
-    ByteCode(scatterSetOf("if")),
-    Dex(scatterSetOf("if")),
-    Oat(scatterSetOf()),
+enum class ISA(val branchInstructions: ScatterSet<String>, val returnInstructions: ScatterSet<String>) {
+    ByteCode(scatterSetOf("if"), scatterSetOf("areturn", "ireturn", "lreturn", "dreturn", "freturn", "return")),
+    Dex(scatterSetOf("if"), scatterSetOf("return")),
+    Oat(scatterSetOf(), scatterSetOf()),
     X86_64(
         scatterSetOf(
             "je",
@@ -46,14 +46,15 @@ enum class ISA(val branchInstructions: ScatterSet<String>) {
             "jnae",
             "jbe",
             "jna"
-        )
+        ),
+        scatterSetOf("ret")
     ),
-    Arm64(scatterSetOf("b", "bl", "cbz", "cbnz", "tbz", "tbnz"))
+    Arm64(scatterSetOf("b", "bl", "cbz", "cbnz", "tbz", "tbnz"), scatterSetOf("ret"))
 }
 
 data class Class(val header: String, val methods: List<Method>)
 
-data class Method(val header: String, val instructionSet: InstructionSet)
+data class Method(val header: String, val instructionSet: InstructionSet, val index: Int = -1)
 
 data class InstructionSet(
     val isa: ISA,
@@ -66,6 +67,7 @@ data class Instruction(
     val code: String,
     val jumpAddress: Int,
     val callAddress: Int = -1,
+    val callAddressMethod: Int = -1,
     val lineNumber: Int = -1
 )
 
