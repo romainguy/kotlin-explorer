@@ -83,7 +83,7 @@ internal class DexDumpParser {
 
         return Method(
             "$returnType $className.$name($paramTypes)",
-            InstructionSet(instructions.withLineNumbers(positions), ISA.Dex)
+            InstructionSet(ISA.Dex, instructions.withLineNumbers(positions))
         )
     }
 

@@ -7,14 +7,14 @@ import org.fife.ui.rsyntaxtextarea.*;
 %%
 
 %public
-%class DexTokenMarker
+%class DexTokenMaker
 %extends AbstractJFlexTokenMaker
 %unicode
 %ignorecase
 %type org.fife.ui.rsyntaxtextarea.Token
 
 %{
-    public DexTokenMarker() {
+    public DexTokenMaker() {
         super();
     }
 

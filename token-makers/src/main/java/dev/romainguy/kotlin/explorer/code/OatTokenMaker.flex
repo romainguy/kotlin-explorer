@@ -7,14 +7,14 @@ import org.fife.ui.rsyntaxtextarea.*;
 %%
 
 %public
-%class OatTokenMarker
+%class OatTokenMaker
 %extends AbstractJFlexTokenMaker
 %unicode
 %ignorecase
 %type org.fife.ui.rsyntaxtextarea.Token
 
 %{
-    public OatTokenMarker() {
+    public OatTokenMaker() {
         super();
     }
 
@@ -35,7 +35,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 
     @Override
     public String[] getLineCommentStartAndEnd(int languageIndex) {
-        return new String[] { ";", null };
+        return new String[] { ";", "→", null };
     }
 
     @Override
@@ -105,7 +105,7 @@ StringLiteral			= ({UnclosedStringLiteral}[\"])
 UnclosedCharLiteral		= ([\'][^\']*)
 CharLiteral			    = ({UnclosedCharLiteral}[\'])
 
-CommentBegin			= ((";")|("//"))
+CommentBegin			= ((";")|("//")|("→"))
 MetadataBegin			= ("--")
 
 LineTerminator			= (\n)

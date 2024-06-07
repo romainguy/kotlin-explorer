@@ -16,6 +16,8 @@
 
 package dev.romainguy.kotlin.explorer.oat
 
+import androidx.collection.IntObjectMap
+import androidx.collection.mutableIntObjectMapOf
 import dev.romainguy.kotlin.explorer.*
 import dev.romainguy.kotlin.explorer.code.*
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
@@ -24,8 +26,17 @@ import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 private val ClassNameRegex = Regex("^\\d+: L(?<class>[^;]+); \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
 private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=\\d+\\)")
 private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(?<code>.+)")
+
+private val DexCodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+($HexDigit+\\s+)+\\|\\s+(?<code>.+)")
+private val DexMethodInvokeRegex = Regex("^invoke-[^}]+},\\s+[a-zA-Z]+\\s+(?<name>.+)\\s+//.+")
+
 private val Arm64JumpRegex = Regex(".+ #[+-]0x$HexDigit+ \\(addr 0x(?<address>$HexDigit+)\\)\$")
 private val X86JumpRegex = Regex(".+ [+-]\\d+ \\(0x(?<address>$HexDigit{8})\\)\$")
+
+private val Arm64MethodCallRegex = Regex("^blr lr$")
+private val X86MethodCallRegex = Regex("^TODO$") // TODO: implement x86
+
+private val DexMethodReferenceRegex = Regex("^\\s+StackMap.+dex_pc=0x(?<callAddress>$HexDigit+),.+$")
 
 internal class OatDumpParser {
     private var isa = ISA.Arm64
@@ -43,10 +54,19 @@ internal class OatDumpParser {
                 ISA.X86_64 -> X86JumpRegex
                 else -> throw IllegalStateException("Incompatible ISA: $isa")
             }
+            val methodCallRegex = when (isa) {
+                ISA.Arm64 -> Arm64MethodCallRegex
+                ISA.X86_64 -> X86MethodCallRegex
+                else -> throw IllegalStateException("Incompatible ISA: $isa")
+            }
             val classes = buildList {
                 while (lines.hasNext()) {
                     val match = lines.consumeUntil(ClassNameRegex) ?: break
-                    val clazz = lines.readClass(match.getValue("class").replace('/', '.'), jumpRegex)
+                    val clazz = lines.readClass(
+                        match.getValue("class").replace('/', '.'),
+                        jumpRegex,
+                        methodCallRegex
+                    )
                     if (clazz != null && clazz.methods.isNotEmpty()) {
                         add(clazz)
                     }
@@ -63,7 +83,11 @@ internal class OatDumpParser {
         return next()
     }
 
-    private fun PeekingIterator<String>.readClass(className: String, jumpRegex: Regex): Class? {
+    private fun PeekingIterator<String>.readClass(
+        className: String,
+        jumpRegex: Regex,
+        methodCallRegex: Regex
+    ): Class? {
         if (className.matches(BuiltInKotlinClass)) {
             return null
         }
@@ -72,7 +96,7 @@ internal class OatDumpParser {
                 val line = peek()
                 when {
                     ClassNameRegex.matches(line) -> break
-                    MethodRegex.matches(line) -> add(readMethod(jumpRegex))
+                    MethodRegex.matches(line) -> add(readMethod(jumpRegex, methodCallRegex))
                     else -> next()
                 }
             }
@@ -80,33 +104,92 @@ internal class OatDumpParser {
         return Class("class $className", methods)
     }
 
-    private fun PeekingIterator<String>.readMethod(jumpRegex: Regex): Method {
+    private fun PeekingIterator<String>.readMethod(jumpRegex: Regex, methodCallRegex: Regex): Method {
         val match = MethodRegex.matchEntire(next()) ?: throw IllegalStateException("Should not happen")
         val method = match.getValue("method")
+        consumeUntil("DEX CODE:")
+        val methodReferences = readMethodReferences()
         consumeUntil("CODE:")
-        val instructions = readInstructions(jumpRegex)
-        return Method(method, InstructionSet(instructions, isa))
+        val instructions = readNativeInstructions(jumpRegex, methodCallRegex)
+        return Method(method, InstructionSet(isa, instructions, methodReferences))
     }
 
-    private fun PeekingIterator<String>.readInstructions(jumpRegex: Regex): List<Instruction> {
+    private fun PeekingIterator<String>.readMethodReferences(): IntObjectMap<MethodReference> {
+        val map = mutableIntObjectMapOf<MethodReference>()
+        while (hasNext()) {
+            val match = DexCodeRegex.matchEntire(next())
+            if (match != null) {
+                match.toMethodReference()?.apply {
+                    map[address] = this
+                }
+            } else {
+                break
+            }
+        }
+        return map
+    }
+
+    private fun MatchResult.toMethodReference(): MethodReference? {
+        val code = getValue("code")
+        val nameMatch = DexMethodInvokeRegex.matchEntire(code)
+        if (nameMatch != null) {
+            val address = getValue("address")
+            val name = nameMatch.getValue("name")
+            val pc = address.toInt(16)
+            return MethodReference(pc, name)
+        }
+        return null
+    }
+
+    private fun PeekingIterator<String>.readNativeInstructions(
+        jumpRegex: Regex,
+        methodCallRegex: Regex
+    ): List<Instruction> {
         return buildList {
             while (hasNext()) {
                 val line = peek()
                 when {
                     line.matches(MethodRegex) -> break
                     line.matches(ClassNameRegex) -> break
-                    line.matches(CodeRegex) -> add(readInstruction(jumpRegex))
-                    else -> next()
+                    else -> {
+                        val match = CodeRegex.matchEntire(next())
+                        if (match != null) {
+                            add(
+                                readNativeInstruction(
+                                    this@readNativeInstructions,
+                                    match,
+                                    jumpRegex,
+                                    methodCallRegex
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 
-    private fun PeekingIterator<String>.readInstruction(jumpRegex: Regex): Instruction {
-        val match = CodeRegex.matchEntire(next()) ?: throw IllegalStateException("Should not happen")
+    private fun readNativeInstruction(
+        iterator: PeekingIterator<String>,
+        match: MatchResult,
+        jumpRegex: Regex,
+        methodCallRegex: Regex
+    ): Instruction {
         val address = match.getValue("address")
+
         val code = match.getValue("code")
-        val jumpAddress = jumpRegex.matchEntire(code)?.getValue("address")?.toInt(16) ?: -1
-        return Instruction(address.toInt(16), "0x$address: $code", jumpAddress)
+        val callAddress = if (methodCallRegex.matches(code)) {
+            DexMethodReferenceRegex.matchEntire(iterator.peek())?.getValue("callAddress")?.toInt(16) ?: -1
+        } else {
+            -1
+        }
+
+        val jumpAddress = if (callAddress == -1) {
+            -1
+        } else {
+            jumpRegex.matchEntire(code)?.getValue("address")?.toInt(16) ?: -1
+        }
+
+        return Instruction(address.toInt(16), "0x$address: $code", jumpAddress, callAddress)
     }
 }

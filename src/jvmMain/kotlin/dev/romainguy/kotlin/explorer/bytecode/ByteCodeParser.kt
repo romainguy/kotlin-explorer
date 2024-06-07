@@ -17,6 +17,7 @@
 package dev.romainguy.kotlin.explorer.bytecode
 
 import androidx.collection.IntIntMap
+import androidx.collection.emptyIntObjectMap
 import androidx.collection.mutableIntIntMapOf
 import dev.romainguy.kotlin.explorer.PeekingIterator
 import dev.romainguy.kotlin.explorer.code.*
@@ -107,7 +108,7 @@ class ByteCodeParser {
         val instructions = readInstructions()
         val lineNumbers = readLineNumbers()
 
-        return Method(header, InstructionSet(instructions.withLineNumbers(lineNumbers), ISA.ByteCode))
+        return Method(header, InstructionSet(ISA.ByteCode, instructions.withLineNumbers(lineNumbers)))
     }
 
     private fun PeekingIterator<String>.readInstructions(): List<Instruction> {

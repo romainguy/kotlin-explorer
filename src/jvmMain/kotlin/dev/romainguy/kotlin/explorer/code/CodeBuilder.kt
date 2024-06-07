@@ -45,7 +45,16 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         writeLine(clazz.header)
     }
 
-    fun startMethod(method: Method) {
+    fun writeMethod(method: Method) {
+        startMethod(method)
+        val instructionSet = method.instructionSet
+        instructionSet.instructions.forEach { instruction ->
+            writeInstruction(instructionSet, instruction)
+        }
+        endMethod()
+    }
+
+    private fun startMethod(method: Method) {
         sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
 
@@ -75,7 +84,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         return count
     }
 
-    fun endMethod() {
+    private fun endMethod() {
         methodJumps.forEach { (line, address) ->
             val targetLine = methodAddresses.getOrDefault(address, -1)
             if (targetLine == -1) return@forEach
@@ -86,23 +95,37 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         lastMethodLineNumber = -1
     }
 
-    fun writeInstruction(instruction: Instruction) {
+    private fun writeInstruction(instructionSet: InstructionSet, instruction: Instruction) {
         sb.append("  ".repeat(codeStyle.indent))
+
         methodAddresses[instruction.address] = line
         if (instruction.jumpAddress > -1) {
             methodJumps.add(IntIntPair(line, instruction.jumpAddress))
         }
+
         val lineNumber = instruction.lineNumber
         if (lineNumber > -1) {
             sourceToCodeLine[lineNumber] = line
             lastMethodLineNumber = lineNumber
         }
+
         codeToSourceToLine[line] = lastMethodLineNumber
         if (codeStyle.showLineNumbers) {
             val prefix = if (lineNumber > -1) "$lineNumber:" else " "
             sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
-        writeLine(instruction.code)
+
+        sb.append(instruction.code)
+
+        if (instruction.callAddress != -1) {
+            val callReference = instructionSet.methodReferences[instruction.callAddress]
+            if (callReference != null) {
+                sb.append(" → ").append(callReference.name)
+            }
+        }
+
+        sb.append('\n')
+        line++
     }
 
     fun build(): Code {

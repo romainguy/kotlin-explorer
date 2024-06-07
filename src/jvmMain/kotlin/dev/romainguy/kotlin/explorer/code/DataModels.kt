@@ -16,9 +16,7 @@
 
 package dev.romainguy.kotlin.explorer.code
 
-import androidx.collection.IntIntMap
-import androidx.collection.ScatterSet
-import androidx.collection.scatterSetOf
+import androidx.collection.*
 
 enum class ISA(val branchInstructions: ScatterSet<String>) {
     ByteCode(scatterSetOf("if")),
@@ -57,9 +55,21 @@ data class Class(val header: String, val methods: List<Method>)
 
 data class Method(val header: String, val instructionSet: InstructionSet)
 
-data class InstructionSet(val instructions: List<Instruction>, val isa: ISA)
+data class InstructionSet(
+    val isa: ISA,
+    val instructions: List<Instruction>,
+    val methodReferences: IntObjectMap<MethodReference> = emptyIntObjectMap()
+)
 
-data class Instruction(val address: Int, val code: String, val jumpAddress: Int, val lineNumber: Int = -1)
+data class Instruction(
+    val address: Int,
+    val code: String,
+    val jumpAddress: Int,
+    val callAddress: Int = -1,
+    val lineNumber: Int = -1
+)
+
+data class MethodReference(val address: Int, val name: String)
 
 fun List<Instruction>.withLineNumbers(lineNumbers: IntIntMap): List<Instruction> {
     return map { it.copy(lineNumber = lineNumbers.getOrDefault(it.address, -1)) }

@@ -44,11 +44,7 @@ class Code(
                     startClass(clazz)
                     val notLastClass = classIndex < classes.size - 1
                     clazz.methods.forEachIndexed { methodIndex, method ->
-                        startMethod(method)
-                        method.instructionSet.instructions.forEach { instruction ->
-                            writeInstruction(instruction)
-                        }
-                        endMethod()
+                        writeMethod(method)
                         if (methodIndex < clazz.methods.size - 1 || notLastClass) writeLine("")
                     }
                 }
