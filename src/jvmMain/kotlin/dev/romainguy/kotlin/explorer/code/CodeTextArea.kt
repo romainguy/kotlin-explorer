@@ -21,7 +21,6 @@ import dev.romainguy.kotlin.explorer.centerCaretInView
 import dev.romainguy.kotlin.explorer.code.CodeContent.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.BasicStroke
-import java.awt.Color
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
@@ -58,7 +57,7 @@ class CodeTextArea(
     init {
         addCaretListener(::caretUpdate)
         markOccurrences = true
-        markOccurrencesDelay = 300
+        markOccurrencesDelay = 400
 
         if (sourceTextArea != null) {
             addMouseListener(object : MouseAdapter() {
