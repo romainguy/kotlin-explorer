@@ -17,6 +17,8 @@
 package dev.romainguy.kotlin.explorer.code
 
 import androidx.collection.IntIntMap
+import androidx.collection.IntObjectMap
+import androidx.collection.mutableIntObjectMapOf
 
 /**
  * A data model representing disassembled code
@@ -40,15 +42,28 @@ class Code(
     companion object {
         fun fromClasses(classes: List<Class>, codeStyle: CodeStyle = CodeStyle()): Code {
             return buildCode(codeStyle) {
+                val indexedMethods = buildIndexedMethods(classes)
                 classes.forEachIndexed { classIndex, clazz ->
                     startClass(clazz)
                     val notLastClass = classIndex < classes.size - 1
                     clazz.methods.forEachIndexed { methodIndex, method ->
-                        writeMethod(method)
+                        writeMethod(method, indexedMethods)
                         if (methodIndex < clazz.methods.size - 1 || notLastClass) writeLine("")
                     }
                 }
             }.build()
+        }
+
+        private fun buildIndexedMethods(classes: List<Class>): IntObjectMap<Method> {
+            val map = mutableIntObjectMapOf<Method>()
+            classes.forEach { clazz ->
+                clazz.methods.forEach { method ->
+                    if (method.index != -1) {
+                        map[method.index] = method
+                    }
+                }
+            }
+            return map
         }
     }
 }

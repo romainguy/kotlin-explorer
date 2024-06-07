@@ -24,7 +24,7 @@ import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 
 private val ClassNameRegex = Regex("^\\d+: L(?<class>[^;]+); \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
-private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=\\d+\\)")
+private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=(?<methodIndex>\\d+)\\)")
 private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(?<code>.+)")
 
 private val DexCodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+($HexDigit+\\s+)+\\|\\s+(?<code>.+)")
@@ -37,6 +37,7 @@ private val Arm64MethodCallRegex = Regex("^blr lr$")
 private val X86MethodCallRegex = Regex("^TODO$") // TODO: implement x86
 
 private val DexMethodReferenceRegex = Regex("^\\s+StackMap.+dex_pc=0x(?<callAddress>$HexDigit+),.+$")
+private val DexInlineInfoRegex = Regex("^\\s+InlineInfo.+dex_pc=0x(?<callAddress>$HexDigit+),\\s+method_index=(?<methodIndex>$HexDigit+).+$")
 
 internal class OatDumpParser {
     private var isa = ISA.Arm64
@@ -96,22 +97,35 @@ internal class OatDumpParser {
                 val line = peek()
                 when {
                     ClassNameRegex.matches(line) -> break
-                    MethodRegex.matches(line) -> add(readMethod(jumpRegex, methodCallRegex))
-                    else -> next()
+                    else -> {
+                        // Skip to the next line first and then read the method
+                        next()
+
+                        val match = MethodRegex.matchEntire(line)
+                        if (match != null) {
+                            add(readMethod(match, jumpRegex, methodCallRegex))
+                        }
+                    }
                 }
             }
         }
         return Class("class $className", methods)
     }
 
-    private fun PeekingIterator<String>.readMethod(jumpRegex: Regex, methodCallRegex: Regex): Method {
-        val match = MethodRegex.matchEntire(next()) ?: throw IllegalStateException("Should not happen")
-        val method = match.getValue("method")
+    private fun PeekingIterator<String>.readMethod(
+        match: MatchResult,
+        jumpRegex: Regex,
+        methodCallRegex: Regex
+    ): Method {
         consumeUntil("DEX CODE:")
         val methodReferences = readMethodReferences()
+
         consumeUntil("CODE:")
         val instructions = readNativeInstructions(jumpRegex, methodCallRegex)
-        return Method(method, InstructionSet(isa, instructions, methodReferences))
+
+        val method = match.getValue("method")
+        val index = match.getValue("methodIndex").toInt()
+        return Method(method, InstructionSet(isa, instructions, methodReferences), index)
     }
 
     private fun PeekingIterator<String>.readMethodReferences(): IntObjectMap<MethodReference> {
@@ -176,10 +190,25 @@ internal class OatDumpParser {
         methodCallRegex: Regex
     ): Instruction {
         val address = match.getValue("address")
-
         val code = match.getValue("code")
-        val callAddress = if (methodCallRegex.matches(code)) {
+
+        var callAddress = if (methodCallRegex.matches(code)) {
             DexMethodReferenceRegex.matchEntire(iterator.peek())?.getValue("callAddress")?.toInt(16) ?: -1
+        } else {
+            -1
+        }
+
+        val callAddressMethod = if (callAddress != -1) {
+            // Skip the StackMap line
+            iterator.next()
+            // Check the InlineInfo if present
+            val methodIndex = DexInlineInfoRegex.matchEntire(iterator.peek())
+            if (methodIndex != null) {
+                callAddress = methodIndex.getValue("callAddress").toInt(16)
+                methodIndex.getValue("methodIndex").toInt()
+            } else {
+                -1
+            }
         } else {
             -1
         }
@@ -190,6 +219,7 @@ internal class OatDumpParser {
             -1
         }
 
-        return Instruction(address.toInt(16), "0x$address: $code", jumpAddress, callAddress)
+        val codeAddress = address.toInt(16)
+        return Instruction(codeAddress, "0x$address: $code", jumpAddress, callAddress, callAddressMethod)
     }
 }

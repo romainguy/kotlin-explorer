@@ -73,7 +73,7 @@ compose.desktop {
 
             targetFormats(TargetFormat.Dmg)
 
-            packageVersion = "1.4.1"
+            packageVersion = "1.4.2"
             packageName = "Kotlin Explorer"
             description = "Kotlin Explorer"
             vendor = "Romain Guy"
