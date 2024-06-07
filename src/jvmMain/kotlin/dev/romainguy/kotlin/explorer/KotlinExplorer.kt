@@ -91,9 +91,6 @@ import javax.swing.SwingUtilities
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 
-private const val FontSizeEditingMode = 12.0f
-private const val FontSizePresentationMode = 20.0f
-
 private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     var activeTextArea by mutableStateOf<RSyntaxTextArea?>(null)
     var status by mutableStateOf("Ready")
@@ -137,7 +134,7 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
         }
     }
 
-    val sourceTextArea: SourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
+    val sourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
     val byteCodeTextArea = byteCodeTextArea(explorerState, focusTracker, sourceTextArea)
     val dexTextArea = dexTextArea(explorerState, focusTracker, sourceTextArea)
     val oatTextArea = oatTextArea(explorerState, focusTracker)
@@ -148,7 +145,8 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     var showSettings by mutableStateOf(!explorerState.toolPaths.isValid)
 
     val updatePresentationMode: (Boolean) -> Unit = {
-        listOf(byteCodeTextArea, dexTextArea, oatTextArea).forEach { area -> area.presentationMode = it }
+        codeTextAreas.forEach { area -> area.presentationMode = it }
+        sourceTextArea.presentationMode = it
     }
     val updateSyncLinesEnabled: (Boolean) -> Unit = {
         listOf(byteCodeTextArea, dexTextArea).forEach { area -> area.isSyncLinesEnabled = it }
@@ -187,11 +185,11 @@ private fun FrameWindowScope.KotlinExplorer(
     val sourcePanel: @Composable () -> Unit =
         { SourcePanel(uiState.sourceTextArea, explorerState) }
     val byteCodePanel: @Composable () -> Unit =
-        { TextPanel(uiState.byteCodeTextArea, explorerState, "Byte Code") }
+        { TextPanel(uiState.byteCodeTextArea, "Byte Code") }
     val dexPanel: @Composable () -> Unit =
-        { TextPanel(uiState.dexTextArea, explorerState, "DEX") }
+        { TextPanel(uiState.dexTextArea, "DEX") }
     val oatPanel: @Composable () -> Unit =
-        { TextPanel(uiState.oatTextArea, explorerState, "OAT") }
+        { TextPanel(uiState.oatTextArea, "OAT") }
     var panels by remember { mutableStateOf(explorerState.getPanels(sourcePanel, byteCodePanel, dexPanel, oatPanel)) }
 
     MainMenu(
@@ -341,20 +339,18 @@ private fun SourcePanel(sourceTextArea: RSyntaxTextArea, explorerState: Explorer
                     sourceTextArea.replaceRange(explorerState.sourceCode, 0, sourceTextArea.text.length)
                     if (killEdit) sourceTextArea.discardAllEdits()
                 }
-                sourceTextArea.updateStyle(explorerState)
             }
         )
     }
 }
 
 @Composable
-private fun TextPanel(textArea: RSyntaxTextArea, explorerState: ExplorerState, title: String) {
+private fun TextPanel(textArea: RSyntaxTextArea, title: String) {
     Column {
         Title(title)
         SwingPanel(
             modifier = Modifier.fillMaxSize(),
-            factory = { RTextScrollPane(textArea) },
-            update = { textArea.updateStyle(explorerState) }
+            factory = { RTextScrollPane(textArea) }
         )
     }
 }
@@ -372,7 +368,7 @@ private fun Title(text: String) {
 
 private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerState): SourceTextArea {
     return SourceTextArea(explorerState.syncLines).apply {
-        configureSyntaxTextArea(SyntaxStyle.Kotlin, focusTracker)
+        configureSyntaxTextArea(explorerState, SyntaxStyle.Kotlin, focusTracker)
         isCodeFoldingEnabled = true
         isMarginLineEnabled = true
         marginLinePosition = 100
@@ -400,8 +396,8 @@ private fun codeTextArea(
     sourceTextArea: SourceTextArea? = null,
 ): CodeTextArea {
     val codeStyle = CodeStyle(state.indent, state.showLineNumbers && hasLineNumbers, state.lineNumberWidth)
-    return CodeTextArea(state.presentationMode, codeStyle, state.syncLines, sourceTextArea).apply {
-        configureSyntaxTextArea(syntaxStyle, focusTracker)
+    return CodeTextArea(codeStyle, state.syncLines, sourceTextArea).apply {
+        configureSyntaxTextArea(state, syntaxStyle, focusTracker)
     }
 }
 
@@ -529,12 +525,17 @@ private fun performSwingMenuAction(actionType: Int) {
     )
 }
 
-private fun RSyntaxTextArea.configureSyntaxTextArea(syntaxStyle: String, focusTracker: FocusListener) {
+private fun SyntaxTextArea.configureSyntaxTextArea(
+    state: ExplorerState,
+    syntaxStyle: String,
+    focusTracker: FocusListener
+) {
     syntaxEditingStyle = syntaxStyle
     antiAliasingEnabled = true
     tabsEmulated = true
     tabSize = 4
     applyTheme(this, syntaxStyle)
+    presentationMode = state.presentationMode
     addFocusListener(focusTracker)
 }
 
@@ -550,11 +551,6 @@ private fun applyTheme(textArea: RSyntaxTextArea, syntaxStyle: String) {
     } catch (ioe: IOException) {
         ioe.printStackTrace()
     }
-}
-
-private fun RSyntaxTextArea.updateStyle(explorerState: ExplorerState) {
-    val presentation = explorerState.presentationMode
-    font = font.deriveFont(if (presentation) FontSizePresentationMode else FontSizeEditingMode)
 }
 
 @OptIn(ExperimentalJewelApi::class)

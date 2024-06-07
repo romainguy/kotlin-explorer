@@ -21,7 +21,9 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 
-class SourceTextArea(var isSyncLinesEnabled: Boolean) : RSyntaxTextArea() {
+class SourceTextArea(
+    var isSyncLinesEnabled: Boolean
+) : SyntaxTextArea() {
     private val codeTextAreas = mutableListOf<CodeTextArea>()
 
     init {

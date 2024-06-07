@@ -17,9 +17,9 @@
 package dev.romainguy.kotlin.explorer.code
 
 import dev.romainguy.kotlin.explorer.SourceTextArea
+import dev.romainguy.kotlin.explorer.SyntaxTextArea
 import dev.romainguy.kotlin.explorer.centerCaretInView
 import dev.romainguy.kotlin.explorer.code.CodeContent.*
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.BasicStroke
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -30,20 +30,13 @@ import java.awt.geom.GeneralPath
 import javax.swing.event.CaretEvent
 
 class CodeTextArea(
-    presentationMode: Boolean = false,
     codeStyle: CodeStyle,
     var isSyncLinesEnabled: Boolean,
     private val sourceTextArea: SourceTextArea?,
-) : RSyntaxTextArea() {
+) : SyntaxTextArea() {
     private var code: Code? = null
     private var jumpOffsets: JumpOffsets? = null
     private var content: CodeContent = Empty
-
-    var presentationMode = presentationMode
-        set(value) {
-            field = value
-            repaint()
-        }
 
     var codeStyle = codeStyle
         set(value) {
