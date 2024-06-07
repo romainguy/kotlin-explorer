@@ -8,8 +8,8 @@
    <selection fg="ffffff" bg="526da5" />
    <currentLineHighlight color="f2f6fe" fade="false" />
    <marginLine fg="b0b4b9" />
-   <markAllHighlight color="edebfc" />
-   <markOccurrencesHighlight color="edebfc" border="false" />
+   <markAllHighlight color="d6fffa" />
+   <markOccurrencesHighlight color="daffdb" border="false" />
    <matchedBracket fg="93d9d9" bg="93d9d9" highlightBoth="true" animate="false" />
    <hyperlinks fg="0000ff" />
    <secondaryLanguages>

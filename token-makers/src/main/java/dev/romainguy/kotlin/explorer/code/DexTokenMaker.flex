@@ -38,6 +38,11 @@ import org.fife.ui.rsyntaxtextarea.*;
         return new String[] { ";", null };
     }
 
+    @Override
+	public boolean getMarkOccurrencesOfTokenType(int type) {
+		return type == Token.RESERVED_WORD || type == Token.FUNCTION || type == Token.VARIABLE;
+	}
+
     public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
         resetTokenList();
@@ -111,7 +116,7 @@ Label				    = ({Digit}({Letter}|{Digit})*[\:])
 %%
 
 <YYINITIAL> {
-    "class"		                    { addToken(Token.RESERVED_WORD); yybegin(CLASS); }
+    "class"		                    { addToken(Token.RESERVED_WORD_2); yybegin(CLASS); }
 
     {LineTerminator}				{ addNullToken(); return firstToken; }
 

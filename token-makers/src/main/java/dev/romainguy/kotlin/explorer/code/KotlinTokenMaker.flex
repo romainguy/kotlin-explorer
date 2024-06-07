@@ -83,15 +83,12 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 
 %{
-
-
 	/**
 	 * Constructor.  This must be here because JFlex does not generate a
 	 * no-parameter constructor.
 	 */
 	public KotlinTokenMaker() {
 	}
-
 
 	/**
 	 * Adds the token specified to the current linked list of tokens.
@@ -104,7 +101,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 		addToken(zzBuffer, start,end, tokenType, so, true);
 	}
 
-
 	/**
 	 * Adds the token specified to the current linked list of tokens.
 	 *
@@ -113,7 +109,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 	private void addToken(int tokenType) {
 		addToken(zzStartRead, zzMarkedPos-1, tokenType);
 	}
-
 
 	/**
 	 * Adds the token specified to the current linked list of tokens.
@@ -125,7 +120,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 		int so = start + offsetShift;
 		addToken(zzBuffer, start,end, tokenType, so, false);
 	}
-
 
 	/**
 	 * Adds the token specified to the current linked list of tokens.
@@ -145,12 +139,15 @@ import org.fife.ui.rsyntaxtextarea.*;
 		zzStartRead = zzMarkedPos;
 	}
 
-
 	@Override
 	public String[] getLineCommentStartAndEnd(int languageIndex) {
 		return new String[] { "//", null };
 	}
 
+    @Override
+	public boolean getMarkOccurrencesOfTokenType(int type) {
+		return type == Token.IDENTIFIER;
+	}
 
 	/**
 	 * Returns the first token in the linked list of tokens generated
@@ -196,7 +193,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 	}
 
-
 	/**
 	 * Refills the input buffer.
 	 *
@@ -206,7 +202,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 	private boolean zzRefill() {
 		return zzCurrentPos>=s.offset+s.count;
 	}
-
 
 	/**
 	 * Resets the scanner to read from a new input stream.
@@ -236,8 +231,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 		zzAtBOL  = true;
 		zzAtEOF  = false;
 	}
-
-
 %}
 
 Letter							= ([A-Za-z])

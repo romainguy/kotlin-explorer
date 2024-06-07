@@ -494,6 +494,11 @@ public class OatTokenMaker extends AbstractJFlexTokenMaker {
         return new String[] { ";", null };
     }
 
+    @Override
+	public boolean getMarkOccurrencesOfTokenType(int type) {
+		return type == Token.RESERVED_WORD || type == Token.FUNCTION || type == Token.VARIABLE;
+	}
+
     public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
         resetTokenList();
@@ -849,7 +854,7 @@ public class OatTokenMaker extends AbstractJFlexTokenMaker {
           }
         case 35: break;
         case 21: 
-          { addToken(Token.RESERVED_WORD); yybegin(CLASS);
+          { addToken(Token.RESERVED_WORD_2); yybegin(CLASS);
           }
         case 36: break;
         case 13: 

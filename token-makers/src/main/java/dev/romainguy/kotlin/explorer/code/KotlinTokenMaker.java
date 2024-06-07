@@ -5224,6 +5224,10 @@ public class KotlinTokenMaker extends AbstractJFlexCTokenMaker {
 		return new String[] { "//", null };
 	}
 
+    @Override
+	public boolean getMarkOccurrencesOfTokenType(int type) {
+		return type == Token.IDENTIFIER;
+	}
 
 	/**
 	 * Returns the first token in the linked list of tokens generated

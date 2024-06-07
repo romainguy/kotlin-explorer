@@ -317,6 +317,11 @@ public class DexTokenMaker extends AbstractJFlexTokenMaker {
         return new String[] { ";", null };
     }
 
+    @Override
+	public boolean getMarkOccurrencesOfTokenType(int type) {
+		return type == Token.RESERVED_WORD || type == Token.FUNCTION || type == Token.VARIABLE;
+	}
+
     public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
         resetTokenList();
@@ -672,7 +677,7 @@ public class DexTokenMaker extends AbstractJFlexTokenMaker {
           }
         case 33: break;
         case 19: 
-          { addToken(Token.RESERVED_WORD); yybegin(CLASS);
+          { addToken(Token.RESERVED_WORD_2); yybegin(CLASS);
           }
         case 34: break;
         case 13: 

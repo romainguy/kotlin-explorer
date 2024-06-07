@@ -376,6 +376,8 @@ private fun sourceTextArea(focusTracker: FocusListener, explorerState: ExplorerS
         isCodeFoldingEnabled = true
         isMarginLineEnabled = true
         marginLinePosition = 100
+        markOccurrences = true
+        markOccurrencesDelay = 300
         document.addDocumentListener(DocumentChangeListener { explorerState.sourceCode = text })
         SwingUtilities.invokeLater { requestFocusInWindow() }
     }
