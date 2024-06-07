@@ -185,9 +185,9 @@ internal class OatDumpParser {
         }
 
         val jumpAddress = if (callAddress == -1) {
-            -1
-        } else {
             jumpRegex.matchEntire(code)?.getValue("address")?.toInt(16) ?: -1
+        } else {
+            -1
         }
 
         return Instruction(address.toInt(16), "0x$address: $code", jumpAddress, callAddress)
