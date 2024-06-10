@@ -18,8 +18,6 @@ which panels are visible using the *View* menu.
 
 # Features
 
-- *Build > Run*: compile the Kotlin source code and run it locally. Any output is sent
-  to the logs panel.
 - *Build > Optimize with R8*: turn on R8 optimizations. Turning this on will affect the
   ability to see corresponding source line numbers in the byte code and DEX outputs.
 - *View > Sync Lines*: synchronize the current line in the source, byte code, and DEX
@@ -28,8 +26,11 @@ which panels are visible using the *View* menu.
   when projected.
 - *Build > Build on Startup*: to automatically launch a compilation when launching the
   app.
+- *Build > Run*: compile the Kotlin source code and run it locally. Any output is sent
+  to the logs panel.
 - Clicking a jump instruction will show an arrow to the jump destination.
 - Shows the number of instructions and branches per method.
+- Click a disassembled instruction or register to highlight all occurrences.
 
 # Running Kotlin Explorer
 
