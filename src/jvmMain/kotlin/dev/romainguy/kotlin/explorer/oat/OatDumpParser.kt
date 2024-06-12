@@ -28,7 +28,7 @@ private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_id
 private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(?<code>.+)")
 
 private val DexCodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+($HexDigit+\\s+)+\\|\\s+(?<code>.+)")
-private val DexMethodInvokeRegex = Regex("^invoke-[^}]+},\\s+[a-zA-Z]+\\s+(?<name>.+)\\s+//.+")
+private val DexMethodInvokeRegex = Regex("^invoke-[^}]+},\\s+\\S+\\s+(?<name>.+)\\s+//.+")
 
 private val Arm64JumpRegex = Regex(".+ #[+-]0x$HexDigit+ \\(addr 0x(?<address>$HexDigit+)\\)\$")
 private val X86JumpRegex = Regex(".+ [+-]\\d+ \\(0x(?<address>$HexDigit{8})\\)\$")
