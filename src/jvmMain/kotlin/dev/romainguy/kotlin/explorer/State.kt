@@ -28,6 +28,7 @@ import kotlin.io.path.readLines
 private const val AndroidHome = "ANDROID_HOME"
 private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
+private const val R8Rules = "R8_RULES"
 private const val AutoBuildOnStartup = "AUTO_BUILD_ON_STARTUP"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
@@ -54,6 +55,7 @@ class ExplorerState {
     var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
+    var r8Rules by StringState(R8Rules, "")
     var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, false)
@@ -108,7 +110,10 @@ class ExplorerState {
 
     fun writeState() {
         writeSourceCodeState()
-        Files.writeString(file, entries.map { (key, value) -> "$key=$value" }.joinToString("\n"))
+        Files.writeString(
+            file,
+            entries.map { (key, value) -> "$key=${value.replace("\n", "\\\n")}" }.joinToString("\n")
+        )
     }
 }
 
@@ -120,13 +125,26 @@ private fun readSettings(file: Path): MutableMap<String, String> {
     val settings = mutableMapOf<String, String>()
     if (!file.exists()) return settings
 
-    val delimiter = Regex.fromLiteral("=")
-    file.readLines().forEach { line ->
-        val parts = line.split(delimiter, 2)
-        if (parts.size == 2) {
-            settings[parts[0]] = parts[1]
+    val lines = file.readLines()
+    var i = 0
+    while (i < lines.size) {
+        val line = lines[i]
+        val index = line.indexOf('=')
+        if (index != -1) {
+            var value = line.substring(index + 1)
+            if (value.endsWith('\\')) {
+                value = value.dropLast(1) + '\n'
+                do {
+                    i++
+                    if (i >= lines.size) break
+                    value += lines[i].dropLast(1) + '\n'
+                } while (lines[i].endsWith('\\'))
+            }
+            settings[line.substring(0, index)] = value
         }
+        i++
     }
+
     return settings
 }
 

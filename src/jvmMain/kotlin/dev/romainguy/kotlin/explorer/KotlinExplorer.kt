@@ -243,12 +243,13 @@ private fun SettingsDialog(
             it.codeStyle = it.codeStyle.withSettings(explorerState.indent, explorerState.lineNumberWidth)
         }
     }
+
     DialogWindow(
         onCloseRequest = onDismissRequest,
-        state = rememberDialogState(size = DpSize.Unspecified),
+        state = rememberDialogState(size = DpSize(592.dp, 385.dp)),
         visible = uiState.showSettings,
         title = "Settings",
-        resizable = false,
+        resizable = true,
         onPreviewKeyEvent = { keyEvent ->
             if (keyEvent.key == Key.Escape) {
                 onDismissRequest()
@@ -430,6 +431,7 @@ private fun FrameWindowScope.MainMenu(
             buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                explorerState.r8Rules,
                 instructionSets,
                 onByteCodeUpdate,
                 onDexUpdate,

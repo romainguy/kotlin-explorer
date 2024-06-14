@@ -36,6 +36,7 @@ fun Settings(
 ) {
     val androidHome = remember { mutableStateOf(state.androidHome) }
     val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
+    val r8rules = remember { mutableStateOf(state.r8Rules) }
     val indent = remember { mutableStateOf(state.indent.toString()) }
     val lineNumberWidth = remember { mutableStateOf(state.lineNumberWidth.toString()) }
     val decompileHiddenIsa = remember { mutableStateOf(state.decompileHiddenIsa) }
@@ -43,6 +44,7 @@ fun Settings(
         state.saveState(
             androidHome.value,
             kotlinHome.value,
+            r8rules.value,
             indent.value,
             lineNumberWidth.value,
             decompileHiddenIsa.value
@@ -56,6 +58,7 @@ fun Settings(
         StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
         IntSetting("Decompiled code indent: ", indent, minValue = 2)
         IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
+        MultiLineStringSetting("R8 rules: ", r8rules)
         BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
         Spacer(modifier = Modifier.height(8.dp))
         Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
@@ -81,12 +84,14 @@ private fun ColumnScope.Buttons(
 private fun ExplorerState.saveState(
     androidHome: String,
     kotlinHome: String,
+    r8Rules: String,
     indent: String,
     lineNumberWidth: String,
     decompileHiddenIsa: Boolean,
 ) {
     this.androidHome = androidHome
     this.kotlinHome = kotlinHome
+    this.r8Rules = r8Rules
     this.indent = indent.toInt()
     this.lineNumberWidth = lineNumberWidth.toInt()
     this.decompileHiddenIsa = decompileHiddenIsa
@@ -96,6 +101,27 @@ private fun ExplorerState.saveState(
 @Composable
 private fun StringSetting(title: String, state: MutableState<String>, isValid: () -> Boolean) {
     SettingRow(title, state.value, { state.value = it }, isValid)
+}
+
+@Composable
+private fun ColumnScope.MultiLineStringSetting(title: String, state: MutableState<String>) {
+    Row(Modifier.weight(1.0f)) {
+        Text(
+            title,
+            modifier = Modifier
+                .alignByBaseline()
+                .defaultMinSize(minWidth = 200.dp),
+        )
+        TextArea(
+            value = state.value,
+            onValueChange = { state.value = it },
+            modifier = Modifier
+                .width(360.dp)
+                .defaultMinSize(minWidth = 360.dp, minHeight = 81.dp)
+                .weight(1.0f)
+                .fillMaxHeight()
+        )
+    }
 }
 
 @Composable
@@ -125,7 +151,7 @@ private fun BooleanSetting(title: String, state: MutableState<Boolean>) {
 
 @Composable
 private fun SettingRow(title: String, value: String, onValueChange: (String) -> Unit, isValid: () -> Boolean) {
-    Row {
+    Row(Modifier.fillMaxWidth()) {
         Text(
             title,
             modifier = Modifier
@@ -137,7 +163,8 @@ private fun SettingRow(title: String, value: String, onValueChange: (String) -> 
             onValueChange = onValueChange,
             modifier = Modifier
                 .alignByBaseline()
-                .defaultMinSize(minWidth = 360.dp),
+                .defaultMinSize(minWidth = 360.dp)
+                .weight(1.0f),
             trailingIcon = { if (isValid()) ValidIcon() else ErrorIcon() }
         )
     }

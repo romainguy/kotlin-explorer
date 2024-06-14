@@ -22,7 +22,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
 
-class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
+class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path, private val r8rules: String) {
     suspend fun buildDex(optimize: Boolean) = process(*buildDexCommand(optimize), directory = outputDirectory)
 
     suspend fun dumpDex() = process(
@@ -82,7 +82,7 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
                 -keep,allowoptimization class !kotlin.**,!kotlinx.** {
                   <methods>;
                 }
-            """.trimIndent()
+            """.trimIndent() + r8rules
         )
     }
 }
