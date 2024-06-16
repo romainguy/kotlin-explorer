@@ -12,10 +12,10 @@ jobs:
   build:
     strategy:
       matrix:
-        # macos-14 is for the arm64 architecture
-        # https://github.blog/changelog/2024-01-30-github-actions-introducing-the-new-m1-macos-runner-available-to-open-source
-        os: [ macos-latest, macos-14 ]
-    runs-on: macos-latest
+        # macos-12 is for the x64 (intel) architecture
+        # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
+        os: [ macos-12, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
