@@ -1,6 +1,10 @@
 @file:Suppress("UnstableApiUsage")
 
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
+import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.moveTo
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -14,6 +18,8 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://packages.jetbrains.team/maven/p/kpm/public/")
 }
+
+version = "1.4.3"
 
 kotlin {
     jvm {
@@ -73,7 +79,7 @@ compose.desktop {
 
             targetFormats(TargetFormat.Dmg)
 
-            packageVersion = "1.4.3"
+            packageVersion = version.toString()
             packageName = "Kotlin Explorer"
             description = "Kotlin Explorer"
             vendor = "Romain Guy"
@@ -86,4 +92,34 @@ compose.desktop {
             }
         }
     }
+}
+
+val currentArch: String = when (val osArch = System.getProperty("os.arch")) {
+    "x86_64", "amd64" -> "x64"
+    "aarch64" -> "arm64"
+    else -> error("Unsupported OS arch: $osArch")
+}
+
+/**
+ * TODO: workaround for https://github.com/JetBrains/compose-multiplatform/issues/4976.
+ */
+val renameDmg by tasks.registering {
+    group = "distribution"
+    description = "Rename the DMG file"
+    val packageDmg = tasks.named<AbstractJPackageTask>("packageDmg")
+    dependsOn(packageDmg)
+
+    doLast {
+        // build/compose/binaries/main/dmg/*.dmg
+        val targetFile = packageDmg.get().appImage.get().dir("../dmg").asFile.toPath()
+            .listDirectoryEntries("*.dmg").single()
+        check(targetFile.exists()) {
+            "The DMG file does not exist: $targetFile"
+        }
+        targetFile.moveTo(targetFile.resolveSibling("kotlin-explorer-$currentArch-$version.dmg"))
+    }
+}
+
+tasks.build {
+    dependsOn(renameDmg)
 }
