@@ -35,7 +35,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.repository_owner == 'romainguy' && startsWith(github.ref, 'refs/tags/')
     needs: build
     permissions:
       contents: write
