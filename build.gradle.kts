@@ -2,9 +2,7 @@
 
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
-import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.moveTo
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -20,6 +18,7 @@ repositories {
 }
 
 version = "1.4.3"
+val baseName = "Kotlin Explorer"
 
 kotlin {
     jvm {
@@ -80,8 +79,8 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg)
 
             packageVersion = version.toString()
-            packageName = "Kotlin Explorer"
-            description = "Kotlin Explorer"
+            packageName = baseName
+            description = baseName
             vendor = "Romain Guy"
             licenseFile = rootProject.file("LICENSE")
 
@@ -103,23 +102,24 @@ val currentArch: String = when (val osArch = System.getProperty("os.arch")) {
 /**
  * TODO: workaround for https://github.com/JetBrains/compose-multiplatform/issues/4976.
  */
-val renameDmg by tasks.registering {
+val renameDmg by tasks.registering(Copy::class) {
     group = "distribution"
     description = "Rename the DMG file"
-    val packageDmg = tasks.named<AbstractJPackageTask>("packageDmg")
-    dependsOn(packageDmg)
 
-    doLast {
-        // build/compose/binaries/main/dmg/*.dmg
-        val targetFile = packageDmg.get().appImage.get().dir("../dmg").asFile.toPath()
-            .listDirectoryEntries("*.dmg").single()
-        check(targetFile.exists()) {
-            "The DMG file does not exist: $targetFile"
-        }
-        targetFile.moveTo(targetFile.resolveSibling("kotlin-explorer-$currentArch-$version.dmg"))
+    val packageDmg = tasks.named<AbstractJPackageTask>("packageDmg")
+    // build/compose/binaries/main/dmg/*.dmg
+    val fromFile = packageDmg.map {
+        it.appImage.get().dir("../dmg").asFile.toPath()
+            .listDirectoryEntries("$baseName*.dmg").single()
+    }
+
+    from(fromFile)
+    into(fromFile.map { it.parent })
+    rename {
+        "kotlin-explorer-$currentArch-$version.dmg"
     }
 }
 
-tasks.build {
+tasks.assemble {
     dependsOn(renameDmg)
 }

@@ -31,7 +31,7 @@ jobs:
           name: distribution-${{ matrix.os }}
           if-no-files-found: error
           path: |
-            build/compose/binaries/main/dmg/*.dmg
+            build/compose/binaries/main/dmg/kotlin-explorer-*.dmg
 
   release:
     runs-on: ubuntu-latest
