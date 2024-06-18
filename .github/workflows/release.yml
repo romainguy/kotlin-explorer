@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '**'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        # macos-12 is for the x64 (intel) architecture
+        # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
+        os: [ macos-12, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v3
+      - run: ./gradlew packageReleaseDmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distribution-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            build/compose/binaries/main-release/dmg/kotlin-explorer-*.dmg
+
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'romainguy' && startsWith(github.ref, 'refs/tags/')
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+      - name: Create release and upload dists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" **/*.dmg -t "${{ github.ref_name }}" --generate-notes

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
+    id("com.dorongold.task-tree") version "2.1.1"
 }
 
 repositories {
@@ -106,8 +107,8 @@ val renameDmg by tasks.registering(Copy::class) {
     group = "distribution"
     description = "Rename the DMG file"
 
-    val packageDmg = tasks.named<AbstractJPackageTask>("packageDmg")
-    // build/compose/binaries/main/dmg/*.dmg
+    val packageDmg = tasks.named<AbstractJPackageTask>("packageReleaseDmg")
+    // build/compose/binaries/main-release/dmg/*.dmg
     val fromFile = packageDmg.map {
         it.appImage.get().dir("../dmg").asFile.toPath()
             .listDirectoryEntries("$baseName*.dmg").single()
@@ -120,6 +121,8 @@ val renameDmg by tasks.registering(Copy::class) {
     }
 }
 
-tasks.assemble {
-    dependsOn(renameDmg)
+project.afterEvaluate {
+    tasks.named("packageReleaseDmg") {
+        finalizedBy(renameDmg)
+    }
 }
