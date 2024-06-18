@@ -17,7 +17,6 @@
 package dev.romainguy.kotlin.explorer.bytecode
 
 import androidx.collection.IntIntMap
-import androidx.collection.emptyIntObjectMap
 import androidx.collection.mutableIntIntMapOf
 import dev.romainguy.kotlin.explorer.PeekingIterator
 import dev.romainguy.kotlin.explorer.code.*
@@ -25,6 +24,7 @@ import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 import dev.romainguy.kotlin.explorer.consumeUntil
 import dev.romainguy.kotlin.explorer.getValue
+import dev.romainguy.kotlin.explorer.oat.codeToOpAndOperands
 
 /*
  * Example:
@@ -62,6 +62,8 @@ private val InstructionRegex = Regex("^(?<address>\\d+): +(?<code>.*)$")
  * ```
  */
 private val JumpRegex = Regex("^(goto|if[_a-z]*) +(?<address>\\d+)$")
+
+private val CommentRegex = Regex("\\s+//")
 
 class ByteCodeParser {
     fun parse(text: String): CodeContent {
@@ -117,10 +119,10 @@ class ByteCodeParser {
                 val line = next().trim()
                 val match = InstructionRegex.matchEntire(line) ?: break
                 val address = match.getValue("address")
-                val code = match.getValue("code")
+                val code = match.getValue("code").replace(CommentRegex, " //")
                 val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt() ?: -1
-
-                add(Instruction(address.toInt(), line, jumpAddress))
+                val (op, operands) = codeToOpAndOperands(code)
+                add(Instruction(address.toInt(), address, op, operands, jumpAddress))
             }
         }
     }

@@ -220,6 +220,14 @@ internal class OatDumpParser {
         }
 
         val codeAddress = address.toInt(16)
-        return Instruction(codeAddress, "0x$address: $code", jumpAddress, callAddress, callAddressMethod)
+        val (op, operands) = codeToOpAndOperands(code)
+        return Instruction(codeAddress, "0x$address", op, operands, jumpAddress, callAddress, callAddressMethod)
     }
+}
+
+internal fun codeToOpAndOperands(code: String): Pair<String, String> {
+    val index = code.indexOf(' ')
+    val opCode = if (index >= 0) code.substring(0, index) else code
+    val operands = if (index >= 0) code.substring(index + 1).trim() else ""
+    return Pair(opCode, operands)
 }

@@ -25,6 +25,7 @@ import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 import dev.romainguy.kotlin.explorer.consumeUntil
 import dev.romainguy.kotlin.explorer.getValue
+import dev.romainguy.kotlin.explorer.oat.codeToOpAndOperands
 
 private val PositionRegex = Regex("^\\s*0x(?<address>[0-9a-f]+) line=(?<line>\\d+)$")
 
@@ -97,7 +98,8 @@ internal class DexDumpParser {
                 val code = line.substringAfter('|')
                 val address = code.substringBefore(": ")
                 val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")
-                add(Instruction(address.toInt(16), code, jumpAddress?.toInt(16) ?: -1))
+                val (op, operands) = codeToOpAndOperands(code.substringAfter(": "))
+                add(Instruction(address.toInt(16), address, op, operands, jumpAddress?.toInt(16) ?: -1))
             }
         }
     }
@@ -176,12 +178,12 @@ private fun jniTypeToJavaType(
 
 private fun returnTypeFromType(type: String): String {
     val index = type.lastIndexOf(')') + 1
-    when (type[index]) {
+    return when (type[index]) {
         '[' -> {
-            return jniTypeToJavaType(type, index + 1).first + "[]"
+            jniTypeToJavaType(type, index + 1).first + "[]"
         }
         else -> {
-            return jniTypeToJavaType(type, index).first
+            jniTypeToJavaType(type, index).first
         }
     }
 }

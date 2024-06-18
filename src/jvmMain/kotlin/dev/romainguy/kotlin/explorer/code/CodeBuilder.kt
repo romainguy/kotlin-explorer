@@ -19,6 +19,7 @@ package dev.romainguy.kotlin.explorer.code
 import androidx.collection.IntIntPair
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
+import kotlin.math.max
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
     return CodeBuilder(codeStyle).apply(builderAction)
@@ -42,17 +43,37 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private val methodJumps = mutableListOf<IntIntPair>()
     private var lastMethodLineNumber: Int = -1
 
+    private fun alignOpCodes(isa: ISA) = when (isa) {
+        ISA.ByteCode -> true
+        ISA.X86_64 -> true
+        ISA.Arm64 -> true
+        else -> false
+    }
+
     fun startClass(clazz: Class) {
         writeLine(clazz.header)
     }
 
     fun writeMethod(method: Method, indexedMethods: IntObjectMap<Method>) {
         startMethod(method)
+
         val instructionSet = method.instructionSet
+        val opCodeLength = if (alignOpCodes(instructionSet.isa)) opCodeLength(instructionSet) else -1
+
         instructionSet.instructions.forEach { instruction ->
-            writeInstruction(instructionSet, instruction, indexedMethods)
+            writeInstruction(instructionSet, instruction, indexedMethods, opCodeLength)
         }
+
         endMethod()
+    }
+
+    private fun opCodeLength(instructionSet: InstructionSet): Int {
+        var maxLength = 0
+        instructionSet.instructions.forEach { instruction ->
+            val opCode = instruction.op
+            maxLength = max(maxLength, opCode.length)
+        }
+        return maxLength
     }
 
     private fun startMethod(method: Method) {
@@ -80,10 +101,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         val returnInstructions = instructionSet.isa.returnInstructions
 
         instructionSet.instructions.forEach { instruction ->
-            val code = instruction.code
-            val start = code.indexOf(": ") + 2
-            val end = code.indexOfFirst(start) { c -> !c.isLetter() }
-            val opCode = code.substring(start, end)
+            val opCode = instruction.op
             if (returnInstructions.contains(opCode)) {
                 returnSeen = true
             } else {
@@ -114,7 +132,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private fun writeInstruction(
         instructionSet: InstructionSet,
         instruction: Instruction,
-        indexedMethods: IntObjectMap<Method>
+        indexedMethods: IntObjectMap<Method>,
+        opCodeLength: Int
     ) {
         sb.append("  ".repeat(codeStyle.indent))
 
@@ -135,7 +154,13 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
             sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
 
-        sb.append(instruction.code)
+        sb.append(instruction.label)
+        sb.append(": ")
+        sb.append(instruction.op)
+        if (instruction.operands.isNotEmpty()) {
+            sb.append(if (opCodeLength != -1) " ".repeat(opCodeLength - instruction.op.length + 1) else " ")
+            sb.append(instruction.operands)
+        }
 
         if (instruction.callAddress != -1) {
             val set = if (instruction.callAddressMethod == -1) {
@@ -164,14 +189,4 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append('\n')
         line++
     }
-}
-
-private inline fun CharSequence.indexOfFirst(start: Int, predicate: (Char) -> Boolean): Int {
-    val end = length
-    for (index in start..<end ) {
-        if (predicate(this[index])) {
-            return index
-        }
-    }
-    return end
 }

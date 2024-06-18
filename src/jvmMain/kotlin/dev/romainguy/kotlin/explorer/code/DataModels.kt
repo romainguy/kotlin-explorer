@@ -64,7 +64,9 @@ data class InstructionSet(
 
 data class Instruction(
     val address: Int,
-    val code: String,
+    val label: String,
+    val op: String,
+    val operands: String,
     val jumpAddress: Int,
     val callAddress: Int = -1,
     val callAddressMethod: Int = -1,
