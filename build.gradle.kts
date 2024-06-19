@@ -91,6 +91,9 @@ compose.desktop {
                 bundleID = "dev.romainguy.kotlin.explorer"
             }
         }
+
+        // TODO: workaround for https://github.com/JetBrains/compose-multiplatform/issues/4997.
+        javaHome = javaToolchains.launcherFor(java.toolchain).map { it.metadata.installationPath.asFile.toString() }.get()
     }
 }
 
