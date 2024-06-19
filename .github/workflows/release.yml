@@ -20,7 +20,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - uses: gradle/actions/setup-gradle@v3
-      - run: ./gradlew packageReleaseDmg
+      - run: ./gradlew build
       - uses: actions/upload-artifact@v4
         with:
           name: distribution-${{ matrix.os }}
@@ -30,7 +30,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'romainguy' && startsWith(github.ref, 'refs/tags/')
+    if: github.repository_owner == 'romainguy'
     needs: build
     permissions:
       contents: write
