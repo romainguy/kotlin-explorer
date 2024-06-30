@@ -107,11 +107,10 @@ val renameDmg by tasks.registering(Copy::class) {
     group = "distribution"
     description = "Rename the DMG file"
 
-    val packageDmg = tasks.named<AbstractJPackageTask>("packageReleaseDmg")
+    val packageReleaseDmg = tasks.named<AbstractJPackageTask>("packageReleaseDmg")
     // build/compose/binaries/main-release/dmg/*.dmg
-    val fromFile = packageDmg.map {
-        it.appImage.get().dir("../dmg").asFile.toPath()
-            .listDirectoryEntries("$baseName*.dmg").single()
+    val fromFile = packageReleaseDmg.map { task ->
+        task.destinationDir.asFile.get().toPath().listDirectoryEntries("$baseName*.dmg").single()
     }
 
     from(fromFile)
@@ -121,8 +120,6 @@ val renameDmg by tasks.registering(Copy::class) {
     }
 }
 
-project.afterEvaluate {
-    tasks.named("packageReleaseDmg") {
-        finalizedBy(renameDmg)
-    }
+tasks.assemble {
+    dependsOn(renameDmg)
 }

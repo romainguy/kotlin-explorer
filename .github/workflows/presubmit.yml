@@ -13,7 +13,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      # TODO: replace this once https://github.com/actions/setup-java/pull/637 gets merged.
+      - uses: gmitch215/setup-java@99fc2135f7f7b08068e180cb5f29340f9de70720
         with:
           distribution: 'zulu'
           java-version: 17
