@@ -109,9 +109,8 @@ val renameDmg by tasks.registering(Copy::class) {
 
     val packageReleaseDmg = tasks.named<AbstractJPackageTask>("packageReleaseDmg")
     // build/compose/binaries/main-release/dmg/*.dmg
-    val fromFile = packageReleaseDmg.map {
-        it.appImage.get().dir("../dmg").asFile.toPath()
-            .listDirectoryEntries("$baseName*.dmg").single()
+    val fromFile = packageReleaseDmg.map { task ->
+        task.destinationDir.asFile.get().toPath().listDirectoryEntries("$baseName*.dmg").single()
     }
 
     from(fromFile)
