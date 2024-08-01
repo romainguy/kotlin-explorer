@@ -83,60 +83,82 @@ class ByteCodeParser {
         }
     }
 
-    private fun PeekingIterator<String>.readClass(classHeader: String): Class {
-        val methods = buildList {
-            while (hasNext()) {
-                val line = peek()
-                when {
-                    line == "}" -> break
-                    MethodRegex.matches(line) -> add(readMethod())
-                    else -> next()
-                }
-            }
-            if (next() != "}") {
-                throw IllegalStateException("Expected '}' but got '${peek()}'")
-            }
-        }
-        return Class(classHeader, methods)
-    }
+}
 
-    private fun PeekingIterator<String>.readMethod(): Method {
-        val match = MethodRegex.matchEntire(next())
-            ?: throw IllegalStateException("Expected method but got '${peek()}'")
-        val header = match.getValue("header")
-        if (next().trim() != "Code:") {
-            throw IllegalStateException("Expected 'Code:' but got '${peek()}'")
-        }
-        val instructions = readInstructions()
-        val lineNumbers = readLineNumbers()
-
-        return Method(header, InstructionSet(ISA.ByteCode, instructions.withLineNumbers(lineNumbers)))
-    }
-
-    private fun PeekingIterator<String>.readInstructions(): List<Instruction> {
-        return buildList {
-            while (hasNext()) {
-                val line = next().trim()
-                val match = InstructionRegex.matchEntire(line) ?: break
-                val address = match.getValue("address")
-                val code = match.getValue("code").replace(CommentRegex, " //")
-                val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt() ?: -1
-                val (op, operands) = codeToOpAndOperands(code)
-                add(Instruction(address.toInt(), address, op, operands, jumpAddress))
-            }
-        }
-    }
-
-    private fun PeekingIterator<String>.readLineNumbers(): IntIntMap {
-        val map = mutableIntIntMapOf()
+private fun PeekingIterator<String>.readClass(classHeader: String): Class {
+    val methods = buildList {
         while (hasNext()) {
-            val line = next().trim()
-            if (!line.startsWith("line")) {
-                break
+            val line = peek()
+            when {
+                line == "}" -> break
+                MethodRegex.matches(line) -> add(readMethod())
+                else -> next()
             }
-            val (lineNumber, address) = line.substringAfter(' ').split(": ", limit = 2)
-            map.put(address.toInt(), lineNumber.toInt())
         }
+        if (next() != "}") {
+            throw IllegalStateException("Expected '}' but got '${peek()}'")
+        }
+    }
+    return Class(classHeader, methods)
+}
+
+
+private fun PeekingIterator<String>.readMethod(): Method {
+    val match = MethodRegex.matchEntire(next())
+        ?: throw IllegalStateException("Expected method but got '${peek()}'")
+    val header = match.getValue("header")
+    if (next().trim() != "Code:") {
+        throw IllegalStateException("Expected 'Code:' but got '${peek()}'")
+    }
+    val instructions = readInstructions()
+    val lineNumbers = readLineNumbers()
+
+    return Method(header, InstructionSet(ISA.ByteCode, instructions.withLineNumbers(lineNumbers)))
+}
+
+
+private fun PeekingIterator<String>.readInstructions(): List<Instruction> {
+    return buildList {
+        while (hasNext()) {
+            val line = peek().trim()
+            val match = InstructionRegex.matchEntire(line) ?: break
+            next()
+            val address = match.getValue("address")
+            val code = match.getValue("code").replace(CommentRegex, " //")
+            val jumpAddress = JumpRegex.matchEntire(code)?.getValue("address")?.toInt() ?: -1
+            val (op, operands) = codeToOpAndOperands(code)
+            add(Instruction(address.toInt(), address, op, operands, jumpAddress))
+        }
+    }
+}
+
+private fun PeekingIterator<String>.readLineNumbers(): IntIntMap {
+    val map = mutableIntIntMapOf()
+    val found = skipToLineNumberTable()
+    if (!found) {
         return map
     }
+    next()
+    while (hasNext()) {
+        val line = peek().trim()
+        if (!line.startsWith("line")) {
+            break
+        }
+        next()
+        val (lineNumber, address) = line.substringAfter(' ').split(": ", limit = 2)
+        map.put(address.toInt(), lineNumber.toInt())
+    }
+    return map
+}
+
+private fun PeekingIterator<String>.skipToLineNumberTable(): Boolean {
+    while (hasNext()) {
+        val line = peek().trim()
+        when (line) {
+            "LineNumberTable:" -> return true
+            "", "}" -> return false
+        }
+        next()
+    }
+    return false
 }
