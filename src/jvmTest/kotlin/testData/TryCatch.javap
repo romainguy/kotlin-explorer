@@ -1,0 +1,45 @@
+Compiled from "TryCatch.kt"
+public final class testData.TryCatchKt {
+  public static final void main();
+    Code:
+       0: aconst_null
+       1: astore_0
+       2: nop
+       3: invokestatic  #11                 // Method foo:()V
+       6: goto          16
+       9: astore_1
+      10: getstatic     #17                 // Field java/lang/System.out:Ljava/io/PrintStream;
+      13: invokevirtual #22                 // Method java/io/PrintStream.println:()V
+      16: return
+    Exception table:
+       from    to  target type
+           2     6     9   Class java/lang/Exception
+    LineNumberTable:
+      line 4: 0
+      line 5: 2
+      line 6: 3
+      line 8: 9
+      line 9: 10
+      line 11: 16
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+         10       6     1     e   Ljava/lang/Exception;
+          2      15     0     a   Ljava/lang/Void;
+
+  public static final void foo();
+    Code:
+       0: getstatic     #17                 // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: invokevirtual #22                 // Method java/io/PrintStream.println:()V
+       6: return
+    LineNumberTable:
+      line 14: 0
+      line 15: 6
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: invokestatic  #29                 // Method main:()V
+       3: return
+    LocalVariableTable:
+      Start  Length  Slot  Name   Signature
+          0       4     0  args   [Ljava/lang/String;
+}

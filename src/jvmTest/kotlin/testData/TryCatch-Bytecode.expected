@@ -1,0 +1,23 @@
+public final class testData.TryCatchKt
+    public static final void main()
+        -- 9 instructions
+        4:    0: aconst_null
+              1: astore_0
+        5:    2: nop
+        6:    3: invokestatic  #11 // Method foo:()V
+              6: goto          16
+        8:    9: astore_1
+        9:    10: getstatic     #17 // Field java/lang/System.out:Ljava/io/PrintStream;
+              13: invokevirtual #22 // Method java/io/PrintStream.println:()V
+        11:   16: return
+
+    public static final void foo()
+        -- 3 instructions
+        14:   0: getstatic     #17 // Field java/lang/System.out:Ljava/io/PrintStream;
+              3: invokevirtual #22 // Method java/io/PrintStream.println:()V
+        15:   6: return
+
+    public static void main(java.lang.String[])
+        -- 2 instructions
+              0: invokestatic #29 // Method main:()V
+              3: return

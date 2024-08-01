@@ -1,0 +1,47 @@
+final class testData.Issue_45Kt$main$1
+    testData.Issue_45Kt$main$1()
+        -- 4 instructions
+              0: aload_0
+              1: iconst_0
+              2: invokespecial #12 // Method kotlin/jvm/internal/Lambda."<init>":(I)V
+              5: return
+
+    public final void invoke()
+        -- 2 instructions
+        5:    0: invokestatic #20 // Method testData/Issue_45Kt.f2:()V
+        6:    3: return
+
+    public java.lang.Object invoke()
+        -- 4 instructions
+        4:    0: aload_0
+              1: invokevirtual #23 // Method invoke:()V
+              4: getstatic     #29 // Field kotlin/Unit.INSTANCE:Lkotlin/Unit;
+              7: areturn
+
+public final class testData.Issue_45Kt
+    public static final void main()
+        -- 4 instructions
+        4:    0: getstatic    #12 // Field testData/Issue_45Kt$main$1.INSTANCE:LtestData/Issue_45Kt$main$1;
+              3: checkcast    #14 // class kotlin/jvm/functions/Function0
+              6: invokestatic #18 // Method f1:(Lkotlin/jvm/functions/Function0;)V
+        7:    9: return
+
+    public static final void f1(kotlin.jvm.functions.Function0<kotlin.Unit>)
+        -- 4 instructions
+        9:    0: aload_0
+              1: invokeinterface #24,  1 // InterfaceMethod kotlin/jvm/functions/Function0.invoke:()Ljava/lang/Object;
+              6: pop
+              7: return
+
+    public static final void f2()
+        -- 5 instructions
+        11:   0: ldc           #29 // String Hi
+              2: getstatic     #35 // Field java/lang/System.out:Ljava/io/PrintStream;
+              5: swap
+              6: invokevirtual #41 // Method java/io/PrintStream.println:(Ljava/lang/Object;)V
+        12:   9: return
+
+    public static void main(java.lang.String[])
+        -- 2 instructions
+              0: invokestatic #44 // Method main:()V
+              3: return
