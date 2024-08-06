@@ -16,7 +16,7 @@ jobs:
       # TODO: replace this once https://github.com/actions/setup-java/pull/637 gets merged.
       - uses: gmitch215/setup-java@99fc2135f7f7b08068e180cb5f29340f9de70720
         with:
-          distribution: 'zulu'
+          distribution: 'jetbrains'
           java-version: 17
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: gradle/actions/setup-gradle@v3
