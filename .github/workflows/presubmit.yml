@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # TODO: replace this once https://github.com/actions/setup-java/pull/637 gets merged.
-      - uses: gmitch215/setup-java@99fc2135f7f7b08068e180cb5f29340f9de70720
+      - uses: gmitch215/setup-java@6d2c5e1f82f180ae79f799f0ed6e3e5efb4e664d
         with:
           distribution: 'jetbrains'
           java-version: 17
