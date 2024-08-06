@@ -18,5 +18,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: gradle/actions/setup-gradle@v3
       - run: ./gradlew build
