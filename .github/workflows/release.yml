@@ -15,12 +15,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      # TODO: replace this once https://github.com/actions/setup-java/pull/637 gets merged.
+      - uses: gmitch215/setup-java@99fc2135f7f7b08068e180cb5f29340f9de70720
         with:
-          distribution: 'zulu'
+          distribution: 'jetbrains'
           java-version: 17
       - uses: gradle/actions/setup-gradle@v3
-      - run: ./gradlew packageReleaseDmg
+      - run: ./gradlew build
       - uses: actions/upload-artifact@v4
         with:
           name: distribution-${{ matrix.os }}
@@ -30,7 +31,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'romainguy' && startsWith(github.ref, 'refs/tags/')
+    if: github.repository_owner == 'romainguy'
     needs: build
     permissions:
       contents: write
