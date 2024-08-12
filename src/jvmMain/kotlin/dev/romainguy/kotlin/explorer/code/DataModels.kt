@@ -49,7 +49,34 @@ enum class ISA(val branchInstructions: ScatterSet<String>, val returnInstruction
         ),
         scatterSetOf("ret")
     ),
-    Arm64(scatterSetOf("b", "bl", "cbz", "cbnz", "tbz", "tbnz"), scatterSetOf("ret"))
+    Arm64(
+        scatterSetOf(
+            "b",
+            "b.eq",
+            "b.ne",
+            "b.cs",
+            "b.hs",
+            "b.cc",
+            "b.lo",
+            "b.mi",
+            "b.pl",
+            "b.vs",
+            "b.vc",
+            "b.hi",
+            "b.ls",
+            "b.ge",
+            "b.lt",
+            "b.gt",
+            "b.le",
+            "b.al",
+            "bl",
+            "cbz",
+            "cbnz",
+            "tbz",
+            "tbnz"
+        ),
+        scatterSetOf("ret")
+    )
 }
 
 data class Class(val header: String, val methods: List<Method>)
