@@ -60,6 +60,7 @@ suspend fun buildAndRun(
 
             val path = directory.resolve("KotlinExplorer.kt")
             Files.writeString(path, source)
+            writeSupportFiles(directory)
 
             val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
@@ -101,7 +102,8 @@ suspend fun buildAndDisassemble(
     onOat: (CodeContent) -> Unit,
     onLogs: (AnnotatedString) -> Unit,
     onStatusUpdate: (String, Float) -> Unit,
-    optimize: Boolean
+    optimize: Boolean,
+    keepEverything: Boolean
 ) = coroutineScope {
     val ui = currentCoroutineContext()
 
@@ -117,6 +119,7 @@ suspend fun buildAndDisassemble(
 
             val path = directory.resolve("KotlinExplorer.kt")
             Files.writeString(path, source)
+            writeSupportFiles(directory)
 
             val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
 
@@ -149,7 +152,7 @@ suspend fun buildAndDisassemble(
 
             val dexCompiler = DexCompiler(toolPaths, directory, r8rules)
 
-            val dex = dexCompiler.buildDex(optimize)
+            val dex = dexCompiler.buildDex(optimize, keepEverything)
 
             if (dex.exitCode != 0) {
                 updater.addJob(launch(ui) {
@@ -269,6 +272,36 @@ private fun cleanupClasses(directory: Path) {
                 path.toFile().deleteRecursively()
             }
         }
+}
+
+private fun writeSupportFiles(directory: Path) {
+    Files.writeString(
+        directory.resolve("Keep.kt"),
+        """
+import java.lang.annotation.ElementType.ANNOTATION_TYPE
+import java.lang.annotation.ElementType.CONSTRUCTOR
+import java.lang.annotation.ElementType.FIELD
+import java.lang.annotation.ElementType.METHOD
+import java.lang.annotation.ElementType.PACKAGE
+import java.lang.annotation.ElementType.TYPE
+
+@Retention(AnnotationRetention.BINARY)
+@Target(
+    AnnotationTarget.FILE,
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.CLASS,
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+    AnnotationTarget.FIELD
+)
+@Suppress("DEPRECATED_JAVA_ANNOTATION", "SupportAnnotationUsage")
+@java.lang.annotation.Target(PACKAGE, TYPE, ANNOTATION_TYPE, CONSTRUCTOR, METHOD, FIELD)
+public annotation class Keep 
+        """.trimIndent()
+    )
 }
 
 private fun showError(error: String) = buildAnnotatedString {

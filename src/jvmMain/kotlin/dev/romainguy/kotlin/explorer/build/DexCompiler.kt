@@ -16,6 +16,7 @@
 
 package dev.romainguy.kotlin.explorer.build
 
+import dev.romainguy.kotlin.explorer.ProcessResult
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
 import java.nio.file.Files
@@ -23,7 +24,9 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path, private val r8rules: String) {
-    suspend fun buildDex(optimize: Boolean) = process(*buildDexCommand(optimize), directory = outputDirectory)
+    suspend fun buildDex(optimize: Boolean, keepEverything: Boolean): ProcessResult {
+        return process(*buildDexCommand(optimize, keepEverything), directory = outputDirectory)
+    }
 
     suspend fun dumpDex() = process(
         toolPaths.dexdump.toString(),
@@ -33,8 +36,8 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
     )
 
     @OptIn(ExperimentalPathApi::class)
-    private fun buildDexCommand(optimize: Boolean): Array<String> {
-        writeR8Rules()
+    private fun buildDexCommand(optimize: Boolean, keepEverything: Boolean): Array<String> {
+        writeR8Rules(keepEverything)
 
         return buildList {
             add("java")
@@ -69,20 +72,47 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
         }.toTypedArray()
     }
 
-    private fun writeR8Rules() {
+    private fun writeR8Rules(keepEverything: Boolean) {
         // Match $ANDROID_HOME/tools/proguard/proguard-android-optimize.txt
         Files.writeString(
             outputDirectory.resolve("rules.txt"),
-            """
-                -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
-                -optimizationpasses 5
-                -allowaccessmodification
-                -dontpreverify
-                -dontobfuscate
-                -keep,allowoptimization class !kotlin.**,!kotlinx.** {
-                  <methods>;
+            buildString {
+                append(
+                    """
+                        -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+                        -optimizationpasses 5
+                        -allowaccessmodification
+                        -dontpreverify
+                        -dontobfuscate
+                    """.trimIndent()
+                )
+                if (keepEverything) {
+                    append(
+                        """
+                        -keep,allowoptimization class !kotlin.**,!kotlinx.** {
+                            <methods >;
+                        }
+                        """.trimIndent()
+                    )
+                } else {
+                    append(
+                        """
+                        -keep,allowobfuscation @interface Keep
+                        -keep @Keep class * {*;}
+                        -keepclasseswithmembers class * {
+                            @Keep <methods>;
+                        }
+                        -keepclasseswithmembers class * {
+                            @Keep <fields>;
+                        }
+                        -keepclasseswithmembers class * {
+                            @Keep <init>(...);
+                        }
+                        """.trimIndent()
+                    )
                 }
-            """.trimIndent() + r8rules
+                append(r8rules)
+            }
         )
     }
 }

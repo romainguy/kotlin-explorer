@@ -27,13 +27,14 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
     private fun buildCompileCommand(file: Path): Array<String> {
         val command = mutableListOf(
             toolPaths.kotlinc.toString(),
-            file.toString(),
             "-Xmulti-platform",
             "-Xno-param-assertions",
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
             "-classpath",
-            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() }
+            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() },
+            file.toString(),
+            file.parent.resolve("Keep.kt").toString()
         )
 
         return command.toTypedArray()

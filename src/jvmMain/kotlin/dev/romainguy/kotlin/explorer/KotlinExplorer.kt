@@ -37,6 +37,7 @@ import androidx.compose.ui.input.key.Key.Companion.C
 import androidx.compose.ui.input.key.Key.Companion.D
 import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.compose.ui.input.key.Key.Companion.G
+import androidx.compose.ui.input.key.Key.Companion.K
 import androidx.compose.ui.input.key.Key.Companion.L
 import androidx.compose.ui.input.key.Key.Companion.O
 import androidx.compose.ui.input.key.Key.Companion.P
@@ -438,7 +439,8 @@ private fun FrameWindowScope.MainMenu(
                 onOatUpdate,
                 onLogsUpdate,
                 onStatusUpdate,
-                explorerState.optimize
+                explorerState.optimize,
+                explorerState.keepEverything
             )
         }
     }
@@ -508,6 +510,7 @@ private fun FrameWindowScope.MainMenu(
             )
             Separator()
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
+            MenuCheckboxItem("Keep everything", CtrlShift(K), explorerState::keepEverything)
             MenuCheckboxItem("Build on Startup", shortcut = null, explorerState::autoBuildOnStartup)
             MenuItem(
                 "Build & Disassemble",

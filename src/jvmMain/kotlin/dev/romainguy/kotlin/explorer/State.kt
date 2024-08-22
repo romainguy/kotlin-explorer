@@ -28,6 +28,7 @@ import kotlin.io.path.readLines
 private const val AndroidHome = "ANDROID_HOME"
 private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
+private const val KeepEverything = "KEEP_EVERYTHING"
 private const val R8Rules = "R8_RULES"
 private const val AutoBuildOnStartup = "AUTO_BUILD_ON_STARTUP"
 private const val Presentation = "PRESENTATION"
@@ -55,6 +56,7 @@ class ExplorerState {
     var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
+    var keepEverything by BooleanState(KeepEverything, true)
     var r8Rules by StringState(R8Rules, "")
     var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)
     var presentationMode by BooleanState(Presentation, false)
@@ -151,5 +153,12 @@ private fun readSettings(file: Path): MutableMap<String, String> {
 private fun readSourceCode(toolPaths: ToolPaths) = if (toolPaths.sourceFile.exists()) {
     Files.readString(toolPaths.sourceFile)
 } else {
-    "fun square(a: Int): Int {\n    return a * a\n}\n"
+    """
+    // NOTE: If Build > Keep everything is *not* checked, used the @Keep
+    // annotation to keep the classes/methods/etc. you want to disassemble
+    fun square(a: Int): Int {
+        return a * a
+    }
+
+    """.trimIndent()
 }
