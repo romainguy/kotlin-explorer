@@ -32,6 +32,18 @@ which panels are visible using the *View* menu.
 - Shows the number of instructions and branches per method.
 - Click a disassembled instruction or register to highlight all occurrences.
 
+# Kotlin Explorer and R8
+
+You can use *Build > Optimize with R8* to optimize the compiled code with the R8 tool.
+By default, all public classes/members/etc. will be kept, allowing you to analyze them
+in the disassembly panels.
+
+However, keeping everything is not representative of what R8 will do on an actual
+application so you can disable that feature, and instead use the `@Keep` annotation
+to choose an entry point leading to the desired disassembly. You can also create a
+`fun main()` entry point and call your code from there. Be careful to not use constants
+when calling other methods as this may lead to aggressive optimization by R8.
+
 # Running Kotlin Explorer
 
 Run Kotlin Explorer with `./gradlew jvmRun`.

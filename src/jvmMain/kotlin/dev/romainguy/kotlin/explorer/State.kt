@@ -154,7 +154,7 @@ private fun readSourceCode(toolPaths: ToolPaths) = if (toolPaths.sourceFile.exis
     Files.readString(toolPaths.sourceFile)
 } else {
     """
-    // NOTE: If Build > Keep everything is *not* checked, used the @Keep
+    // NOTE: If Build > Keep Everything is *not* checked, used the @Keep
     // annotation to keep the classes/methods/etc. you want to disassemble
     fun square(a: Int): Int {
         return a * a

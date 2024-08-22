@@ -510,7 +510,7 @@ private fun FrameWindowScope.MainMenu(
             )
             Separator()
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
-            MenuCheckboxItem("Keep everything", CtrlShift(K), explorerState::keepEverything)
+            MenuCheckboxItem("Keep Everything", CtrlShift(K), explorerState::keepEverything)
             MenuCheckboxItem("Build on Startup", shortcut = null, explorerState::autoBuildOnStartup)
             MenuItem(
                 "Build & Disassemble",
