@@ -90,7 +90,7 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
                     append(
                         """
                         -keep,allowoptimization class !kotlin.**,!kotlinx.** {
-                            <methods >;
+                            <methods>;
                         }
                         """.trimIndent()
                     )
