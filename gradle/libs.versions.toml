@@ -1,22 +1,22 @@
 [versions]
-collection = "1.4.0"
-compose = "1.6.10"
-jewel = "0.19.3"
+collection = "1.4.3"
+compose = "1.6.11"
+jewel = "0.23.1"
 jna = "5.14.0"
 junit4 = "4.13.2"
 kotlin = "2.0.0"
 lifecycle = "2.8.0"
 rstaui = "3.3.1"
 rsyntaxtextarea="3.4.0"
-skiko="0.8.4"
+skiko="0.8.12"
 truth = "1.4.2"
 
 [libraries]
 collection = { group = "androidx.collection", name = "collection", version.ref = "collection" }
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "compose" }
 compose-splitpane = { group = "org.jetbrains.compose.components", name = "components-splitpane-desktop", version.ref = "compose" }
-jewel = { group = "org.jetbrains.jewel", name = "jewel-int-ui-standalone-241", version.ref = "jewel" }
-jewel-decorated = { group = "org.jetbrains.jewel", name = "jewel-int-ui-decorated-window-241", version.ref = "jewel" }
+jewel = { group = "org.jetbrains.jewel", name = "jewel-int-ui-standalone-242", version.ref = "jewel" }
+jewel-decorated = { group = "org.jetbrains.jewel", name = "jewel-int-ui-decorated-window-242", version.ref = "jewel" }
 jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }

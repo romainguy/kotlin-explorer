@@ -19,14 +19,16 @@
 package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.jewel.ui.component.*
+import org.jetbrains.jewel.ui.icon.PathIconKey
+
 
 @Composable
 fun Settings(
@@ -34,26 +36,26 @@ fun Settings(
     onSaveRequest: () -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val androidHome = remember { mutableStateOf(state.androidHome) }
-    val kotlinHome = remember { mutableStateOf(state.kotlinHome) }
-    val r8rules = remember { mutableStateOf(state.r8Rules) }
-    val indent = remember { mutableStateOf(state.indent.toString()) }
-    val lineNumberWidth = remember { mutableStateOf(state.lineNumberWidth.toString()) }
+    val androidHome = rememberTextFieldState(state.androidHome)
+    val kotlinHome = rememberTextFieldState(state.kotlinHome)
+    val r8rules = rememberTextFieldState(state.r8Rules)
+    val indent = rememberTextFieldState(state.indent.toString())
+    val lineNumberWidth = rememberTextFieldState(state.lineNumberWidth.toString())
     val decompileHiddenIsa = remember { mutableStateOf(state.decompileHiddenIsa) }
     val onSaveClick = {
         state.saveState(
-            androidHome.value,
-            kotlinHome.value,
-            r8rules.value,
-            indent.value,
-            lineNumberWidth.value,
+            androidHome.text.toString(),
+            kotlinHome.text.toString(),
+            r8rules.text.toString(),
+            indent.text.toString(),
+            lineNumberWidth.text.toString(),
             decompileHiddenIsa.value
         )
         onSaveRequest()
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
-        val toolPaths = ToolPaths(state.directory, androidHome.value, kotlinHome.value)
+        val toolPaths = ToolPaths(state.directory, androidHome.text.toString(), kotlinHome.text.toString())
         StringSetting("Android home directory: ", androidHome) { toolPaths.isAndroidHomeValid }
         StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
         IntSetting("Decompiled code indent: ", indent, minValue = 2)
@@ -92,19 +94,19 @@ private fun ExplorerState.saveState(
     this.androidHome = androidHome
     this.kotlinHome = kotlinHome
     this.r8Rules = r8Rules
-    this.indent = indent.toInt()
-    this.lineNumberWidth = lineNumberWidth.toInt()
+    this.indent = indent.toIntOrNull() ?: 4
+    this.lineNumberWidth = lineNumberWidth.toIntOrNull() ?: 4
     this.decompileHiddenIsa = decompileHiddenIsa
     this.reloadToolPathsFromSettings()
 }
 
 @Composable
-private fun StringSetting(title: String, state: MutableState<String>, isValid: () -> Boolean) {
-    SettingRow(title, state.value, { state.value = it }, isValid)
+private fun StringSetting(title: String, state: TextFieldState, isValid: () -> Boolean) {
+    SettingRow(title, state, isValid,)
 }
 
 @Composable
-private fun ColumnScope.MultiLineStringSetting(title: String, state: MutableState<String>) {
+private fun ColumnScope.MultiLineStringSetting(title: String, state: TextFieldState) {
     Row(Modifier.weight(1.0f)) {
         Text(
             title,
@@ -113,8 +115,7 @@ private fun ColumnScope.MultiLineStringSetting(title: String, state: MutableStat
                 .defaultMinSize(minWidth = 200.dp),
         )
         TextArea(
-            value = state.value,
-            onValueChange = { state.value = it },
+            state,
             modifier = Modifier
                 .width(360.dp)
                 .defaultMinSize(minWidth = 360.dp, minHeight = 81.dp)
@@ -125,21 +126,21 @@ private fun ColumnScope.MultiLineStringSetting(title: String, state: MutableStat
 }
 
 @Composable
-private fun IntSetting(title: String, state: MutableState<String>, minValue: Int) {
-    SettingRow(
-        title,
-        value = state.value,
-        onValueChange = {
-            if (it.toIntOrNull() != null || it.isEmpty()) {
-                state.value = it
-            }
-        },
-        isValid = { (state.value.toIntOrNull() ?: Int.MIN_VALUE) >= minValue }
-    )
+private fun IntSetting(title: String, state: TextFieldState, minValue: Int) {
+    val isValid by derivedStateOf {
+        (state.text.toString().toIntOrNull() ?: Int.MIN_VALUE) >= minValue
+    }
+
+    SettingRow(title, state, isValid = { isValid }, {
+        val changed = this.toString()
+        if (changed.isNotEmpty() && changed.toIntOrNull() == null) {
+            revertAllChanges()
+        }
+    })
 }
 
 @Composable
-private fun BooleanSetting(title: String, state: MutableState<Boolean>) {
+private fun BooleanSetting(@Suppress("SameParameterValue") title: String, state: MutableState<Boolean>) {
     Row {
         Checkbox(state.value, onCheckedChange = { state.value = it })
         Text(
@@ -150,7 +151,12 @@ private fun BooleanSetting(title: String, state: MutableState<Boolean>) {
 }
 
 @Composable
-private fun SettingRow(title: String, value: String, onValueChange: (String) -> Unit, isValid: () -> Boolean) {
+private fun SettingRow(
+    title: String,
+    state: TextFieldState,
+    isValid: () -> Boolean,
+    inputTransformation: InputTransformation? = null
+) {
     Row(Modifier.fillMaxWidth()) {
         Text(
             title,
@@ -159,12 +165,12 @@ private fun SettingRow(title: String, value: String, onValueChange: (String) -> 
                 .defaultMinSize(minWidth = 200.dp),
         )
         TextField(
-            value = value,
-            onValueChange = onValueChange,
+            state,
             modifier = Modifier
                 .alignByBaseline()
                 .defaultMinSize(minWidth = 360.dp)
                 .weight(1.0f),
+            inputTransformation = inputTransformation,
             trailingIcon = { if (isValid()) ValidIcon() else ErrorIcon() }
         )
     }
@@ -173,19 +179,23 @@ private fun SettingRow(title: String, value: String, onValueChange: (String) -> 
 @Composable
 private fun ErrorIcon() {
     Icon(
-        "icons/error.svg",
-        iconClass = ExplorerState::class.java,
-        contentDescription = "Error",
-        tint = IconErrorColor
+        key = PathIconKey(
+            "icons/error.svg",
+            iconClass = ExplorerState::class.java
+        ), contentDescription = "Error",
+        tint = IconErrorColor,
+        hints = arrayOf()
     )
 }
 
 @Composable
 private fun ValidIcon() {
     Icon(
-        "icons/done.svg",
-        iconClass = ExplorerState::class.java,
-        contentDescription = "Valid",
-        tint = IconValidColor
+        key = PathIconKey(
+            "icons/done.svg",
+            iconClass = ExplorerState::class.java
+        ), contentDescription = "Valid",
+        tint = IconValidColor,
+        hints = arrayOf()
     )
 }

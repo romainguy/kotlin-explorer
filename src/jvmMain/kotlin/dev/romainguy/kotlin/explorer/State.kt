@@ -80,7 +80,8 @@ class ExplorerState {
         toolPaths = createToolPaths()
     }
 
-    private fun createToolPaths() = ToolPaths(directory, Path.of(androidHome), Path.of(kotlinHome))
+    private fun createToolPaths() =
+        ToolPaths(directory, Path.of(androidHome.toString()), Path.of(kotlinHome.toString()))
 
     private inner class BooleanState(key: String, initialValue: Boolean) :
         SettingsState<Boolean>(key, initialValue, { toBoolean() })
