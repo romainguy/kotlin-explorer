@@ -30,6 +30,7 @@ private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
 private const val KeepEverything = "KEEP_EVERYTHING"
 private const val R8Rules = "R8_RULES"
+private const val MinApi = "MIN_API"
 private const val AutoBuildOnStartup = "AUTO_BUILD_ON_STARTUP"
 private const val Presentation = "PRESENTATION"
 private const val ShowLineNumbers = "SHOW_LINE_NUMBERS"
@@ -58,6 +59,7 @@ class ExplorerState {
     var optimize by BooleanState(Optimize, true)
     var keepEverything by BooleanState(KeepEverything, true)
     var r8Rules by StringState(R8Rules, "")
+    var minApi by IntState(MinApi, 21)
     var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)
     var presentationMode by BooleanState(Presentation, false)
     var showLineNumbers by BooleanState(ShowLineNumbers, false)
@@ -80,8 +82,7 @@ class ExplorerState {
         toolPaths = createToolPaths()
     }
 
-    private fun createToolPaths() =
-        ToolPaths(directory, Path.of(androidHome.toString()), Path.of(kotlinHome.toString()))
+    private fun createToolPaths() = ToolPaths(directory, Path.of(androidHome), Path.of(kotlinHome))
 
     private inner class BooleanState(key: String, initialValue: Boolean) :
         SettingsState<Boolean>(key, initialValue, { toBoolean() })

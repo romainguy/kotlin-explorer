@@ -23,7 +23,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
 
-class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path, private val r8rules: String) {
+class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path, private val r8rules: String, private val minApi: Int) {
     suspend fun buildDex(optimize: Boolean, keepEverything: Boolean): ProcessResult {
         return process(*buildDexCommand(optimize, keepEverything), directory = outputDirectory)
     }
@@ -45,7 +45,7 @@ class DexCompiler(private val toolPaths: ToolPaths, private val outputDirectory:
             add(toolPaths.d8.toString())
             add(if (optimize) "com.android.tools.r8.R8" else "com.android.tools.r8.D8")
             add("--min-api")
-            add("21")
+            add(minApi.toString())
             if (optimize) {
                 add("--pg-conf")
                 add("rules.txt")
