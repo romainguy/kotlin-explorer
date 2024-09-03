@@ -96,6 +96,7 @@ suspend fun buildAndDisassemble(
     toolPaths: ToolPaths,
     source: String,
     r8rules: String,
+    minApi: Int,
     instructionSets: Map<ISA, Boolean>,
     onByteCode: (CodeContent) -> Unit,
     onDex: (CodeContent) -> Unit,
@@ -150,7 +151,7 @@ suspend fun buildAndDisassemble(
                 launch(ui) { updater.advance("") }
             }
 
-            val dexCompiler = DexCompiler(toolPaths, directory, r8rules)
+            val dexCompiler = DexCompiler(toolPaths, directory, r8rules, minApi)
 
             val dex = dexCompiler.buildDex(optimize, keepEverything)
 

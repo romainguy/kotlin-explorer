@@ -39,6 +39,7 @@ fun Settings(
     val androidHome = rememberTextFieldState(state.androidHome)
     val kotlinHome = rememberTextFieldState(state.kotlinHome)
     val r8rules = rememberTextFieldState(state.r8Rules)
+    val minApi = rememberTextFieldState(state.minApi.toString())
     val indent = rememberTextFieldState(state.indent.toString())
     val lineNumberWidth = rememberTextFieldState(state.lineNumberWidth.toString())
     val decompileHiddenIsa = remember { mutableStateOf(state.decompileHiddenIsa) }
@@ -47,6 +48,7 @@ fun Settings(
             androidHome.text.toString(),
             kotlinHome.text.toString(),
             r8rules.text.toString(),
+            minApi.text.toString(),
             indent.text.toString(),
             lineNumberWidth.text.toString(),
             decompileHiddenIsa.value
@@ -61,6 +63,7 @@ fun Settings(
         IntSetting("Decompiled code indent: ", indent, minValue = 2)
         IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
         MultiLineStringSetting("R8 rules: ", r8rules)
+        IntSetting("Min API: ", minApi, minValue = 1)
         BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
         Spacer(modifier = Modifier.height(8.dp))
         Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
@@ -87,6 +90,7 @@ private fun ExplorerState.saveState(
     androidHome: String,
     kotlinHome: String,
     r8Rules: String,
+    minApi: String,
     indent: String,
     lineNumberWidth: String,
     decompileHiddenIsa: Boolean,
@@ -94,6 +98,7 @@ private fun ExplorerState.saveState(
     this.androidHome = androidHome
     this.kotlinHome = kotlinHome
     this.r8Rules = r8Rules
+    this.minApi = minApi.toIntOrNull() ?: 21
     this.indent = indent.toIntOrNull() ?: 4
     this.lineNumberWidth = lineNumberWidth.toIntOrNull() ?: 4
     this.decompileHiddenIsa = decompileHiddenIsa

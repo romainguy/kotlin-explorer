@@ -433,6 +433,7 @@ private fun FrameWindowScope.MainMenu(
                 explorerState.toolPaths,
                 sourceTextArea.text,
                 explorerState.r8Rules,
+                explorerState.minApi,
                 instructionSets,
                 onByteCodeUpdate,
                 onDexUpdate,
