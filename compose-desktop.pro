@@ -24,3 +24,6 @@
 -keep class androidx.compose.ui.input.key.KeyEvent_skikoKt { *; }
 -dontnote androidx.compose.ui.input.key.KeyEvent_skikoKt
 -dontwarn androidx.compose.ui.input.key.KeyEvent_skikoKt
+
+-dontnote org.jetbrains.jewel.intui.markdown.standalone.styling.extensions.**
+-dontwarn org.jetbrains.jewel.intui.markdown.standalone.styling.extensions.**

@@ -31,6 +31,7 @@ which panels are visible using the *View* menu.
 - Clicking a jump instruction will show an arrow to the jump destination.
 - Shows the number of instructions and branches per method.
 - Click a disassembled instruction or register to highlight all occurrences.
+- Inline aarch64 (ARM 64 bit) documentation. Use *View > Show Logs & Documentation*.
 
 # Kotlin Explorer and R8
 
