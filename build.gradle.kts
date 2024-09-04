@@ -18,7 +18,7 @@ repositories {
     maven("https://packages.jetbrains.team/maven/p/kpm/public/")
 }
 
-version = "1.5.1"
+version = "1.6.0"
 val baseName = "Kotlin Explorer"
 
 kotlin {
