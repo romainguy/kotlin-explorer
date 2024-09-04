@@ -19,6 +19,7 @@ package dev.romainguy.kotlin.explorer.code
 import androidx.collection.IntIntPair
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
+import androidx.collection.mutableIntObjectMapOf
 import kotlin.math.max
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
@@ -37,6 +38,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private val jumps = mutableIntIntMapOf()
     private val sourceToCodeLine = mutableIntIntMapOf()
     private val codeToSourceToLine = mutableIntIntMapOf()
+    private var isa = ISA.Aarch64
+    private val instructions = mutableIntObjectMapOf<Instruction>()
 
     // These 3 fields collect method scope data. They are reset when a method is added
     private val methodAddresses = mutableIntIntMapOf()
@@ -46,7 +49,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private fun alignOpCodes(isa: ISA) = when (isa) {
         ISA.ByteCode -> true
         ISA.X86_64 -> true
-        ISA.Arm64 -> true
+        ISA.Aarch64 -> true
         else -> false
     }
 
@@ -58,6 +61,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         startMethod(method)
 
         val instructionSet = method.instructionSet
+        // TODO: We should do this only once
+        isa = instructionSet.isa
         val opCodeLength = if (alignOpCodes(instructionSet.isa)) opCodeLength(instructionSet) else -1
 
         instructionSet.instructions.forEach { instruction ->
@@ -154,6 +159,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
             sb.append(prefix.padEnd(codeStyle.lineNumberWidth + 2))
         }
 
+        instructions[line] = instruction
+
         sb.append(instruction.label)
         sb.append(": ")
         sb.append(instruction.op)
@@ -179,7 +186,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     }
 
     fun build(): Code {
-        return Code(sb.toString(), jumps, sourceToCodeLine, codeToSourceToLine)
+        return Code(isa, sb.toString(), instructions, jumps, sourceToCodeLine, codeToSourceToLine)
     }
 
     override fun toString() = sb.toString()

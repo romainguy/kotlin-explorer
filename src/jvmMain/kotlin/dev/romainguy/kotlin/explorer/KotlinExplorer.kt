@@ -15,6 +15,7 @@
  */
 
 @file:Suppress("FunctionName")
+@file:OptIn(ExperimentalJewelApi::class)
 
 package dev.romainguy.kotlin.explorer
 
@@ -57,6 +58,7 @@ import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.*
 import dev.romainguy.kotlin.explorer.code.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
@@ -67,15 +69,21 @@ import org.fife.ui.rsyntaxtextarea.Theme
 import org.fife.ui.rtextarea.RTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
 import org.fife.ui.rtextarea.SearchEngine
+import org.jetbrains.compose.splitpane.HorizontalSplitPane
+import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.enableNewSwingCompositing
 import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.intui.markdown.standalone.ProvideMarkdownStyling
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.jetbrains.jewel.intui.standalone.theme.darkThemeDefinition
 import org.jetbrains.jewel.intui.standalone.theme.lightThemeDefinition
 import org.jetbrains.jewel.intui.window.decoratedWindow
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
+import org.jetbrains.jewel.markdown.Markdown
+import org.jetbrains.jewel.markdown.MarkdownBlock
+import org.jetbrains.jewel.markdown.processing.MarkdownProcessor
 import org.jetbrains.jewel.ui.ComponentStyling
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.window.DecoratedWindow
@@ -87,16 +95,20 @@ import java.awt.event.ActionEvent
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.io.IOException
+import java.net.URI
 import javax.swing.FocusManager
 import javax.swing.SwingUtilities
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 
-private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
+private class UiState(val explorerState: ExplorerState, scope: CoroutineScope, window: ComposeWindow) {
     var activeTextArea by mutableStateOf<RSyntaxTextArea?>(null)
     var status by mutableStateOf("Ready")
     var progress by mutableStateOf(1f)
     var logs by mutableStateOf(AnnotatedString(""))
+    var markdownBlocks by mutableStateOf(emptyList<MarkdownBlock>())
+
+    val markdownProcessor = MarkdownProcessor()
 
     val searchListener = object : SearchListener {
         override fun searchEvent(e: SearchEvent?) {
@@ -138,7 +150,12 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     val sourceTextArea = sourceTextArea(focusTracker, explorerState).apply { requestFocusInWindow() }
     val byteCodeTextArea = byteCodeTextArea(explorerState, focusTracker, sourceTextArea)
     val dexTextArea = dexTextArea(explorerState, focusTracker, sourceTextArea)
-    val oatTextArea = oatTextArea(explorerState, focusTracker)
+    val oatTextArea = oatTextArea(explorerState, focusTracker) { code, line, _ ->
+        scope.launch {
+            val blocks = markdownProcessor.generateInlineDocumentation(code, line)
+            if (blocks.isNotEmpty()) markdownBlocks = blocks
+        }
+    }
 
     val codeTextAreas = listOf(byteCodeTextArea, dexTextArea, oatTextArea)
 
@@ -170,7 +187,7 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
     val onLogsUpdate: (AnnotatedString) -> Unit = { text ->
         logs = text
         if (text.isNotEmpty()) {
-            explorerState.showLogs = true
+            explorerState.showLogsAndDocumentation = true
         }
     }
 }
@@ -179,7 +196,8 @@ private class UiState(val explorerState: ExplorerState, window: ComposeWindow) {
 private fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
-    val uiState = remember { UiState(explorerState, window) }
+    val scope = rememberCoroutineScope()
+    val uiState = remember { UiState(explorerState, scope, window) }
 
     uiState.sourceTextArea.addCodeTextAreas(uiState.byteCodeTextArea, uiState.dexTextArea)
 
@@ -223,8 +241,8 @@ private fun FrameWindowScope.KotlinExplorer(
     Column(modifier = Modifier.background(JewelTheme.globalColors.panelBackground)) {
         VerticalOptionalPanel(
             modifier = Modifier.weight(1.0f),
-            showOptionalPanel = explorerState.showLogs,
-            optionalPanel = { LogsPanel(uiState.logs) }
+            showOptionalPanel = explorerState.showLogsAndDocumentation,
+            optionalPanel = { LogsAndDocumentationPanel(uiState.logs, uiState.markdownBlocks) }
         ) {
             MultiSplitter(modifier = Modifier.weight(1.0f), panels)
         }
@@ -264,22 +282,88 @@ private fun SettingsDialog(
     }
 }
 
+@Suppress("OPT_IN_USAGE")
+@Composable
+private fun LogsAndDocumentationPanel(logs: AnnotatedString, markdownBlocks: List<MarkdownBlock>) {
+    HorizontalSplitPane(
+        splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.7f)
+    ) {
+        first { LogsPanel(logs) }
+        second { DocumentationPanel(markdownBlocks) }
+        splitter { HorizontalSplitter() }
+    }
+}
+
+@Composable
+private fun DocumentationPanel(markdownBlocks: List<MarkdownBlock>) {
+    Column {
+        Title("Documentation")
+        val scrollState = rememberScrollState()
+        ProvideMarkdownStyling {
+            Box(Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .border(1.dp, JewelTheme.globalColors.borders.normal)
+                .padding(8.dp)
+            ) {
+                Box(Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                ) {
+                    Markdown(
+                        markdownBlocks,
+                        "",  // TODO: we should pass the raw Markdown
+                        Modifier
+                            .fillMaxSize()
+                            .padding(end = 12.dp)
+                            .focusable(false),
+                        selectable = true,
+                        onUrlClick = { url -> Desktop.getDesktop().browse(URI.create(url)) }
+                    )
+                }
+                VerticalScrollbar(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .fillMaxHeight(),
+                    adapter = rememberScrollbarAdapter(scrollState)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun LogsPanel(logs: AnnotatedString) {
     Column {
         Title("Logs")
-        SelectionContainer {
-            Text(
-                text = logs,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
+        val scrollState = rememberScrollState()
+        Box(Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .border(1.dp, JewelTheme.globalColors.borders.normal)
+            .padding(8.dp)
+        ) {
+            Box(Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+            ) {
+                SelectionContainer {
+                    Text(
+                        text = logs,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(end = 12.dp)
+                            .focusable(false)
+                    )
+                }
+            }
+            VerticalScrollbar(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .verticalScroll(rememberScrollState())
-                    .border(1.dp, JewelTheme.globalColors.borders.normal)
-                    .padding(8.dp)
-                    .focusable(false)
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+                adapter = rememberScrollbarAdapter(scrollState)
             )
         }
     }
@@ -387,8 +471,17 @@ private fun byteCodeTextArea(state: ExplorerState, focusTracker: FocusListener, 
 private fun dexTextArea(state: ExplorerState, focusTracker: FocusListener, sourceTextArea: SourceTextArea) =
     codeTextArea(state, focusTracker, syntaxStyle = SyntaxStyle.Dex, sourceTextArea = sourceTextArea)
 
-private fun oatTextArea(state: ExplorerState, focusTracker: FocusListener) =
-    codeTextArea(state, focusTracker, hasLineNumbers = false, syntaxStyle = SyntaxStyle.Oat)
+private fun oatTextArea(
+    state: ExplorerState,
+    focusTracker: FocusListener,
+    onLineSelected: ((code: Code, lineNumber: Int, content: String) -> Unit)?
+) = codeTextArea(
+    state,
+    focusTracker,
+    hasLineNumbers = false,
+    syntaxStyle = SyntaxStyle.Oat,
+    onLineSelected = onLineSelected
+)
 
 private fun codeTextArea(
     state: ExplorerState,
@@ -396,9 +489,10 @@ private fun codeTextArea(
     hasLineNumbers: Boolean = true,
     syntaxStyle: String = SyntaxConstants.SYNTAX_STYLE_NONE,
     sourceTextArea: SourceTextArea? = null,
+    onLineSelected: ((code: Code, lineNumber: Int, content: String) -> Unit)? = null
 ): CodeTextArea {
     val codeStyle = CodeStyle(state.indent, state.showLineNumbers && hasLineNumbers, state.lineNumberWidth)
-    return CodeTextArea(codeStyle, state.syncLines, sourceTextArea).apply {
+    return CodeTextArea(codeStyle, state.syncLines, sourceTextArea, onLineSelected).apply {
         configureSyntaxTextArea(state, syntaxStyle, focusTracker)
     }
 }
@@ -496,7 +590,7 @@ private fun FrameWindowScope.MainMenu(
             Separator()
             MenuCheckboxItem("Sync Lines", Ctrl(S), explorerState::syncLines, onSyncLinesChanged)
             Separator()
-            MenuCheckboxItem("Show Logs", Ctrl(L), explorerState::showLogs)
+            MenuCheckboxItem("Show Logs & Documentation", Ctrl(L), explorerState::showLogsAndDocumentation)
             Separator()
             MenuCheckboxItem("Presentation Mode", CtrlShift(P), explorerState::presentationMode) {
                 onPresentationModeChanged(it)
@@ -559,7 +653,6 @@ private fun applyTheme(textArea: RSyntaxTextArea, syntaxStyle: String) {
     }
 }
 
-@OptIn(ExperimentalJewelApi::class)
 fun main() {
     System.setProperty("apple.awt.application.name", "Kotlin Explorer")
 

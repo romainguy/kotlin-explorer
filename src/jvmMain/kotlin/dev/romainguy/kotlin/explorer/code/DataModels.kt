@@ -49,7 +49,7 @@ enum class ISA(val branchInstructions: ScatterSet<String>, val returnInstruction
         ),
         scatterSetOf("ret")
     ),
-    Arm64(
+    Aarch64(
         scatterSetOf(
             "b",
             "b.eq",

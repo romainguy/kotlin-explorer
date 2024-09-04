@@ -28,7 +28,9 @@ import androidx.collection.mutableIntObjectMapOf
  * - Jump information for branch instructions
  */
 class Code(
+    val isa: ISA,
     val text: String,
+    val instructions: IntObjectMap<Instruction>,
     private val jumps: IntIntMap,
     private val sourceToCodeLine: IntIntMap,
     private val codeToSourceToLine: IntIntMap,

@@ -66,7 +66,7 @@ class ExplorerState {
     var showByteCode by BooleanState(ShowByteCode, false)
     var showDex by BooleanState(ShowDex, true)
     var showOat by BooleanState(ShowOat, true)
-    var showLogs by mutableStateOf(false)
+    var showLogsAndDocumentation by mutableStateOf(false)
     var syncLines by BooleanState(SyncLines, true)
     var lineNumberWidth by IntState(LineNumberWidth, 4)
     var indent by IntState(Indent, 4)

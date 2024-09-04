@@ -30,33 +30,33 @@ private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(
 private val DexCodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+($HexDigit+\\s+)+\\|\\s+(?<code>.+)")
 private val DexMethodInvokeRegex = Regex("^invoke-[^}]+},\\s+\\S+\\s+(?<name>.+)\\s+//.+")
 
-private val Arm64JumpRegex = Regex(".+ #[+-]0x$HexDigit+ \\(addr 0x(?<address>$HexDigit+)\\)\$")
+private val Aarch64JumpRegex = Regex(".+ #[+-]0x$HexDigit+ \\(addr 0x(?<address>$HexDigit+)\\)\$")
 private val X86JumpRegex = Regex(".+ [+-]\\d+ \\(0x(?<address>$HexDigit{8})\\)\$")
 
-private val Arm64MethodCallRegex = Regex("^blr lr$")
+private val Aarch64MethodCallRegex = Regex("^blr lr$")
 private val X86MethodCallRegex = Regex("^TODO$") // TODO: implement x86
 
 private val DexMethodReferenceRegex = Regex("^\\s+StackMap.+dex_pc=0x(?<callAddress>$HexDigit+),.+$")
 private val DexInlineInfoRegex = Regex("^\\s+InlineInfo.+dex_pc=0x(?<callAddress>$HexDigit+),\\s+method_index=(?<methodIndex>$HexDigit+).+$")
 
 internal class OatDumpParser {
-    private var isa = ISA.Arm64
+    private var isa = ISA.Aarch64
 
     fun parse(text: String): CodeContent {
         return try {
             val lines = PeekingIterator(text.lineSequence().iterator())
             val isa = when (val set = lines.readInstructionSet()) {
-                "Arm64" -> ISA.Arm64
+                "Arm64" -> ISA.Aarch64
                 "X86_64" -> ISA.X86_64
                 else -> throw IllegalStateException("Unknown instruction set: $set")
             }
             val jumpRegex = when (isa) {
-                ISA.Arm64 -> Arm64JumpRegex
+                ISA.Aarch64 -> Aarch64JumpRegex
                 ISA.X86_64 -> X86JumpRegex
                 else -> throw IllegalStateException("Incompatible ISA: $isa")
             }
             val methodCallRegex = when (isa) {
-                ISA.Arm64 -> Arm64MethodCallRegex
+                ISA.Aarch64 -> Aarch64MethodCallRegex
                 ISA.X86_64 -> X86MethodCallRegex
                 else -> throw IllegalStateException("Incompatible ISA: $isa")
             }

@@ -45,6 +45,8 @@ kotlin {
                 implementation(libs.compose.splitpane)
                 implementation(libs.jewel)
                 implementation(libs.jewel.decorated)
+                implementation(libs.jewel.markdown.core)
+                implementation(libs.jewel.markdown.intUiStandaloneStyling)
                 implementation(libs.jna)
                 implementation(libs.lifecycle)
                 implementation(libs.lifecycle.compose)

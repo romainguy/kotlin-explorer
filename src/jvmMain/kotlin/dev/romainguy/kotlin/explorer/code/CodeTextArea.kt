@@ -33,6 +33,7 @@ class CodeTextArea(
     codeStyle: CodeStyle,
     var isSyncLinesEnabled: Boolean,
     private val sourceTextArea: SourceTextArea?,
+    var onLineSelected: ((code: Code, lineNumber: Int, content: String) -> Unit)? = null
 ) : SyntaxTextArea() {
     private var code: Code? = null
     private var jumpOffsets: JumpOffsets? = null
@@ -145,18 +146,27 @@ class CodeTextArea(
     }
 
     private fun caretUpdate(event: CaretEvent) {
-        caretUpdate(getLineOfOffset(minOf(event.dot, document.length)))
+        // We receive two events every time, make sure we react to only one
+        if (event.javaClass.name == "org.fife.ui.rsyntaxtextarea.RSyntaxTextArea\$RSyntaxTextAreaMutableCaretEvent") {
+            caretUpdate(getLineOfOffset(minOf(event.dot, document.length)))
+        }
     }
 
     private fun caretUpdate(line: Int) {
         val codeModel = code ?: return
         val oldJumpOffsets = jumpOffsets
+
+        val lineContent = getLine(line)
+        if (onLineSelected != null) {
+            onLineSelected?.invoke(code!!, line, lineContent)
+        }
+
         try {
             jumpOffsets = null
             val dstLine = codeModel.getJumpTargetOfLine(line)
             if (dstLine == -1) return
 
-            val srcOffset = getLineStartOffset(line) + getLine(line).countPadding()
+            val srcOffset = getLineStartOffset(line) + lineContent.countPadding()
             val dstOffset = getLineStartOffset(dstLine) + getLine(dstLine).countPadding()
             jumpOffsets = JumpOffsets(srcOffset, dstOffset)
         } finally {
