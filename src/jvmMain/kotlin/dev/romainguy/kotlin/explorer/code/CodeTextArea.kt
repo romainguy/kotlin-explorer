@@ -147,7 +147,7 @@ class CodeTextArea(
 
     private fun caretUpdate(event: CaretEvent) {
         // We receive two events every time, make sure we react to only one
-        if (event.javaClass.name == "org.fife.ui.rsyntaxtextarea.RSyntaxTextArea\$RSyntaxTextAreaMutableCaretEvent") {
+        if (event.javaClass.name != "org.fife.ui.rsyntaxtextarea.RSyntaxTextArea\$RSyntaxTextAreaMutableCaretEvent") {
             caretUpdate(getLineOfOffset(minOf(event.dot, document.length)))
         }
     }
