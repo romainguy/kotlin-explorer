@@ -71,7 +71,7 @@ kotlin {
 }
 
 composeCompiler {
-    stabilityConfigurationFile = layout.projectDirectory.file("stability_config.conf")
+    stabilityConfigurationFile = layout.projectDirectory.file("compose-stability.config")
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
 }
 
