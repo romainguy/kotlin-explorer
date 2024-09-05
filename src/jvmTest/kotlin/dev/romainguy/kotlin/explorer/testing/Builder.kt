@@ -82,7 +82,7 @@ class LocalBuilder(private val outputDirectory: Path) : Builder {
     }
 
     private suspend fun kotlinCompile(path: Path) {
-        val result = kotlinCompiler.compile(compilerFlags, path)
+        val result = kotlinCompiler.compile("", path)
         if (result.exitCode != 0) {
             System.err.println(result.output)
             fail("kotlinc error")
