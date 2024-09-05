@@ -29,6 +29,7 @@ private const val AndroidHome = "ANDROID_HOME"
 private const val KotlinHome = "KOTLIN_HOME"
 private const val Optimize = "OPTIMIZE"
 private const val KeepEverything = "KEEP_EVERYTHING"
+private const val CompilerFlags = "COMPILER_FLAGS"
 private const val R8Rules = "R8_RULES"
 private const val MinApi = "MIN_API"
 private const val AutoBuildOnStartup = "AUTO_BUILD_ON_STARTUP"
@@ -58,6 +59,7 @@ class ExplorerState {
     var toolPaths by mutableStateOf(createToolPaths())
     var optimize by BooleanState(Optimize, true)
     var keepEverything by BooleanState(KeepEverything, true)
+    var compilerFlags by StringState(CompilerFlags, "")
     var r8Rules by StringState(R8Rules, "")
     var minApi by IntState(MinApi, 21)
     var autoBuildOnStartup by BooleanState(AutoBuildOnStartup, false)

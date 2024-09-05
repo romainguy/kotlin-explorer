@@ -44,6 +44,7 @@ private val oatDumpParser = OatDumpParser()
 
 suspend fun buildAndRun(
     toolPaths: ToolPaths,
+    compilerFlags: String,
     source: String,
     onLogs: (AnnotatedString) -> Unit,
     onStatusUpdate: (String, Float) -> Unit
@@ -62,7 +63,7 @@ suspend fun buildAndRun(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(compilerFlags, path)
 
             if (kotlinc.exitCode != 0) {
                 withContext(ui) {
@@ -95,6 +96,7 @@ suspend fun buildAndRun(
 suspend fun buildAndDisassemble(
     toolPaths: ToolPaths,
     source: String,
+    compilerFlags: String,
     r8rules: String,
     minApi: Int,
     instructionSets: Map<ISA, Boolean>,
@@ -122,7 +124,7 @@ suspend fun buildAndDisassemble(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(compilerFlags, path)
 
             if (kotlinc.exitCode != 0) {
                 updater.addJob(launch(ui) {

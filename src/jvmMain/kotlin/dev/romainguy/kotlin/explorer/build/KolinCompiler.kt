@@ -21,10 +21,10 @@ import dev.romainguy.kotlin.explorer.process
 import java.nio.file.Path
 
 class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
+    suspend fun compile(compilerFlags: String, source: Path) =
+        process(*buildCompileCommand(compilerFlags, source), directory = outputDirectory)
 
-    suspend fun compile(source: Path) = process(*buildCompileCommand(source), directory = outputDirectory)
-
-    private fun buildCompileCommand(file: Path): Array<String> {
+    private fun buildCompileCommand(compilerFlags: String, file: Path): Array<String> {
         val command = mutableListOf(
             toolPaths.kotlinc.toString(),
             "-Xmulti-platform",
@@ -35,7 +35,10 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
             (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() },
             file.toString(),
             file.parent.resolve("Keep.kt").toString()
-        )
+        ).apply {
+            // TODO: Do something smarter in case a flag looks like -foo="something with space"
+            addAll(compilerFlags.split(' '))
+        }
 
         return command.toTypedArray()
     }

@@ -526,6 +526,7 @@ private fun FrameWindowScope.MainMenu(
             buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                explorerState.compilerFlags,
                 explorerState.r8Rules,
                 explorerState.minApi,
                 instructionSets,
@@ -543,6 +544,7 @@ private fun FrameWindowScope.MainMenu(
         scope.launch {
             buildAndRun(
                 explorerState.toolPaths,
+                explorerState.compilerFlags,
                 sourceTextArea.text,
                 onLogsUpdate,
                 onStatusUpdate
