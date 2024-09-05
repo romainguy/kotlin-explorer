@@ -1,6 +1,6 @@
 [versions]
 collection = "1.4.3"
-compose = "1.6.11"
+compose = "1.7.0-beta01"
 jewel = "0.23.1"
 jna = "5.14.0"
 junit4 = "4.13.2"

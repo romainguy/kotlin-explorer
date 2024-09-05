@@ -44,4 +44,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" **/*.dmg -t "${{ github.ref_name }}" --generate-notes
+          gh release create "${{ github.ref_name }}" **/*.dmg -t "${{ github.ref_name }}" --draft --generate-notes

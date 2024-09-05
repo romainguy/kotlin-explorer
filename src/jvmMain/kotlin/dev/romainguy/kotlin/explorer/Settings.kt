@@ -20,6 +20,7 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
@@ -38,6 +39,7 @@ fun Settings(
 ) {
     val androidHome = rememberTextFieldState(state.androidHome)
     val kotlinHome = rememberTextFieldState(state.kotlinHome)
+    val compilerFlags = rememberTextFieldState(state.compilerFlags)
     val r8rules = rememberTextFieldState(state.r8Rules)
     val minApi = rememberTextFieldState(state.minApi.toString())
     val indent = rememberTextFieldState(state.indent.toString())
@@ -47,6 +49,7 @@ fun Settings(
         state.saveState(
             androidHome.text.toString(),
             kotlinHome.text.toString(),
+            compilerFlags.text.toString(),
             r8rules.text.toString(),
             minApi.text.toString(),
             indent.text.toString(),
@@ -62,6 +65,7 @@ fun Settings(
         StringSetting("Kotlin home directory: ", kotlinHome) { toolPaths.isKotlinHomeValid }
         IntSetting("Decompiled code indent: ", indent, minValue = 2)
         IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
+        StringSetting("Kotlin compiler flags: ", compilerFlags)
         MultiLineStringSetting("R8 rules: ", r8rules)
         IntSetting("Min API: ", minApi, minValue = 1)
         BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
@@ -89,6 +93,7 @@ private fun ColumnScope.Buttons(
 private fun ExplorerState.saveState(
     androidHome: String,
     kotlinHome: String,
+    compilerFlags: String,
     r8Rules: String,
     minApi: String,
     indent: String,
@@ -97,6 +102,7 @@ private fun ExplorerState.saveState(
 ) {
     this.androidHome = androidHome
     this.kotlinHome = kotlinHome
+    this.compilerFlags = compilerFlags
     this.r8Rules = r8Rules
     this.minApi = minApi.toIntOrNull() ?: 21
     this.indent = indent.toIntOrNull() ?: 4
@@ -106,8 +112,8 @@ private fun ExplorerState.saveState(
 }
 
 @Composable
-private fun StringSetting(title: String, state: TextFieldState, isValid: () -> Boolean) {
-    SettingRow(title, state, isValid,)
+private fun StringSetting(title: String, state: TextFieldState, isValid: () -> Boolean = { true }) {
+    SettingRow(title, state, isValid)
 }
 
 @Composable
@@ -122,10 +128,9 @@ private fun ColumnScope.MultiLineStringSetting(title: String, state: TextFieldSt
         TextArea(
             state,
             modifier = Modifier
-                .width(360.dp)
-                .defaultMinSize(minWidth = 360.dp, minHeight = 81.dp)
                 .weight(1.0f)
-                .fillMaxHeight()
+                .fillMaxHeight(),
+            lineLimits = TextFieldLineLimits.MultiLine(10, 10)
         )
     }
 }

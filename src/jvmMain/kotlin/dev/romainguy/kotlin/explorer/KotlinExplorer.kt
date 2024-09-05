@@ -265,7 +265,7 @@ private fun SettingsDialog(
 
     DialogWindow(
         onCloseRequest = onDismissRequest,
-        state = rememberDialogState(size = DpSize(592.dp, 385.dp)),
+        state = rememberDialogState(size = DpSize(640.dp, 480.dp)),
         visible = uiState.showSettings,
         title = "Settings",
         resizable = true,
@@ -304,7 +304,7 @@ private fun DocumentationPanel(markdownBlocks: List<MarkdownBlock>) {
                 .fillMaxSize()
                 .background(Color.White)
                 .border(1.dp, JewelTheme.globalColors.borders.normal)
-                .padding(8.dp)
+                .padding(8.dp, 2.dp, 4.dp, 2.dp)
             ) {
                 Box(Modifier
                     .fillMaxSize()
@@ -315,7 +315,7 @@ private fun DocumentationPanel(markdownBlocks: List<MarkdownBlock>) {
                         "",  // TODO: we should pass the raw Markdown
                         Modifier
                             .fillMaxSize()
-                            .padding(end = 12.dp)
+                            .padding(0.dp, 6.dp, 6.dp, 8.dp)
                             .focusable(false),
                         selectable = true,
                         onUrlClick = { url -> Desktop.getDesktop().browse(URI.create(url)) }
@@ -341,7 +341,7 @@ private fun LogsPanel(logs: AnnotatedString) {
             .fillMaxSize()
             .background(Color.White)
             .border(1.dp, JewelTheme.globalColors.borders.normal)
-            .padding(8.dp)
+            .padding(8.dp, 2.dp, 4.dp, 2.dp)
         ) {
             Box(Modifier
                 .fillMaxSize()
@@ -354,7 +354,7 @@ private fun LogsPanel(logs: AnnotatedString) {
                         fontSize = 12.sp,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(end = 12.dp)
+                            .padding(0.dp, 6.dp, 6.dp, 8.dp)
                             .focusable(false)
                     )
                 }
@@ -526,6 +526,7 @@ private fun FrameWindowScope.MainMenu(
             buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                explorerState.compilerFlags,
                 explorerState.r8Rules,
                 explorerState.minApi,
                 instructionSets,
@@ -543,6 +544,7 @@ private fun FrameWindowScope.MainMenu(
         scope.launch {
             buildAndRun(
                 explorerState.toolPaths,
+                explorerState.compilerFlags,
                 sourceTextArea.text,
                 onLogsUpdate,
                 onStatusUpdate
