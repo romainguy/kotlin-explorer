@@ -141,8 +141,10 @@ private fun readSettings(file: Path): MutableMap<String, String> {
                 do {
                     i++
                     if (i >= lines.size) break
-                    value += lines[i].dropLast(1) + '\n'
-                } while (lines[i].endsWith('\\'))
+                    value += lines[i].dropLast(1)
+                    val continuation = lines[i].endsWith('\\')
+                    if (continuation) value += '\n'
+                } while (continuation)
             }
             settings[line.substring(0, index)] = value
         }
