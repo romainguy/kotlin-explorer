@@ -20,6 +20,7 @@ package dev.romainguy.kotlin.explorer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
@@ -122,10 +123,9 @@ private fun ColumnScope.MultiLineStringSetting(title: String, state: TextFieldSt
         TextArea(
             state,
             modifier = Modifier
-                .width(360.dp)
-                .defaultMinSize(minWidth = 360.dp, minHeight = 81.dp)
                 .weight(1.0f)
-                .fillMaxHeight()
+                .fillMaxHeight(),
+            lineLimits = TextFieldLineLimits.MultiLine(10, 10)
         )
     }
 }

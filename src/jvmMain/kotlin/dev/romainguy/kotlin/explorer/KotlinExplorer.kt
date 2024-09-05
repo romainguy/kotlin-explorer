@@ -265,7 +265,7 @@ private fun SettingsDialog(
 
     DialogWindow(
         onCloseRequest = onDismissRequest,
-        state = rememberDialogState(size = DpSize(592.dp, 385.dp)),
+        state = rememberDialogState(size = DpSize(640.dp, 480.dp)),
         visible = uiState.showSettings,
         title = "Settings",
         resizable = true,
