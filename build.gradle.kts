@@ -70,6 +70,11 @@ kotlin {
     }
 }
 
+composeCompiler {
+    stabilityConfigurationFile = layout.projectDirectory.file("compose-stability.config")
+    reportsDestination = layout.buildDirectory.dir("compose-compiler")
+}
+
 compose.desktop {
     application {
         mainClass = "dev.romainguy.kotlin.explorer.KotlinExplorerKt"
