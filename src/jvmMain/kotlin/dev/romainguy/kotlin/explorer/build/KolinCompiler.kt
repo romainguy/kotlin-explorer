@@ -36,8 +36,10 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
             file.toString(),
             file.parent.resolve("Keep.kt").toString()
         ).apply {
-            // TODO: Do something smarter in case a flag looks like -foo="something with space"
-            addAll(compilerFlags.split(' '))
+            if (compilerFlags.isNotEmpty() || compilerFlags.isNotBlank()) {
+                // TODO: Do something smarter in case a flag looks like -foo="something with space"
+                addAll(compilerFlags.split(' '))
+            }
         }
 
         return command.toTypedArray()
