@@ -69,7 +69,7 @@ internal class DexDumpParser {
                 }
             }
         }
-        return Class("class $className", methods)
+        return Class("class $className", methods, false)
     }
 
     private fun Iterator<String>.readMethod(className: String): Method {

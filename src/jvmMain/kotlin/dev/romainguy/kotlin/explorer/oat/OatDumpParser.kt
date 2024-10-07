@@ -89,9 +89,7 @@ internal class OatDumpParser {
         jumpRegex: Regex,
         methodCallRegex: Regex
     ): Class? {
-        if (className.matches(BuiltInKotlinClass)) {
-            return null
-        }
+        val builtIn = className.matches(BuiltInKotlinClass)
         val methods = buildList {
             while (hasNext()) {
                 val line = peek()
@@ -103,28 +101,30 @@ internal class OatDumpParser {
 
                         val match = MethodRegex.matchEntire(line)
                         if (match != null) {
-                            add(readMethod(match, jumpRegex, methodCallRegex))
+                            add(readMethod(match, jumpRegex, methodCallRegex, builtIn))
                         }
                     }
                 }
             }
         }
-        return Class("class $className", methods)
+        return Class("class $className", methods, builtIn)
     }
 
     private fun PeekingIterator<String>.readMethod(
         match: MatchResult,
         jumpRegex: Regex,
-        methodCallRegex: Regex
+        methodCallRegex: Regex,
+        builtIn: Boolean = false
     ): Method {
         consumeUntil("DEX CODE:")
         val methodReferences = readMethodReferences()
 
         consumeUntil("CODE:")
-        val instructions = readNativeInstructions(jumpRegex, methodCallRegex)
+        val instructions = readNativeInstructions(jumpRegex, methodCallRegex, builtIn)
 
         val method = match.getValue("method")
         val index = match.getValue("methodIndex").toInt()
+
         return Method(method, InstructionSet(isa, instructions, methodReferences), index)
     }
 
@@ -157,7 +157,8 @@ internal class OatDumpParser {
 
     private fun PeekingIterator<String>.readNativeInstructions(
         jumpRegex: Regex,
-        methodCallRegex: Regex
+        methodCallRegex: Regex,
+        builtIn: Boolean
     ): List<Instruction> {
         return buildList {
             while (hasNext()) {
@@ -168,6 +169,7 @@ internal class OatDumpParser {
                     else -> {
                         val match = CodeRegex.matchEntire(next())
                         if (match != null) {
+                            if (builtIn) continue
                             add(
                                 readNativeInstruction(
                                     this@readNativeInstructions,
@@ -202,13 +204,16 @@ internal class OatDumpParser {
             // Skip the StackMap line
             iterator.next()
             // Check the InlineInfo if present
-            val methodIndex = DexInlineInfoRegex.matchEntire(iterator.peek())
-            if (methodIndex != null) {
-                callAddress = methodIndex.getValue("callAddress").toInt(16)
-                methodIndex.getValue("methodIndex").toInt()
-            } else {
-                -1
-            }
+            var index = -1
+            do {
+                val methodIndex = DexInlineInfoRegex.matchEntire(iterator.peek())
+                if (methodIndex != null) {
+                    callAddress = methodIndex.getValue("callAddress").toInt(16)
+                    index = methodIndex.getValue("methodIndex").toInt()
+                    iterator.next()
+                }
+            } while (methodIndex != null)
+            index
         } else {
             -1
         }

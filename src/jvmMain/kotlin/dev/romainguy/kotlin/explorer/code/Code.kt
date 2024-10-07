@@ -46,6 +46,7 @@ class Code(
             return buildCode(codeStyle) {
                 val indexedMethods = buildIndexedMethods(classes)
                 classes.forEachIndexed { classIndex, clazz ->
+                    if (clazz.builtIn) return@forEachIndexed
                     startClass(clazz)
                     val notLastClass = classIndex < classes.size - 1
                     clazz.methods.forEachIndexed { methodIndex, method ->

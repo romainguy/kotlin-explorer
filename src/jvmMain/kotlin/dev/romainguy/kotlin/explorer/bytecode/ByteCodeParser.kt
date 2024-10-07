@@ -99,7 +99,7 @@ private fun PeekingIterator<String>.readClass(classHeader: String): Class {
             throw IllegalStateException("Expected '}' but got '${peek()}'")
         }
     }
-    return Class(classHeader, methods)
+    return Class(classHeader, methods, false)
 }
 
 
