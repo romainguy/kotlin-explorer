@@ -20,25 +20,35 @@ import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
 import java.nio.file.Path
 
-class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
-    suspend fun compile(compilerFlags: String, source: Path) =
-        process(*buildCompileCommand(compilerFlags, source), directory = outputDirectory)
+private val BuiltInFiles = listOf(
+    "Keep.kt",
+    "NeverInline.kt"
+)
 
-    private fun buildCompileCommand(compilerFlags: String, file: Path): Array<String> {
+class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirectory: Path) {
+    suspend fun compile(kotlinOnlyConsumers: Boolean, compilerFlags: String, source: Path) =
+        process(*buildCompileCommand(kotlinOnlyConsumers, compilerFlags, source), directory = outputDirectory)
+
+    private fun buildCompileCommand(kotlinOnlyConsumers: Boolean, compilerFlags: String, file: Path): Array<String> {
         val command = mutableListOf(
             toolPaths.kotlinc.toString(),
             "-Xmulti-platform",
-            "-Xno-param-assertions",
-            "-Xno-call-assertions",
-            "-Xno-receiver-assertions",
             "-classpath",
-            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() },
-            file.toString(),
-            file.parent.resolve("Keep.kt").toString()
+            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() }
         ).apply {
+            if (kotlinOnlyConsumers) {
+                this += "-Xno-param-assertions"
+                this += "-Xno-call-assertions"
+                this += "-Xno-receiver-assertions"
+            }
             if (compilerFlags.isNotEmpty() || compilerFlags.isNotBlank()) {
                 // TODO: Do something smarter in case a flag looks like -foo="something with space"
                 addAll(compilerFlags.split(' '))
+            }
+            // Source code to compile
+            this += file.toString()
+            for (fileName in BuiltInFiles) {
+                this += file.parent.resolve(fileName).toString()
             }
         }
 

@@ -44,6 +44,7 @@ private val oatDumpParser = OatDumpParser()
 
 suspend fun buildAndRun(
     toolPaths: ToolPaths,
+    kotlinOnlyConsumers: Boolean,
     compilerFlags: String,
     source: String,
     onLogs: (AnnotatedString) -> Unit,
@@ -63,7 +64,7 @@ suspend fun buildAndRun(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(compilerFlags, path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(kotlinOnlyConsumers, compilerFlags, path)
 
             if (kotlinc.exitCode != 0) {
                 withContext(ui) {
@@ -96,6 +97,7 @@ suspend fun buildAndRun(
 suspend fun buildAndDisassemble(
     toolPaths: ToolPaths,
     source: String,
+    kotlinOnlyConsumers: Boolean,
     compilerFlags: String,
     r8rules: String,
     minApi: Int,
@@ -124,7 +126,7 @@ suspend fun buildAndDisassemble(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(compilerFlags, path)
+            val kotlinc = KotlinCompiler(toolPaths, directory).compile(kotlinOnlyConsumers, compilerFlags, path)
 
             if (kotlinc.exitCode != 0) {
                 updater.addJob(launch(ui) {
@@ -278,6 +280,19 @@ private fun cleanupClasses(directory: Path) {
 }
 
 private fun writeSupportFiles(directory: Path) {
+    Files.writeString(
+        directory.resolve("NeverInline.kt"),
+        """
+@file:OptIn(ExperimentalMultiplatform::class)
+
+package dalvik.annotation.optimization
+
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION)
+public annotation class NeverInline()
+        """.trimIndent()
+    )
+
     Files.writeString(
         directory.resolve("Keep.kt"),
         """

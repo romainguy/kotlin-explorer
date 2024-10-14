@@ -18,7 +18,9 @@
 
 package dev.romainguy.kotlin.explorer
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -39,6 +41,7 @@ fun Settings(
 ) {
     val androidHome = rememberTextFieldState(state.androidHome)
     val kotlinHome = rememberTextFieldState(state.kotlinHome)
+    val kotlinOnlyConsumers = remember { mutableStateOf(state.kotlinOnlyConsumers) }
     val compilerFlags = rememberTextFieldState(state.compilerFlags)
     val r8rules = rememberTextFieldState(state.r8Rules)
     val minApi = rememberTextFieldState(state.minApi.toString())
@@ -49,6 +52,7 @@ fun Settings(
         state.saveState(
             androidHome.text.toString(),
             kotlinHome.text.toString(),
+            kotlinOnlyConsumers.value,
             compilerFlags.text.toString(),
             r8rules.text.toString(),
             minApi.text.toString(),
@@ -68,6 +72,7 @@ fun Settings(
         StringSetting("Kotlin compiler flags: ", compilerFlags)
         MultiLineStringSetting("R8 rules: ", r8rules)
         IntSetting("Min API: ", minApi, minValue = 1)
+        BooleanSetting("Kotlin only consumers", kotlinOnlyConsumers)
         BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
         Spacer(modifier = Modifier.height(8.dp))
         Buttons(saveEnabled = toolPaths.isValid, onSaveClick, onDismissRequest)
@@ -93,6 +98,7 @@ private fun ColumnScope.Buttons(
 private fun ExplorerState.saveState(
     androidHome: String,
     kotlinHome: String,
+    kotlinOnlyConsumers: Boolean,
     compilerFlags: String,
     r8Rules: String,
     minApi: String,
@@ -102,6 +108,7 @@ private fun ExplorerState.saveState(
 ) {
     this.androidHome = androidHome
     this.kotlinHome = kotlinHome
+    this.kotlinOnlyConsumers = kotlinOnlyConsumers
     this.compilerFlags = compilerFlags
     this.r8Rules = r8Rules
     this.minApi = minApi.toIntOrNull() ?: 21
@@ -149,13 +156,19 @@ private fun IntSetting(title: String, state: TextFieldState, minValue: Int) {
     })
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BooleanSetting(@Suppress("SameParameterValue") title: String, state: MutableState<Boolean>) {
     Row {
         Checkbox(state.value, onCheckedChange = { state.value = it })
         Text(
             title,
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(start = 2.dp)
+                .onClick {
+                    state.value = !state.value
+                }
         )
     }
 }

@@ -83,154 +83,154 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 
 %{
-	/**
-	 * Constructor.  This must be here because JFlex does not generate a
-	 * no-parameter constructor.
-	 */
-	public KotlinTokenMaker() {
-	}
+    /**
+     * Constructor.  This must be here because JFlex does not generate a
+     * no-parameter constructor.
+     */
+    public KotlinTokenMaker() {
+    }
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 * @see #addToken(int, int, int)
-	 */
-	private void addHyperlinkToken(int start, int end, int tokenType) {
-		int so = start + offsetShift;
-		addToken(zzBuffer, start,end, tokenType, so, true);
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     * @see #addToken(int, int, int)
+     */
+    private void addHyperlinkToken(int start, int end, int tokenType) {
+        int so = start + offsetShift;
+        addToken(zzBuffer, start,end, tokenType, so, true);
+    }
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 */
-	private void addToken(int tokenType) {
-		addToken(zzStartRead, zzMarkedPos-1, tokenType);
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     */
+    private void addToken(int tokenType) {
+        addToken(zzStartRead, zzMarkedPos-1, tokenType);
+    }
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 * @see #addHyperlinkToken(int, int, int)
-	 */
-	private void addToken(int start, int end, int tokenType) {
-		int so = start + offsetShift;
-		addToken(zzBuffer, start,end, tokenType, so, false);
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     * @see #addHyperlinkToken(int, int, int)
+     */
+    private void addToken(int start, int end, int tokenType) {
+        int so = start + offsetShift;
+        addToken(zzBuffer, start,end, tokenType, so, false);
+    }
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param array The character array.
-	 * @param start The starting offset in the array.
-	 * @param end The ending offset in the array.
-	 * @param tokenType The token's type.
-	 * @param startOffset The offset in the document at which this token
-	 *                    occurs.
-	 * @param hyperlink Whether this token is a hyperlink.
-	 */
-	@Override
-	public void addToken(char[] array, int start, int end, int tokenType,
-						int startOffset, boolean hyperlink) {
-		super.addToken(array, start,end, tokenType, startOffset, hyperlink);
-		zzStartRead = zzMarkedPos;
-	}
-
-	@Override
-	public String[] getLineCommentStartAndEnd(int languageIndex) {
-		return new String[] { "//", null };
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param array The character array.
+     * @param start The starting offset in the array.
+     * @param end The ending offset in the array.
+     * @param tokenType The token's type.
+     * @param startOffset The offset in the document at which this token
+     *                    occurs.
+     * @param hyperlink Whether this token is a hyperlink.
+     */
+    @Override
+    public void addToken(char[] array, int start, int end, int tokenType,
+                        int startOffset, boolean hyperlink) {
+        super.addToken(array, start,end, tokenType, startOffset, hyperlink);
+        zzStartRead = zzMarkedPos;
+    }
 
     @Override
-	public boolean getMarkOccurrencesOfTokenType(int type) {
-		return type == Token.IDENTIFIER;
-	}
+    public String[] getLineCommentStartAndEnd(int languageIndex) {
+        return new String[] { "//", null };
+    }
 
-	/**
-	 * Returns the first token in the linked list of tokens generated
-	 * from <code>text</code>.  This method must be implemented by
-	 * subclasses so they can correctly implement syntax highlighting.
-	 *
-	 * @param text The text from which to get tokens.
-	 * @param initialTokenType The token type we should start with.
-	 * @param startOffset The offset into the document at which
-	 *        <code>text</code> starts.
-	 * @return The first <code>Token</code> in a linked list representing
-	 *         the syntax highlighted text.
-	 */
-	public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
+    @Override
+    public boolean getMarkOccurrencesOfTokenType(int type) {
+        return type == Token.IDENTIFIER;
+    }
 
-		resetTokenList();
-		this.offsetShift = -text.offset + startOffset;
+    /**
+     * Returns the first token in the linked list of tokens generated
+     * from <code>text</code>.  This method must be implemented by
+     * subclasses so they can correctly implement syntax highlighting.
+     *
+     * @param text The text from which to get tokens.
+     * @param initialTokenType The token type we should start with.
+     * @param startOffset The offset into the document at which
+     *        <code>text</code> starts.
+     * @return The first <code>Token</code> in a linked list representing
+     *         the syntax highlighted text.
+     */
+    public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
-		// Start off in the proper state.
-		int state = Token.NULL;
-		switch (initialTokenType) {
-			case Token.COMMENT_MULTILINE:
-				state = MLC;
-				start = text.offset;
-				break;
-			case Token.COMMENT_DOCUMENTATION:
-				state = DOCCOMMENT;
-				start = text.offset;
-				break;
-			default:
-				state = Token.NULL;
-		}
+        resetTokenList();
+        this.offsetShift = -text.offset + startOffset;
 
-		s = text;
-		try {
-			yyreset(zzReader);
-			yybegin(state);
-			return yylex();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			return new TokenImpl();
-		}
+        // Start off in the proper state.
+        int state = Token.NULL;
+        switch (initialTokenType) {
+            case Token.COMMENT_MULTILINE:
+                state = MLC;
+                start = text.offset;
+                break;
+            case Token.COMMENT_DOCUMENTATION:
+                state = DOCCOMMENT;
+                start = text.offset;
+                break;
+            default:
+                state = Token.NULL;
+        }
 
-	}
+        s = text;
+        try {
+            yyreset(zzReader);
+            yybegin(state);
+            return yylex();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            return new TokenImpl();
+        }
 
-	/**
-	 * Refills the input buffer.
-	 *
-	 * @return      <code>true</code> if EOF was reached, otherwise
-	 *              <code>false</code>.
-	 */
-	private boolean zzRefill() {
-		return zzCurrentPos>=s.offset+s.count;
-	}
+    }
 
-	/**
-	 * Resets the scanner to read from a new input stream.
-	 * Does not close the old reader.
-	 *
-	 * All internal variables are reset, the old input stream
-	 * <b>cannot</b> be reused (internal buffer is discarded and lost).
-	 * Lexical state is set to <tt>YY_INITIAL</tt>.
-	 *
-	 * @param reader   the new input stream
-	 */
-	public final void yyreset(Reader reader) {
-		// 's' has been updated.
-		zzBuffer = s.array;
-		/*
-		 * We replaced the line below with the two below it because zzRefill
-		 * no longer "refills" the buffer (since the way we do it, it's always
-		 * "full" the first time through, since it points to the segment's
-		 * array).  So, we assign zzEndRead here.
-		 */
-		//zzStartRead = zzEndRead = s.offset;
-		zzStartRead = s.offset;
-		zzEndRead = zzStartRead + s.count - 1;
-		zzCurrentPos = zzMarkedPos = zzPushbackPos = s.offset;
-		zzLexicalState = YYINITIAL;
-		zzReader = reader;
-		zzAtBOL  = true;
-		zzAtEOF  = false;
-	}
+    /**
+     * Refills the input buffer.
+     *
+     * @return      <code>true</code> if EOF was reached, otherwise
+     *              <code>false</code>.
+     */
+    private boolean zzRefill() {
+        return zzCurrentPos>=s.offset+s.count;
+    }
+
+    /**
+     * Resets the scanner to read from a new input stream.
+     * Does not close the old reader.
+     *
+     * All internal variables are reset, the old input stream
+     * <b>cannot</b> be reused (internal buffer is discarded and lost).
+     * Lexical state is set to <tt>YY_INITIAL</tt>.
+     *
+     * @param reader   the new input stream
+     */
+    public final void yyreset(Reader reader) {
+        // 's' has been updated.
+        zzBuffer = s.array;
+        /*
+         * We replaced the line below with the two below it because zzRefill
+         * no longer "refills" the buffer (since the way we do it, it's always
+         * "full" the first time through, since it points to the segment's
+         * array).  So, we assign zzEndRead here.
+         */
+        //zzStartRead = zzEndRead = s.offset;
+        zzStartRead = s.offset;
+        zzEndRead = zzStartRead + s.count - 1;
+        zzCurrentPos = zzMarkedPos = zzPushbackPos = s.offset;
+        zzLexicalState = YYINITIAL;
+        zzReader = reader;
+        zzAtBOL  = true;
+        zzAtEOF  = false;
+    }
 %}
 
 Letter							= ([A-Za-z])
@@ -249,9 +249,9 @@ IdentifierStart                     = ([:jletter:])
 IdentifierPart						= ([:jletterdigit:]|("\\"{EscapedSourceCharacter}))
 
 LineTerminator				= (\n)
-WhiteSpace				= ([ \t\f])
+WhiteSpace				    = ([ \t\f])
 
-CharLiteral				= ([\']({AnyCharacterButApostropheOrBackSlash}|{Escape})[\'])
+CharLiteral				    = ([\']({AnyCharacterButApostropheOrBackSlash}|{Escape})[\'])
 UnclosedCharLiteral			= ([\'][^\'\n]*)
 ErrorCharLiteral			= ({UnclosedCharLiteral}[\'])
 StringLiteral				= ([\"]({AnyCharacterButDoubleQuoteOrBackSlash}|{Escape})*[\"])
@@ -259,8 +259,8 @@ UnclosedStringLiteral		= ([\"]([\\].|[^\\\"])*[^\"]?)
 ErrorStringLiteral			= ({UnclosedStringLiteral}[\"])
 
 MLCBegin					= "/*"
-MLCEnd					= "*/"
-DocCommentBegin			= "/**"
+MLCEnd				     	= "*/"
+DocCommentBegin		    	= "/**"
 LineCommentBegin			= "//"
 
 DigitOrUnderscore			= ({Digit}|[_])
@@ -290,7 +290,7 @@ ErrorNumberFormat			= (({IntegerLiteral}|{HexLiteral}|{FloatLiteral}){NonSeparat
 BooleanLiteral				= ("true"|"false")
 
 Separator					= ([\(\)\{\}\[\]])
-Separator2				= ([\;,.])
+Separator2                  = ([\;,.]|"..")
 
 NonAssignmentOperator		= ("+"|"-"|"<="|"^"|"++"|"<"|"*"|">="|"%"|"--"|">"|"/"|"!="|"?"|">>"|"!"|"&"|"=="|":"|">>"|"~"|"|"|"&&"|">>>")
 AssignmentOperator			= ("="|"-="|"*="|"/="|"|="|"&="|"^="|"+="|"%="|"<<="|">>="|">>>=")
@@ -302,7 +302,7 @@ InlineTag					= ("code"|"docRoot"|"inheritDoc"|"link"|"linkplain"|"literal"|"val
 Identifier				= ({IdentifierStart}{IdentifierPart}*)
 ErrorIdentifier			= ({NonSeparator}+)
 
-Annotation				= ("@"{Identifier}?)
+Annotation				= ("@"{Identifier}([.]{Identifier}+)*)
 
 URLGenDelim				= ([:\/\?#\[\]@])
 URLSubDelim				= ([\!\$&'\(\)\*\+,;=])
@@ -321,34 +321,34 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 
 <YYINITIAL> {
 
-	/* Hard keywords (sans "return", "true" and "false") */
-	"as" |
-	"as?" |
-	"break" |
-	"class" |
-	"continue" |
-	"do" |
-	"else" |
-	"for" |
-	"fun" |
-	"if" |
-	"in" |
-	"!in" |
-	"interface" |
-	"is" |
-	"!is" |
-	"null" |
-	"object" |
-	"super" |
-	"this" |
-	"throw" |
-	"try" |
-	"typealias" |
-	"typeof" |
-	"val" |
-	"var" |
-	"when" |
-	"while"					{ addToken(Token.RESERVED_WORD); }
+    /* Hard keywords (sans "return", "true" and "false") */
+    "as" |
+    "as?" |
+    "break" |
+    "class" |
+    "continue" |
+    "do" |
+    "else" |
+    "for" |
+    "fun" |
+    "if" |
+    "in" |
+    "!in" |
+    "interface" |
+    "is" |
+    "!is" |
+    "null" |
+    "object" |
+    "super" |
+    "this" |
+    "throw" |
+    "try" |
+    "typealias" |
+    "typeof" |
+    "val" |
+    "var" |
+    "when" |
+    "while"					{ addToken(Token.RESERVED_WORD); }
 
     /* Soft keywords */
     "by" |
@@ -398,134 +398,134 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
     "sealed" |
     "suspend" |
     "tailrec" |
-	"value" |
+    "value" |
     "vararg"                 { addToken(Token.RESERVED_WORD); }
 
-	"return"				{ addToken(Token.RESERVED_WORD_2); }
+    "return"				{ addToken(Token.RESERVED_WORD_2); }
 
-	/* Data types. */
-	"Any" |
-	"Boolean" |
-	"Byte" |
-	"Unit" |
-	"String" |
-	"Int" |
-	"Short" |
-	"Long" |
-	"Double" |
-	"Float" |
-	"Char" |
-	"Array"                    { addToken(Token.DATA_TYPE); }
+    /* Data types. */
+    "Any" |
+    "Boolean" |
+    "Byte" |
+    "Unit" |
+    "String" |
+    "Int" |
+    "Short" |
+    "Long" |
+    "Double" |
+    "Float" |
+    "Char" |
+    "Array"                    { addToken(Token.DATA_TYPE); }
 
-	/* Booleans. */
-	{BooleanLiteral}			{ addToken(Token.LITERAL_BOOLEAN); }
+    /* Booleans. */
+    {BooleanLiteral}			{ addToken(Token.LITERAL_BOOLEAN); }
 
-	/* java.lang interfaces */
-	"Appendable" |
-	"AutoCloseable" |
-	"CharSequence" |
-	"Cloneable" |
-	"Comparable" |
-	"Iterable" |
-	"ProcessHandle" |
-	"ProcessHandle.Info" |
-	"Readable" |
-	"Runnable" |
-	"StackWalker.StackFrame" |
-	"System.Logger" |
-	"Thread.UncaughtExceptionHandler" |
+    /* java.lang interfaces */
+    "Appendable" |
+    "AutoCloseable" |
+    "CharSequence" |
+    "Cloneable" |
+    "Comparable" |
+    "Iterable" |
+    "ProcessHandle" |
+    "ProcessHandle.Info" |
+    "Readable" |
+    "Runnable" |
+    "StackWalker.StackFrame" |
+    "System.Logger" |
+    "Thread.UncaughtExceptionHandler" |
 
-	/* java.lang classes */
-	"Character" |
-	"Character.Subset" |
-	"Character.UnicodeBlock" |
-	"Class" |
-	"ClassLoader" |
-	"ClassValue" |
-	"Compiler" |
-	"Enum" |
-	"Enum.EnumDesc" |
-	"Float" |
-	"InheritableThreadLocal" |
-	"Integer" |
-	"Math" |
-	"Module" |
-	"ModuleLayer" |
-	"ModuleLayer.Controller" |
-	"Number" |
-	"Object" |
-	"Package" |
-	"Process" |
-	"ProcessBuilder" |
-	"ProcessBuilder.Redirect" |
-	"Record" |
-	"Runtime" |
-	"RuntimePermission" |
-	"Runtime.Version" |
-	"SecurityManager" |
-	"StackTraceElement" |
-	"StackWalker" |
-	"StrictMath" |
-	"StringBuffer" |
-	"StringBuilder" |
-	"System" |
-	"Thread" |
-	"ThreadGroup" |
-	"ThreadLocal" |
-	"Throwable" |
-	"Void" |
-	"Character.UnicodeScript" |
-	"ProcessBuilder.Redirect.Type" |
-	"Thread.State" |
-	"ArithmeticException" |
-	"ArrayIndexOutOfBoundsException" |
-	"ArrayStoreException" |
-	"ClassCastException" |
-	"ClassNotFoundException" |
-	"CloneNotSupportedException" |
-	"EnumConstantNotPresentException" |
-	"Exception" |
-	"IllegalAccessException" |
-	"IllegalArgumentException" |
-	"IllegalMonitorStateException" |
-	"IllegalStateException" |
-	"IllegalThreadStateException" |
-	"IndexOutOfBoundsException" |
-	"InstantiationException" |
-	"InterruptedException" |
-	"NegativeArraySizeException" |
-	"NoSuchFieldException" |
-	"NoSuchMethodException" |
-	"NullPointerException" |
-	"NumberFormatException" |
-	"RuntimeException" |
-	"SecurityException" |
-	"StringIndexOutOfBoundsException" |
-	"TypeNotPresentException" |
-	"UnsupportedOperationException" |
-	"AbstractMethodError" |
-	"AssertionError" |
-	"BootstrapMethodError" |
-	"ClassCircularityError" |
-	"ClassFormatError" |
-	"Error" |
-	"ExceptionInInitializerError" |
-	"IllegalAccessError" |
-	"IncompatibleClassChangeError" |
-	"InstantiationError" |
-	"InternalError" |
-	"LinkageError" |
-	"NoClassDefFoundError" |
-	"NoSuchFieldError" |
-	"NoSuchMethodError" |
-	"OutOfMemoryError" |
-	"StackOverflowError" |
-	"ThreadDeath" |
-	"UnknownError" |
-	"UnsatisfiedLinkError" |
-	"UnsupportedClassVersionError" |
-	"VerifyError" |
-	"VirtualMachineError" |
+    /* java.lang classes */
+    "Character" |
+    "Character.Subset" |
+    "Character.UnicodeBlock" |
+    "Class" |
+    "ClassLoader" |
+    "ClassValue" |
+    "Compiler" |
+    "Enum" |
+    "Enum.EnumDesc" |
+    "Float" |
+    "InheritableThreadLocal" |
+    "Integer" |
+    "Math" |
+    "Module" |
+    "ModuleLayer" |
+    "ModuleLayer.Controller" |
+    "Number" |
+    "Object" |
+    "Package" |
+    "Process" |
+    "ProcessBuilder" |
+    "ProcessBuilder.Redirect" |
+    "Record" |
+    "Runtime" |
+    "RuntimePermission" |
+    "Runtime.Version" |
+    "SecurityManager" |
+    "StackTraceElement" |
+    "StackWalker" |
+    "StrictMath" |
+    "StringBuffer" |
+    "StringBuilder" |
+    "System" |
+    "Thread" |
+    "ThreadGroup" |
+    "ThreadLocal" |
+    "Throwable" |
+    "Void" |
+    "Character.UnicodeScript" |
+    "ProcessBuilder.Redirect.Type" |
+    "Thread.State" |
+    "ArithmeticException" |
+    "ArrayIndexOutOfBoundsException" |
+    "ArrayStoreException" |
+    "ClassCastException" |
+    "ClassNotFoundException" |
+    "CloneNotSupportedException" |
+    "EnumConstantNotPresentException" |
+    "Exception" |
+    "IllegalAccessException" |
+    "IllegalArgumentException" |
+    "IllegalMonitorStateException" |
+    "IllegalStateException" |
+    "IllegalThreadStateException" |
+    "IndexOutOfBoundsException" |
+    "InstantiationException" |
+    "InterruptedException" |
+    "NegativeArraySizeException" |
+    "NoSuchFieldException" |
+    "NoSuchMethodException" |
+    "NullPointerException" |
+    "NumberFormatException" |
+    "RuntimeException" |
+    "SecurityException" |
+    "StringIndexOutOfBoundsException" |
+    "TypeNotPresentException" |
+    "UnsupportedOperationException" |
+    "AbstractMethodError" |
+    "AssertionError" |
+    "BootstrapMethodError" |
+    "ClassCircularityError" |
+    "ClassFormatError" |
+    "Error" |
+    "ExceptionInInitializerError" |
+    "IllegalAccessError" |
+    "IncompatibleClassChangeError" |
+    "InstantiationError" |
+    "InternalError" |
+    "LinkageError" |
+    "NoClassDefFoundError" |
+    "NoSuchFieldError" |
+    "NoSuchMethodError" |
+    "OutOfMemoryError" |
+    "StackOverflowError" |
+    "ThreadDeath" |
+    "UnknownError" |
+    "UnsatisfiedLinkError" |
+    "UnsupportedClassVersionError" |
+    "VerifyError" |
+    "VirtualMachineError" |
 
     /* java.lang annotation interfaces */
     "Deprecated" |
@@ -534,7 +534,7 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
     "SafeVarargs" |
     "SuppressWarnings" |
 
-	/* java.io classes*/
+    /* java.io classes*/
     "Closeable" |
     "DataInput" |
     "DataOutput" |
@@ -625,7 +625,7 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
     /* java.io annotation interfaces */
     "Serial" |
 
-	/* java.util classes */
+    /* java.util classes */
     "Collection" |
     "Comparator" |
     "Deque" |
@@ -759,72 +759,72 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 
     "ServiceConfigurationError" 		{ addToken(Token.FUNCTION); }
 
-	{LineTerminator}				{ addNullToken(); return firstToken; }
+    {LineTerminator}				{ addNullToken(); return firstToken; }
 
-	{Identifier}					{ addToken(Token.IDENTIFIER); }
+    {Identifier}					{ addToken(Token.IDENTIFIER); }
 
-	{WhiteSpace}+					{ addToken(Token.WHITESPACE); }
+    {WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
-	/* String/Character literals. */
-	{CharLiteral}					{ addToken(Token.LITERAL_CHAR); }
-	{UnclosedCharLiteral}			{ addToken(Token.ERROR_CHAR); addNullToken(); return firstToken; }
-	{ErrorCharLiteral}				{ addToken(Token.ERROR_CHAR); }
-	{StringLiteral}				{ addToken(Token.LITERAL_STRING_DOUBLE_QUOTE); }
-	{UnclosedStringLiteral}			{ addToken(Token.ERROR_STRING_DOUBLE); addNullToken(); return firstToken; }
-	{ErrorStringLiteral}			{ addToken(Token.ERROR_STRING_DOUBLE); }
+    /* String/Character literals. */
+    {CharLiteral}					{ addToken(Token.LITERAL_CHAR); }
+    {UnclosedCharLiteral}			{ addToken(Token.ERROR_CHAR); addNullToken(); return firstToken; }
+    {ErrorCharLiteral}				{ addToken(Token.ERROR_CHAR); }
+    {StringLiteral}				{ addToken(Token.LITERAL_STRING_DOUBLE_QUOTE); }
+    {UnclosedStringLiteral}			{ addToken(Token.ERROR_STRING_DOUBLE); addNullToken(); return firstToken; }
+    {ErrorStringLiteral}			{ addToken(Token.ERROR_STRING_DOUBLE); }
 
-	/* Comment literals. */
-	"/**/"						{ addToken(Token.COMMENT_MULTILINE); }
-	{MLCBegin}					{ start = zzMarkedPos-2; yybegin(MLC); }
-	{DocCommentBegin}				{ start = zzMarkedPos-3; yybegin(DOCCOMMENT); }
-	{LineCommentBegin}			{ start = zzMarkedPos-2; yybegin(EOL_COMMENT); }
+    /* Comment literals. */
+    "/**/"						{ addToken(Token.COMMENT_MULTILINE); }
+    {MLCBegin}					{ start = zzMarkedPos-2; yybegin(MLC); }
+    {DocCommentBegin}				{ start = zzMarkedPos-3; yybegin(DOCCOMMENT); }
+    {LineCommentBegin}			{ start = zzMarkedPos-2; yybegin(EOL_COMMENT); }
 
-	/* Annotations. */
-	{Annotation}					{ addToken(Token.ANNOTATION); }
+    /* Annotations. */
+    {Annotation}					{ addToken(Token.ANNOTATION); }
 
-	/* Separators. */
-	{Separator}					{ addToken(Token.SEPARATOR); }
-	{Separator2}					{ addToken(Token.IDENTIFIER); }
+    /* Separators. */
+    {Separator}					{ addToken(Token.SEPARATOR); }
+    {Separator2}					{ addToken(Token.IDENTIFIER); }
 
-	/* Operators. */
-	{Operator}					{ addToken(Token.OPERATOR); }
+    /* Operators. */
+    {Operator}					{ addToken(Token.OPERATOR); }
 
-	/* Numbers */
-	{IntegerLiteral}				{ addToken(Token.LITERAL_NUMBER_DECIMAL_INT); }
-	{BinaryLiteral}					{ addToken(Token.LITERAL_NUMBER_DECIMAL_INT); }
-	{HexLiteral}					{ addToken(Token.LITERAL_NUMBER_HEXADECIMAL); }
-	{FloatLiteral}					{ addToken(Token.LITERAL_NUMBER_FLOAT); }
-	{ErrorNumberFormat}				{ addToken(Token.ERROR_NUMBER_FORMAT); }
+    /* Numbers */
+    {IntegerLiteral}				{ addToken(Token.LITERAL_NUMBER_DECIMAL_INT); }
+    {BinaryLiteral}					{ addToken(Token.LITERAL_NUMBER_DECIMAL_INT); }
+    {HexLiteral}					{ addToken(Token.LITERAL_NUMBER_HEXADECIMAL); }
+    {FloatLiteral}					{ addToken(Token.LITERAL_NUMBER_FLOAT); }
+    {ErrorNumberFormat}				{ addToken(Token.ERROR_NUMBER_FORMAT); }
 
-	{ErrorIdentifier}				{ addToken(Token.ERROR_IDENTIFIER); }
+    {ErrorIdentifier}				{ addToken(Token.ERROR_IDENTIFIER); }
 
-	/* Ended with a line not in a string or comment. */
-	<<EOF>>						{ addNullToken(); return firstToken; }
+    /* Ended with a line not in a string or comment. */
+    <<EOF>>						{ addNullToken(); return firstToken; }
 
-	/* Catch any other (unhandled) characters and flag them as identifiers. */
-	.							{ addToken(Token.ERROR_IDENTIFIER); }
+    /* Catch any other (unhandled) characters and flag them as identifiers. */
+    .							{ addToken(Token.ERROR_IDENTIFIER); }
 
 }
 
 
 <MLC> {
 
-	[^hwf\n\*]+				{}
-	{URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_MULTILINE); start = zzMarkedPos; }
-	[hwf]					{}
+    [^hwf\n\*]+				{}
+    {URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_MULTILINE); start = zzMarkedPos; }
+    [hwf]					{}
 
-	\n						{ addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); return firstToken; }
-	{MLCEnd}					{ yybegin(YYINITIAL); addToken(start,zzStartRead+1, Token.COMMENT_MULTILINE); }
-	\*						{}
-	<<EOF>>					{ addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); return firstToken; }
+    \n						{ addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); return firstToken; }
+    {MLCEnd}					{ yybegin(YYINITIAL); addToken(start,zzStartRead+1, Token.COMMENT_MULTILINE); }
+    \*						{}
+    <<EOF>>					{ addToken(start,zzStartRead-1, Token.COMMENT_MULTILINE); return firstToken; }
 
 }
 
 
 <DOCCOMMENT> {
 
-	[^hwf\@\{\n\<\*]+			{}
-	{URL}						{
+    [^hwf\@\{\n\<\*]+			{}
+    {URL}						{
                                     int temp = zzStartRead;
                                     if (start <= zzStartRead - 1) {
                                         addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
@@ -832,9 +832,9 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
                                     addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_DOCUMENTATION);
                                     start = zzMarkedPos;
                                 }
-	[hwf]						{}
+    [hwf]						{}
 
-	"@"{BlockTag}				{
+    "@"{BlockTag}				{
                                     int temp = zzStartRead;
                                     if (start <= zzStartRead - 1) {
                                         addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
@@ -842,8 +842,8 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
                                     addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD);
                                     start = zzMarkedPos;
                                 }
-	"@"							{}
-	"{@"{InlineTag}[^\}]*"}"	{
+    "@"							{}
+    "{@"{InlineTag}[^\}]*"}"	{
                                     int temp = zzStartRead;
                                     if (start <= zzStartRead - 1) {
                                         addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
@@ -851,22 +851,22 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
                                     addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD);
                                     start = zzMarkedPos;
                                 }
-	"{"							{}
-	\n							{ addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); return firstToken; }
-	"<"[/]?({Letter}[^\>]*)?">"	{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addToken(temp,zzMarkedPos-1, Token.COMMENT_MARKUP); start = zzMarkedPos; }
-	\<							{}
-	{MLCEnd}					{ yybegin(YYINITIAL); addToken(start,zzStartRead+1, Token.COMMENT_DOCUMENTATION); }
-	\*							{}
-	<<EOF>>						{ yybegin(YYINITIAL); addToken(start,zzEndRead, Token.COMMENT_DOCUMENTATION); return firstToken; }
+    "{"							{}
+    \n							{ addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); return firstToken; }
+    "<"[/]?({Letter}[^\>]*)?">"	{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addToken(temp,zzMarkedPos-1, Token.COMMENT_MARKUP); start = zzMarkedPos; }
+    \<							{}
+    {MLCEnd}					{ yybegin(YYINITIAL); addToken(start,zzStartRead+1, Token.COMMENT_DOCUMENTATION); }
+    \*							{}
+    <<EOF>>						{ yybegin(YYINITIAL); addToken(start,zzEndRead, Token.COMMENT_DOCUMENTATION); return firstToken; }
 
 }
 
 
 <EOL_COMMENT> {
-	[^hwf\n]+				{}
-	{URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_EOL); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_EOL); start = zzMarkedPos; }
-	[hwf]					{}
-	\n						{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
-	<<EOF>>					{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
+    [^hwf\n]+				{}
+    {URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_EOL); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_EOL); start = zzMarkedPos; }
+    [hwf]					{}
+    \n						{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
+    <<EOF>>					{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
 
 }

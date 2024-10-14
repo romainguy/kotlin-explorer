@@ -526,6 +526,7 @@ private fun FrameWindowScope.MainMenu(
             buildAndDisassemble(
                 explorerState.toolPaths,
                 sourceTextArea.text,
+                explorerState.kotlinOnlyConsumers,
                 explorerState.compilerFlags,
                 explorerState.r8Rules,
                 explorerState.minApi,
@@ -544,6 +545,7 @@ private fun FrameWindowScope.MainMenu(
         scope.launch {
             buildAndRun(
                 explorerState.toolPaths,
+                explorerState.kotlinOnlyConsumers,
                 explorerState.compilerFlags,
                 sourceTextArea.text,
                 onLogsUpdate,
