@@ -34,7 +34,7 @@ interface Builder {
         fun getInstance(outputDirectory: Path) =
             try {
                 LocalBuilder(outputDirectory)
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 System.err.println("Failed to create local builder. Using Github builder")
                 GithubBuilder()
             }
@@ -82,7 +82,7 @@ class LocalBuilder(private val outputDirectory: Path) : Builder {
     }
 
     private suspend fun kotlinCompile(path: Path) {
-        val result = kotlinCompiler.compile(kotlinOnlyConsumers, "", path)
+        val result = kotlinCompiler.compile(true, "", path)
         if (result.exitCode != 0) {
             System.err.println(result.output)
             fail("kotlinc error")
