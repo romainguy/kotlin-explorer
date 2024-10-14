@@ -92,7 +92,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append(indent)
         val codeSize = method.codeSize
         val instructionCount = method.instructionSet.instructions.size
-        writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""} ${if (codeSize >= 0) "($codeSize bytes)" else ""}")
+        writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""}${if (codeSize >= 0) " ($codeSize bytes)" else ""}")
 
         val (pre, post) = countBranches(method.instructionSet)
         val branches = pre + post
