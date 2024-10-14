@@ -23,6 +23,8 @@ import dev.romainguy.kotlin.explorer.code.*
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 
+private val CodeStartRegex = Regex("^\\s+CODE: \\(code_offset=0x[a-fA-F0-9]+ size=(?<codeSize>\\d+)\\)[.]{3}")
+
 private val ClassNameRegex = Regex("^\\d+: L(?<class>[^;]+); \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
 private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=(?<methodIndex>\\d+)\\)")
 private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(?<code>.+)")
@@ -119,13 +121,15 @@ internal class OatDumpParser {
         consumeUntil("DEX CODE:")
         val methodReferences = readMethodReferences()
 
-        consumeUntil("CODE:")
+        val codeStart = consumeUntil(CodeStartRegex)
+        val codeSize = codeStart?.getValue("codeSize")?.toInt() ?: -1
+
         val instructions = readNativeInstructions(jumpRegex, methodCallRegex, builtIn)
 
         val method = match.getValue("method")
         val index = match.getValue("methodIndex").toInt()
 
-        return Method(method, InstructionSet(isa, instructions, methodReferences), index)
+        return Method(method, InstructionSet(isa, instructions, methodReferences), index, codeSize)
     }
 
     private fun PeekingIterator<String>.readMethodReferences(): IntObjectMap<MethodReference> {

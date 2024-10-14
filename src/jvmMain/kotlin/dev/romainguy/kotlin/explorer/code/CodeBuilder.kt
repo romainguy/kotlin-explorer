@@ -20,6 +20,8 @@ import androidx.collection.IntIntPair
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
 import androidx.collection.mutableIntObjectMapOf
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastSumBy
 import kotlin.math.max
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
@@ -85,14 +87,17 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
         sb.append(" ".repeat(codeStyle.indent))
         writeLine(method.header)
 
-        sb.append("  ".repeat(codeStyle.indent))
+        val indent = "  ".repeat(codeStyle.indent)
+
+        sb.append(indent)
+        val codeSize = method.codeSize
         val instructionCount = method.instructionSet.instructions.size
-        writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""}")
+        writeLine("-- $instructionCount instruction${if (instructionCount > 1) "s" else ""} ${if (codeSize >= 0) "($codeSize bytes)" else ""}")
 
         val (pre, post) = countBranches(method.instructionSet)
         val branches = pre + post
         if (branches > 0) {
-            sb.append("  ".repeat(codeStyle.indent))
+            sb.append(indent)
             writeLine("-- $branches branch${if (branches > 1) "es" else ""} ($pre + $post)")
         }
     }

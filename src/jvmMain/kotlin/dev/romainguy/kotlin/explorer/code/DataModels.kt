@@ -81,7 +81,7 @@ enum class ISA(val branchInstructions: ScatterSet<String>, val returnInstruction
 
 data class Class(val header: String, val methods: List<Method>, val builtIn: Boolean)
 
-data class Method(val header: String, val instructionSet: InstructionSet, val index: Int = -1)
+data class Method(val header: String, val instructionSet: InstructionSet, val index: Int = -1, val codeSize: Int = -1)
 
 data class InstructionSet(
     val isa: ISA,
