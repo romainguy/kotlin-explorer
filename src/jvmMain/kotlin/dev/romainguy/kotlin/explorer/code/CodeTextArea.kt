@@ -56,10 +56,12 @@ class CodeTextArea(
         if (sourceTextArea != null) {
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(event: MouseEvent) {
-                    val codeLine = getLineOfOffset(viewToModel2D(event.point))
-                    val line = code?.getSourceLine(codeLine) ?: return
-                    if (line == -1) return
-                    sourceTextArea.gotoLine(this@CodeTextArea, line - 1)
+                    if (isSyncLinesEnabled) {
+                        val codeLine = getLineOfOffset(viewToModel2D(event.point))
+                        val line = code?.getSourceLine(codeLine) ?: return
+                        if (line == -1) return
+                        sourceTextArea.gotoLine(this@CodeTextArea, line - 1)
+                    }
                 }
             })
         }

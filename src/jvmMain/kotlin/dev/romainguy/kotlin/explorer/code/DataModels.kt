@@ -103,5 +103,8 @@ data class Instruction(
 data class MethodReference(val address: Int, val name: String)
 
 fun List<Instruction>.withLineNumbers(lineNumbers: IntIntMap): List<Instruction> {
-    return map { it.copy(lineNumber = lineNumbers.getOrDefault(it.address, -1)) }
+    return map {
+        val line = lineNumbers.getOrDefault(it.address, -1)
+        if (line != -1) it.copy(lineNumber = line) else it
+    }
 }

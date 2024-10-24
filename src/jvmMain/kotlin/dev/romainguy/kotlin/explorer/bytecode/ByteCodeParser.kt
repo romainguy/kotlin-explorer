@@ -82,7 +82,6 @@ class ByteCodeParser {
             Error(e)
         }
     }
-
 }
 
 private fun PeekingIterator<String>.readClass(classHeader: String): Class {
@@ -107,9 +106,9 @@ private fun PeekingIterator<String>.readMethod(): Method {
     val match = MethodRegex.matchEntire(next())
         ?: throw IllegalStateException("Expected method but got '${peek()}'")
     val header = match.getValue("header")
-    if (next().trim() != "Code:") {
-        throw IllegalStateException("Expected 'Code:' but got '${peek()}'")
-    }
+    // A method can have no code
+    if (next().trim() != "Code:") return Method(header, InstructionSet(ISA.ByteCode, emptyList()))
+
     val instructions = readInstructions()
     val lineNumbers = readLineNumbers()
 
