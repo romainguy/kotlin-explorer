@@ -20,8 +20,6 @@ import androidx.collection.IntIntPair
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
 import androidx.collection.mutableIntObjectMapOf
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastSumBy
 import kotlin.math.max
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {

@@ -23,7 +23,7 @@ import dev.romainguy.kotlin.explorer.code.*
 import dev.romainguy.kotlin.explorer.code.CodeContent.Error
 import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 
-private val CodeStartRegex = Regex("^\\s+CODE: \\(code_offset=0x[a-fA-F0-9]+ size=(?<codeSize>\\d+)\\)[.]{3}")
+private val CodeStartRegex = Regex("^\\s+CODE: \\(code_offset=0x[a-fA-F0-9]+ size=(?<codeSize>\\d+)\\)([.]{3})?")
 
 private val ClassNameRegex = Regex("^\\d+: L(?<class>[^;]+); \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
 private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=(?<methodIndex>\\d+)\\)")
@@ -124,7 +124,14 @@ internal class OatDumpParser {
         val codeStart = consumeUntil(CodeStartRegex)
         val codeSize = codeStart?.getValue("codeSize")?.toInt() ?: -1
 
-        val instructions = readNativeInstructions(jumpRegex, methodCallRegex, builtIn)
+        // We could also check for the presence of "..." at the end of codeStart
+        val instructions = if (codeSize == 0) {
+            // Skip "NO CODE!"
+            next()
+            emptyList()
+        } else {
+            readNativeInstructions(jumpRegex, methodCallRegex, builtIn)
+        }
 
         val method = match.getValue("method")
         val index = match.getValue("methodIndex").toInt()
