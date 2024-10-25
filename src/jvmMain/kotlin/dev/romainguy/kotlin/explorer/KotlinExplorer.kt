@@ -602,6 +602,12 @@ private fun FrameWindowScope.MainMenu(
         }
         Menu("Build") {
             MenuItem(
+                "Build & Disassemble",
+                CtrlShift(D),
+                onClick = compileAndDisassemble,
+                enabled = explorerState.toolPaths.isValid
+            )
+            MenuItem(
                 "Run",
                 CtrlOnly(R),
                 onClick = compileAndRun,
@@ -611,12 +617,6 @@ private fun FrameWindowScope.MainMenu(
             MenuCheckboxItem("Optimize with R8", CtrlShift(O), explorerState::optimize)
             MenuCheckboxItem("Keep Everything", CtrlShift(K), explorerState::keepEverything)
             MenuCheckboxItem("Build on Startup", shortcut = null, explorerState::autoBuildOnStartup)
-            MenuItem(
-                "Build & Disassemble",
-                CtrlShift(D),
-                onClick = compileAndDisassemble,
-                enabled = explorerState.toolPaths.isValid
-            )
         }
     }
 }
