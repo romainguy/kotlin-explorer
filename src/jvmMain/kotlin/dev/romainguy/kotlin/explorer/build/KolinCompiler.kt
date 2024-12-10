@@ -18,6 +18,7 @@ package dev.romainguy.kotlin.explorer.build
 
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
+import java.io.File
 import java.nio.file.Path
 
 private val BuiltInFiles = listOf(
@@ -34,7 +35,7 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
             toolPaths.kotlinc.toString(),
             "-Xmulti-platform",
             "-classpath",
-            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(":") { jar -> jar.toString() }
+            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(File.pathSeparator) { jar -> jar.toString() }
         ).apply {
             if (kotlinOnlyConsumers) {
                 this += "-Xno-param-assertions"
