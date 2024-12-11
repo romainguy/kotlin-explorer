@@ -81,7 +81,19 @@ enum class ISA(val branchInstructions: ScatterSet<String>, val returnInstruction
 
 data class Class(val header: String, val methods: List<Method>, val builtIn: Boolean)
 
-data class Method(val header: String, val instructionSet: InstructionSet, val index: Int = -1, val codeSize: Int = -1)
+const val AccessPublic      = 0x00001
+const val AccessPrivate     = 0x00002
+const val AccessStatic      = 0x00008
+const val AccessFinal       = 0x00010
+const val AccessSynthetic   = 0x01000
+const val AccessConstructor = 0x10000
+
+data class Method(
+    val header: String,
+    val instructionSet: InstructionSet,
+    val index: Int = -1,
+    val codeSize: Int = -1
+)
 
 data class InstructionSet(
     val isa: ISA,

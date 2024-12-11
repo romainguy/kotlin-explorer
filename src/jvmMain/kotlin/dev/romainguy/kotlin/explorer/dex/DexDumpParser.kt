@@ -30,15 +30,18 @@ import dev.romainguy.kotlin.explorer.oat.codeToOpAndOperands
 private val PositionRegex = Regex("^\\s*0x(?<address>[0-9a-f]+) line=(?<line>\\d+)$")
 
 private val JumpRegex = Regex("^$HexDigit{4}: .* (?<address>$HexDigit{4}) // [+-]$HexDigit{4}$")
+private val AccessRegex = Regex("^access\\s+:\\s+0x(?<bitField>[0-9a-fA-F]+)\\s+\\(.+\\)$")
 
 private const val ClassStart = "Class #"
 private const val ClassEnd = "source_file_idx"
 private const val ClassName = "Class descriptor"
 private const val Instructions = "insns size"
 private const val Positions = "positions"
+private const val Access = "access"
 
 internal class DexDumpParser {
     fun parse(text: String): CodeContent {
+        println(text)
         return try {
             val lines = text.lineSequence().iterator()
             val classes = buildList {
@@ -61,18 +64,20 @@ internal class DexDumpParser {
             return null
         }
         val methods = buildList {
+            var access = 0
             while (hasNext()) {
                 val line = next().trim()
+                if (line.startsWith(Access)) access = readAccess(line)
                 when {
                     line.startsWith(ClassEnd) -> break
-                    line.startsWith(Instructions) -> add(readMethod(className))
+                    line.startsWith(Instructions) -> add(readMethod(className, access))
                 }
             }
         }
         return Class("class $className", methods, false)
     }
 
-    private fun Iterator<String>.readMethod(className: String): Method {
+    private fun Iterator<String>.readMethod(className: String, access: Int): Method {
         val (name, type) = next().substringAfterLast(".").split(':', limit = 2)
         val instructions = readInstructions()
 
@@ -83,16 +88,23 @@ internal class DexDumpParser {
         val paramTypes = paramTypesFromType(type).joinToString(", ")
 
         return Method(
-            "$returnType $className.$name($paramTypes)",
+            "$returnType $className.$name($paramTypes)${accessToString(access)}",
             InstructionSet(ISA.Dex, instructions.withLineNumbers(positions))
         )
+    }
+
+    private fun accessToString(access: Int) = if (access and AccessStatic != 0) " // static" else ""
+
+    private fun readAccess(line: String): Int {
+        val bitField = AccessRegex.matchEntire(line)?.getValue("bitField")
+        return if (bitField != null) bitField.toInt(16) else 0
     }
 
     private fun Iterator<String>.readInstructions(): List<Instruction> {
         return buildList {
             while (hasNext()) {
                 val line = next()
-                if (line.startsWith(" ")) {
+                if (line[0] == ' ') {
                     break
                 }
                 val code = line.substringAfter('|')
