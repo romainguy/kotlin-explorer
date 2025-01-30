@@ -384,7 +384,8 @@ private fun StatusBar(status: String, progress: Float) {
                 progress = { progress },
                 color = ProgressColor,
                 trackColor = ProgressTrackColor,
-                strokeCap = StrokeCap.Round
+                strokeCap = StrokeCap.Round,
+                drawStopIndicator = { }
             )
         }
     }
