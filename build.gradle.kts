@@ -83,7 +83,7 @@ compose.desktop {
         nativeDistributions {
             modules("jdk.unsupported")
 
-            targetFormats(TargetFormat.Dmg)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Exe)
 
             packageVersion = version.toString()
             packageName = baseName
@@ -95,6 +95,11 @@ compose.desktop {
                 dockName = "Kotlin Explorer"
                 iconFile = file("art/app-icon/icon.icns")
                 bundleID = "dev.romainguy.kotlin.explorer"
+            }
+
+            windows {
+                menuGroup = "Kotlin Explorer"
+                iconFile = file("art/app-icon/icon.ico")
             }
         }
     }
