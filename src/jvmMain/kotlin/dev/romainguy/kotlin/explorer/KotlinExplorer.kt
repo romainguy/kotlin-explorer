@@ -48,6 +48,7 @@ import androidx.compose.ui.input.key.Key.Companion.V
 import androidx.compose.ui.input.key.Key.Companion.X
 import androidx.compose.ui.input.key.Key.Companion.Z
 import androidx.compose.ui.input.key.key
+import org.jetbrains.jewel.ui.component.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
@@ -699,10 +700,13 @@ fun main() {
                     explorerState.setWindowState(windowState)
                     exitApplication()
                 },
-                title = "Kotlin Explorer"
+                title = "Kotlin Explorer",
+                icon = if (isWindows) painterResource("icons/icon.ico") else null,
             ) {
-                TitleBar(Modifier.newFullscreenControls()) {
-                    Text("Kotlin Explorer")
+                if (!isWindows) {
+                    TitleBar(Modifier.newFullscreenControls()) {
+                        Text("Kotlin Explorer")
+                    }
                 }
                 KotlinExplorer(explorerState)
             }

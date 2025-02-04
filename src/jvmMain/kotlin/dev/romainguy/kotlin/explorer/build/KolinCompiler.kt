@@ -31,11 +31,12 @@ class KotlinCompiler(private val toolPaths: ToolPaths, private val outputDirecto
         process(*buildCompileCommand(kotlinOnlyConsumers, compilerFlags, source), directory = outputDirectory)
 
     private fun buildCompileCommand(kotlinOnlyConsumers: Boolean, compilerFlags: String, file: Path): Array<String> {
+        val classpath = (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(File.pathSeparator) { jar -> jar.toString() }
         val command = mutableListOf(
             toolPaths.kotlinc.toString(),
             "-Xmulti-platform",
             "-classpath",
-            (toolPaths.kotlinLibs + listOf(toolPaths.platform)).joinToString(File.pathSeparator) { jar -> jar.toString() }
+            "\"$classpath\""
         ).apply {
             if (kotlinOnlyConsumers) {
                 this += "-Xno-param-assertions"

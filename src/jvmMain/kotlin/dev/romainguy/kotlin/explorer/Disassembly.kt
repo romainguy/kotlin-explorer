@@ -29,6 +29,7 @@ import dev.romainguy.kotlin.explorer.code.ISA
 import dev.romainguy.kotlin.explorer.dex.DexDumpParser
 import dev.romainguy.kotlin.explorer.oat.OatDumpParser
 import kotlinx.coroutines.*
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.extension
@@ -259,11 +260,16 @@ suspend fun buildAndDisassemble(
 }
 
 private fun buildJavaCommand(toolPaths: ToolPaths): Array<String> {
+    val classpath = toolPaths.kotlinLibs.joinToString(File.pathSeparator) { jar -> jar.toString() } +
+            File.pathSeparator + toolPaths.platform +
+            File.pathSeparator + "."
+
     val command = mutableListOf(
         "java",
         "-classpath",
-        toolPaths.kotlinLibs.joinToString(":") { jar -> jar.toString() } + ":${toolPaths.platform}" + ":.",
-        "KotlinExplorerKt")
+        classpath,
+        "KotlinExplorerKt"
+    )
     return command.toTypedArray()
 }
 
