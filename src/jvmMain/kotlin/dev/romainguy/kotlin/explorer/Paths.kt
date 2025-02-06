@@ -58,7 +58,7 @@ class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
 
         kotlinc = kotlinHome.resolve(if (isWindows) "bin/kotlinc.bat" else "bin/kotlinc")
 
-        val lib = kotlinHome.resolve("lib")
+        val lib = kotlinHome.resolveFirstExistsOrFirst("lib", "libexec/lib")
         kotlinLibs = listOf(
             lib.resolve("kotlin-stdlib-jdk8.jar"),
             lib.resolve("kotlin-stdlib.jar"),
@@ -81,3 +81,14 @@ class ToolPaths(settingsDirectory: Path, androidHome: Path, kotlinHome: Path) {
 private fun Path.listIfExists() = if (exists()) listDirectoryEntries() else emptyList()
 
 private fun String.toPath() = Path.of(this)
+
+private fun Path.resolveFirstExistsOrFirst(vararg others: String): Path {
+    for (other in others) {
+        val path = resolve(other)
+        if (path.exists()) {
+            return path
+        }
+    }
+
+    return resolve(others.first())
+}
