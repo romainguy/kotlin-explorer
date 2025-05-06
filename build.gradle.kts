@@ -39,6 +39,7 @@ kotlin {
                 implementation(compose.desktop.currentOs) {
                     exclude(group = "org.jetbrains.compose.material")
                 }
+                implementation(compose.components.resources)
                 implementation(libs.collection)
                 implementation(libs.compose.material3)
                 implementation(libs.compose.splitpane)
@@ -52,10 +53,10 @@ kotlin {
                 implementation(libs.lifecycle.viewmodel)
                 implementation(libs.lifecycle.viewmodel.compose)
                 implementation(libs.skiko.mac)
+                implementation(libs.skiko.linux)
                 implementation(libs.rsyntaxtextarea)
                 implementation(libs.rstaui)
                 implementation(project(":token-makers"))
-                runtimeOnly(libs.skiko.linux)
             }
         }
 
