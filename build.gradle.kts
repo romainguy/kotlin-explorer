@@ -41,6 +41,7 @@ kotlin {
                 }
                 implementation(compose.components.resources)
                 implementation(libs.collection)
+                implementation(libs.compose.backhandler)
                 implementation(libs.compose.material3)
                 implementation(libs.compose.splitpane)
                 implementation(libs.jewel)
