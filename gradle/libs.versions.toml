@@ -28,7 +28,7 @@ lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "life
 lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 rstaui = { group = "com.fifesoft", name = "rstaui", version.ref = "rstaui" }
 rsyntaxtextarea = { group = "com.fifesoft", name = "rsyntaxtextarea", version.ref = "rsyntaxtextarea" }
-skiko-linux = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-linux-arm64", version.ref = "skiko" }
+skiko-linux = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-linux-x64", version.ref = "skiko" }
 skiko-mac = { group = "org.jetbrains.skiko", name = "skiko-awt-runtime-macos-arm64", version.ref = "skiko" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
