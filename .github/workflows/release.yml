@@ -9,9 +9,9 @@ jobs:
   build:
     strategy:
       matrix:
-        # macos-12 is for the x64 (intel) architecture
+        # macos-15-large is for the x64 (intel) architecture
         # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-        os: [ macos-15, macos-latest ]
+        os: [ macos-15-large, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
