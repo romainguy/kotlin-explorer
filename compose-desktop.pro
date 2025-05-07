@@ -27,3 +27,12 @@
 
 -dontnote org.jetbrains.jewel.intui.markdown.standalone.styling.extensions.**
 -dontwarn org.jetbrains.jewel.intui.markdown.standalone.styling.extensions.**
+
+-dontnote org.jetbrains.jewel.foundation.lazy.**
+-dontwarn org.jetbrains.jewel.foundation.lazy.**
+
+-dontnote org.jetbrains.jewel.foundation.util.**
+-dontwarn org.jetbrains.jewel.foundation.util.**
+
+-dontnote org.jetbrains.jewel.window.utils.**
+-dontwarn org.jetbrains.jewel.window.utils.**
