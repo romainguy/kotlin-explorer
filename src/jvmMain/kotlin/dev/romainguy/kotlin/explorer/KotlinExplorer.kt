@@ -532,6 +532,8 @@ private fun FrameWindowScope.MainMenu(
                 explorerState.compilerFlags,
                 explorerState.r8Rules,
                 explorerState.minApi,
+                explorerState.directory,
+                explorerState.composeVersion,
                 instructionSets,
                 onByteCodeUpdate,
                 onDexUpdate,
@@ -549,6 +551,8 @@ private fun FrameWindowScope.MainMenu(
                 explorerState.toolPaths,
                 explorerState.kotlinOnlyConsumers,
                 explorerState.compilerFlags,
+                explorerState.directory,
+                explorerState.composeVersion,
                 sourceTextArea.text,
                 onLogsUpdate,
                 onStatusUpdate

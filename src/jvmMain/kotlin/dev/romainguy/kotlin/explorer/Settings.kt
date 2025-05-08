@@ -44,6 +44,7 @@ fun Settings(
     val kotlinOnlyConsumers = remember { mutableStateOf(state.kotlinOnlyConsumers) }
     val compilerFlags = rememberTextFieldState(state.compilerFlags)
     val r8rules = rememberTextFieldState(state.r8Rules)
+    val composeVersion = rememberTextFieldState(state.composeVersion)
     val minApi = rememberTextFieldState(state.minApi.toString())
     val indent = rememberTextFieldState(state.indent.toString())
     val lineNumberWidth = rememberTextFieldState(state.lineNumberWidth.toString())
@@ -55,6 +56,7 @@ fun Settings(
             kotlinOnlyConsumers.value,
             compilerFlags.text.toString(),
             r8rules.text.toString(),
+            composeVersion.text.toString(),
             minApi.text.toString(),
             indent.text.toString(),
             lineNumberWidth.text.toString(),
@@ -71,6 +73,7 @@ fun Settings(
         IntSetting("Line number column width: ", lineNumberWidth, minValue = 1)
         StringSetting("Kotlin compiler flags: ", compilerFlags)
         MultiLineStringSetting("R8 rules: ", r8rules)
+        StringSetting("Compose version: ", composeVersion) {composeVersion.text.isNotEmpty()}
         IntSetting("Min API: ", minApi, minValue = 1)
         BooleanSetting("Kotlin only consumers", kotlinOnlyConsumers)
         BooleanSetting("Decompile hidden instruction sets", decompileHiddenIsa)
@@ -101,6 +104,7 @@ private fun ExplorerState.saveState(
     kotlinOnlyConsumers: Boolean,
     compilerFlags: String,
     r8Rules: String,
+    composeVersion: String,
     minApi: String,
     indent: String,
     lineNumberWidth: String,
@@ -111,6 +115,7 @@ private fun ExplorerState.saveState(
     this.kotlinOnlyConsumers = kotlinOnlyConsumers
     this.compilerFlags = compilerFlags
     this.r8Rules = r8Rules
+    this.composeVersion = composeVersion
     this.minApi = minApi.toIntOrNull() ?: 21
     this.indent = indent.toIntOrNull() ?: 4
     this.lineNumberWidth = lineNumberWidth.toIntOrNull() ?: 4

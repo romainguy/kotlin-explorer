@@ -47,6 +47,8 @@ suspend fun buildAndRun(
     toolPaths: ToolPaths,
     kotlinOnlyConsumers: Boolean,
     compilerFlags: String,
+    settingsDirectory: Path,
+    composeVersion: String,
     source: String,
     onLogs: (AnnotatedString) -> Unit,
     onStatusUpdate: (String, Float) -> Unit
@@ -65,7 +67,7 @@ suspend fun buildAndRun(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(kotlinOnlyConsumers, compilerFlags, path)
+            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(kotlinOnlyConsumers, compilerFlags, composeVersion, path)
 
             if (kotlinc.exitCode != 0) {
                 withContext(ui) {
@@ -102,6 +104,8 @@ suspend fun buildAndDisassemble(
     compilerFlags: String,
     r8rules: String,
     minApi: Int,
+    settingsDirectory: Path,
+    composeVersion: String,
     instructionSets: Map<ISA, Boolean>,
     onByteCode: (CodeContent) -> Unit,
     onDex: (CodeContent) -> Unit,
@@ -127,7 +131,7 @@ suspend fun buildAndDisassemble(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, directory).compile(kotlinOnlyConsumers, compilerFlags, path)
+            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(kotlinOnlyConsumers, compilerFlags, composeVersion, path)
 
             if (kotlinc.exitCode != 0) {
                 updater.addJob(launch(ui) {
