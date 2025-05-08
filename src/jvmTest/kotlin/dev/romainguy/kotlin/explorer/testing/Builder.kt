@@ -54,7 +54,7 @@ class LocalBuilder(private val outputDirectory: Path) : Builder {
     private val cwd = Path.of(System.getProperty("user.dir"))
     private val testData = cwd.resolve("src/jvmTest/kotlin/testData")
     private val toolPaths = createToolsPath()
-    private val kotlinCompiler = KotlinCompiler(toolPaths, outputDirectory)
+    private val kotlinCompiler = KotlinCompiler(toolPaths, outputDirectory, outputDirectory)
     private val byteCodeDecompiler = ByteCodeDecompiler()
 
     override fun generateByteCode(testFile: String): String {
@@ -82,7 +82,7 @@ class LocalBuilder(private val outputDirectory: Path) : Builder {
     }
 
     private suspend fun kotlinCompile(path: Path) {
-        val result = kotlinCompiler.compile(true, "", path)
+        val result = kotlinCompiler.compile(true, "", "not-used", path)
         if (result.exitCode != 0) {
             System.err.println(result.output)
             fail("kotlinc error")
