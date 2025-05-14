@@ -36,3 +36,6 @@
 
 -dontnote org.jetbrains.jewel.window.utils.**
 -dontwarn org.jetbrains.jewel.window.utils.**
+
+-dontwarn com.google.common.**
+

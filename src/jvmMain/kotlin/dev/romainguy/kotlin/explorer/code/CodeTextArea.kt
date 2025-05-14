@@ -20,6 +20,7 @@ import dev.romainguy.kotlin.explorer.SourceTextArea
 import dev.romainguy.kotlin.explorer.SyntaxTextArea
 import dev.romainguy.kotlin.explorer.centerCaretInView
 import dev.romainguy.kotlin.explorer.code.CodeContent.*
+import org.fife.ui.rsyntaxtextarea.Theme
 import java.awt.BasicStroke
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -28,6 +29,8 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.geom.GeneralPath
 import javax.swing.event.CaretEvent
+import javax.swing.text.DefaultHighlighter
+
 
 class CodeTextArea(
     codeStyle: CodeStyle,
@@ -55,9 +58,10 @@ class CodeTextArea(
 
         if (sourceTextArea != null) {
             addMouseListener(object : MouseAdapter() {
-                override fun mouseClicked(event: MouseEvent) {
+                override fun mousePressed(e: MouseEvent) {
                     if (isSyncLinesEnabled) {
-                        val codeLine = getLineOfOffset(viewToModel2D(event.point))
+                        highlighter.removeAllHighlights()
+                        val codeLine = getLineOfOffset(viewToModel2D(e.point))
                         val line = code?.getSourceLine(codeLine) ?: return
                         if (line == -1) return
                         sourceTextArea.gotoLine(this@CodeTextArea, line - 1)
@@ -74,9 +78,20 @@ class CodeTextArea(
     }
 
     fun gotoSourceLine(sourceLine: Int) {
-        val line = code?.getCodeLine(sourceLine + 1) ?: return
-        if (line == -1) return
-        caretPosition = getLineStartOffset(line.coerceIn(0 until lineCount))
+        val lines = code?.getCodeLines(sourceLine + 1)?.map { it.coerceIn(-1 until lineCount) } ?: return
+        lines.forEach { line ->
+            val painter = DefaultHighlighter.DefaultHighlightPainter(Theme(this).currentLineHighlight)
+            val start = getLineStartOffset(line)
+            highlighter.removeAllHighlights()
+            highlighter.addHighlight(start, getLineEndOffset(line), painter)
+        }
+        val index = lines.indexOf(getLineOfOffset(caretPosition))
+        val caretLine = when  {
+            index < 0 -> lines.first()
+            lines.size == 1 -> return
+            else -> lines[(index + 1) % lines.size]
+        }
+        caretPosition = getLineStartOffset(caretLine)
         centerCaretInView()
     }
 

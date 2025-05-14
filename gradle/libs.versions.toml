@@ -1,6 +1,7 @@
 [versions]
 collection = "1.5.0"
 compose = "1.8.0"
+guava = "33.4.8-jre"
 jewel = "1.0.0-SNAPSHOT"
 jna = "5.17.0"
 junit4 = "4.13.2"
@@ -16,6 +17,7 @@ collection = { group = "androidx.collection", name = "collection", version.ref =
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "compose" }
 compose-splitpane = { group = "org.jetbrains.compose.components", name = "components-splitpane-desktop", version.ref = "compose" }
 compose-backhandler = { group = "org.jetbrains.compose.ui", name = "ui-backhandler", version.ref = "compose" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 jewel = { group = "org.jetbrains.jewel", name = "jewel-int-ui-standalone-243", version.ref = "jewel" }
 jewel-decorated = { group = "org.jetbrains.jewel", name = "jewel-int-ui-decorated-window-243", version.ref = "jewel" }
 jewel-markdown-core = { group = "org.jetbrains.jewel", name = "jewel-markdown-core-243", version.ref = "jewel" }

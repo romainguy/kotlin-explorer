@@ -198,9 +198,12 @@ private fun FrameWindowScope.KotlinExplorer(
     explorerState: ExplorerState
 ) {
     val scope = rememberCoroutineScope()
-    val uiState = remember { UiState(explorerState, scope, window) }
+    val uiState = remember {
+        UiState(explorerState, scope, window).apply {
+            sourceTextArea.addCodeTextAreas(byteCodeTextArea, dexTextArea)
+        }
+    }
 
-    uiState.sourceTextArea.addCodeTextAreas(uiState.byteCodeTextArea, uiState.dexTextArea)
 
     val sourcePanel: @Composable () -> Unit =
         { SourcePanel(uiState.sourceTextArea, explorerState) }
