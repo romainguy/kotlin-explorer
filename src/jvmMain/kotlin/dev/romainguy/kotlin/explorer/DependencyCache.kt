@@ -32,6 +32,10 @@ private const val BASE_PATH = "%1\$s/%2\$s/%3\$s/%2\$s-%3\$s"
 
 class DependencyCache(private val root: Path) {
 
+    fun getDependency(dependency: Dependency, onOutput: (String) -> Unit): Path {
+        return getDependency(dependency.group, dependency.name, dependency.version, onOutput)
+    }
+
     fun getDependency(group: String, name: String, version: String, onOutput: (String) -> Unit): Path {
         val basePath = BASE_PATH.format(group.replace('.', '/'), name, version)
         val dst = root.resolve("$basePath.jar")
@@ -89,4 +93,6 @@ class DependencyCache(private val root: Path) {
         }
         return true
     }
+
+    data class Dependency(val group: String, val name: String, val version: String)
 }
