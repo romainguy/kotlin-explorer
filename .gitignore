@@ -42,3 +42,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 /local.properties
+/.idea/AndroidProjectSystem.xml
+/.idea/inspectionProfiles/Project_Default.xml

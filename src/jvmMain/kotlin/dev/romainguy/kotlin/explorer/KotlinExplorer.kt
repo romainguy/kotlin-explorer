@@ -48,7 +48,6 @@ import androidx.compose.ui.input.key.Key.Companion.V
 import androidx.compose.ui.input.key.Key.Companion.X
 import androidx.compose.ui.input.key.Key.Companion.Z
 import androidx.compose.ui.input.key.key
-import org.jetbrains.jewel.ui.component.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion.Center
@@ -87,6 +86,7 @@ import org.jetbrains.jewel.markdown.MarkdownBlock
 import org.jetbrains.jewel.markdown.processing.MarkdownProcessor
 import org.jetbrains.jewel.ui.ComponentStyling
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.painterResource
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.newFullscreenControls
@@ -678,9 +678,14 @@ fun main() {
             placement = explorerState.windowPlacement,
         )
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            shutdown(explorerState, windowState)
-        })
+        val currentWindowState by rememberUpdatedState(windowState)
+        DisposableEffect(Unit) {
+            // Using DisposableEffect since we aren't launching any coroutines.
+            Runtime.getRuntime().addShutdownHook(Thread {
+                shutdown(explorerState, currentWindowState)
+            })
+            onDispose {}
+        }
 
         val themeDefinition = if (KotlinExplorerTheme.System.isDark()) {
             JewelTheme.darkThemeDefinition()
