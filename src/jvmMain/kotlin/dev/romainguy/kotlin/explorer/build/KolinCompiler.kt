@@ -17,6 +17,7 @@
 package dev.romainguy.kotlin.explorer.build
 
 import dev.romainguy.kotlin.explorer.DependencyCache
+import dev.romainguy.kotlin.explorer.DependencyCache.Dependency
 import dev.romainguy.kotlin.explorer.ProcessResult
 import dev.romainguy.kotlin.explorer.ToolPaths
 import dev.romainguy.kotlin.explorer.process
@@ -75,6 +76,9 @@ class KotlinCompiler(
                     )
                 )
             }
+            file.getDependencies(onOutput).forEach {
+                add(dependencyCache.getDependency(it, onOutput))
+            }
         }.joinToString((File.pathSeparator)) { it.toString() }
 
         val command = buildList {
@@ -116,6 +120,19 @@ class KotlinCompiler(
             "-version",
         ).toTypedArray()
         return process(*command).output.substringAfter("kotlinc-jvm ").substringBefore(" ")
+    }
+
+    private fun Path.getDependencies(onOutput: (String) -> Unit): List<Dependency> {
+        return useLines { lines ->
+            lines.filter { it -> it.trim().startsWith("// dep: ") }.mapNotNull {
+                val split = it.substringAfter(": ").trim().split(':')
+                if (split.size != 3) {
+                    onOutput("Invalid dependency line: '$it'")
+                    return@mapNotNull null
+                }
+                Dependency(split[0], split[1], split[2])
+            }.toList()
+        }
     }
 }
 
