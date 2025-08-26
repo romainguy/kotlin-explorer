@@ -20,6 +20,7 @@ import androidx.collection.IntIntPair
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntIntMapOf
 import androidx.collection.mutableIntObjectMapOf
+import com.google.common.collect.TreeMultimap
 import kotlin.math.max
 
 fun buildCode(codeStyle: CodeStyle = CodeStyle(), builderAction: CodeBuilder.() -> Unit): CodeBuilder {
@@ -36,7 +37,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     private var line = 0
     private val sb = StringBuilder()
     private val jumps = mutableIntIntMapOf()
-    private val sourceToCodeLine = mutableIntIntMapOf()
+    private val sourceToCodeLines = TreeMultimap.create<Int, Int>()
     private val codeToSourceToLine = mutableIntIntMapOf()
     private var isa = ISA.Aarch64
     private val instructions = mutableIntObjectMapOf<Instruction>()
@@ -152,7 +153,8 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
 
         val lineNumber = instruction.lineNumber
         if (lineNumber > -1) {
-            sourceToCodeLine[lineNumber] = line
+
+            sourceToCodeLines.put(lineNumber, line)
             lastMethodLineNumber = lineNumber
         }
 
@@ -189,7 +191,7 @@ class CodeBuilder(private val codeStyle: CodeStyle) {
     }
 
     fun build(): Code {
-        return Code(isa, sb.toString(), instructions, jumps, sourceToCodeLine, codeToSourceToLine)
+        return Code(isa, sb.toString(), instructions, jumps, sourceToCodeLines, codeToSourceToLine)
     }
 
     override fun toString() = sb.toString()

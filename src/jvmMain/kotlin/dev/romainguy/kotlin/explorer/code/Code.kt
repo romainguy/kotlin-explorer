@@ -19,6 +19,7 @@ package dev.romainguy.kotlin.explorer.code
 import androidx.collection.IntIntMap
 import androidx.collection.IntObjectMap
 import androidx.collection.mutableIntObjectMapOf
+import com.google.common.collect.TreeMultimap
 
 /**
  * A data model representing disassembled code
@@ -32,12 +33,12 @@ class Code(
     val text: String,
     val instructions: IntObjectMap<Instruction>,
     private val jumps: IntIntMap,
-    private val sourceToCodeLine: IntIntMap,
+    private val sourceToCodeLines: TreeMultimap<Int, Int>,
     private val codeToSourceToLine: IntIntMap,
 ) {
     fun getJumpTargetOfLine(line: Int) = jumps.getOrDefault(line, -1)
 
-    fun getCodeLine(sourceLine: Int) = sourceToCodeLine.getOrDefault(sourceLine, -1)
+    fun getCodeLines(sourceLine: Int) = sourceToCodeLines.get(sourceLine)
 
     fun getSourceLine(codeLine: Int) = codeToSourceToLine.getOrDefault(codeLine, -1)
 

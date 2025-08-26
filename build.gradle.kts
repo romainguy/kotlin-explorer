@@ -40,6 +40,7 @@ kotlin {
                     exclude(group = "org.jetbrains.compose.material")
                 }
                 implementation(compose.components.resources)
+                implementation(libs.guava)
                 implementation(libs.collection)
                 implementation(libs.compose.backhandler)
                 implementation(libs.compose.material3)

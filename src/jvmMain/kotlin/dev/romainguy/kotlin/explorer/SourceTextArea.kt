@@ -17,7 +17,6 @@
 package dev.romainguy.kotlin.explorer
 
 import dev.romainguy.kotlin.explorer.code.CodeTextArea
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 
@@ -28,10 +27,10 @@ class SourceTextArea(
 
     init {
         addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(event: MouseEvent) {
+            override fun mousePressed(e: MouseEvent) {
                 if (isSyncLinesEnabled) {
                     codeTextAreas.forEach {
-                        it.gotoSourceLine(getLineOfOffset(viewToModel2D(event.point)))
+                        it.gotoSourceLine(getLineOfOffset(viewToModel2D(e.point)))
                     }
                 }
             }
