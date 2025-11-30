@@ -30,7 +30,7 @@ kotlin {
 
     jvmToolchain {
         vendor = JvmVendorSpec.JETBRAINS
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 
     sourceSets {
@@ -49,12 +49,11 @@ kotlin {
                 implementation(libs.jewel.markdown.core)
                 implementation(libs.jewel.markdown.intUiStandaloneStyling)
                 implementation(libs.jna)
+                implementation(libs.jsoup)
                 implementation(libs.lifecycle)
                 implementation(libs.lifecycle.compose)
                 implementation(libs.lifecycle.viewmodel)
                 implementation(libs.lifecycle.viewmodel.compose)
-                implementation(libs.skiko.mac)
-                implementation(libs.skiko.linux)
                 implementation(libs.rsyntaxtextarea)
                 implementation(libs.rstaui)
                 implementation(project(":token-makers"))

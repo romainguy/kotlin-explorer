@@ -13,11 +13,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      # TODO: replace this once https://github.com/actions/setup-java/pull/637 gets merged.
-      - uses: gmitch215/setup-java@6d2c5e1f82f180ae79f799f0ed6e3e5efb4e664d
+      - uses: actions/setup-java@v4
         with:
           distribution: 'jetbrains'
-          java-version: 17
+          java-version: 21
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: gradle/actions/setup-gradle@v3

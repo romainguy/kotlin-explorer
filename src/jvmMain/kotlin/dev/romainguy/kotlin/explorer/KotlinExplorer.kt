@@ -703,6 +703,7 @@ fun main() {
             ComponentStyling.decoratedWindow(titleBarStyle = titleBarStyle),
             false
         ) {
+            @Suppress("DEPRECATION")
             DecoratedWindow(
                 state = windowState,
                 onCloseRequest = {
@@ -730,7 +731,11 @@ private fun shutdown(
 ) {
     explorerState.setWindowState(windowState)
     explorerState.writeState()
-    explorerState.toolPaths.tempDirectory.deleteRecursively()
+    try {
+        explorerState.toolPaths.tempDirectory.deleteRecursively()
+    } finally {
+        // Temporary file, it's okay if we can't delete it
+    }
 }
 
 private fun ExplorerState.getWindowSize() = DpSize(windowWidth.dp, windowHeight.dp)
