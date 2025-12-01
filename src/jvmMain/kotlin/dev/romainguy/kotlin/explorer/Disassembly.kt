@@ -67,7 +67,12 @@ suspend fun buildAndRun(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(kotlinOnlyConsumers, compilerFlags, composeVersion, path)
+            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(
+                kotlinOnlyConsumers,
+                compilerFlags,
+                composeVersion,
+                path
+            )
 
             if (kotlinc.exitCode != 0) {
                 withContext(ui) {
@@ -131,7 +136,12 @@ suspend fun buildAndDisassemble(
             Files.writeString(path, source)
             writeSupportFiles(directory)
 
-            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(kotlinOnlyConsumers, compilerFlags, composeVersion, path)
+            val kotlinc = KotlinCompiler(toolPaths, settingsDirectory, directory).compile(
+                kotlinOnlyConsumers,
+                compilerFlags,
+                composeVersion,
+                path
+            )
 
             if (kotlinc.exitCode != 0) {
                 updater.addJob(launch(ui) {

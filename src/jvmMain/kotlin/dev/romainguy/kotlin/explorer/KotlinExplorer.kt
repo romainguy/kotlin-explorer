@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "UnstableApiUsage")
 @file:OptIn(ExperimentalJewelApi::class)
 
 package dev.romainguy.kotlin.explorer
@@ -58,8 +58,11 @@ import androidx.compose.ui.window.*
 import androidx.compose.ui.window.WindowPosition.Aligned
 import dev.romainguy.kotlin.explorer.Shortcut.*
 import dev.romainguy.kotlin.explorer.code.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.fife.rsta.ui.search.FindDialog
 import org.fife.rsta.ui.search.SearchEvent
 import org.fife.rsta.ui.search.SearchListener
@@ -153,7 +156,9 @@ private class UiState(val explorerState: ExplorerState, scope: CoroutineScope, w
     val dexTextArea = dexTextArea(explorerState, focusTracker, sourceTextArea)
     val oatTextArea = oatTextArea(explorerState, focusTracker) { code, line, _ ->
         scope.launch {
-            val blocks = markdownProcessor.generateInlineDocumentation(code, line)
+            val blocks = withContext(Dispatchers.Default) {
+                markdownProcessor.generateInlineDocumentation(code, line)
+            }
             if (blocks.isNotEmpty()) markdownBlocks = blocks
         }
     }

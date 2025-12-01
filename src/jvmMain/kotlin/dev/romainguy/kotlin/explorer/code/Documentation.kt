@@ -15,12 +15,12 @@
  */
 
 @file:OptIn(ExperimentalJewelApi::class)
+@file:Suppress("UnstableApiUsage")
 
 package dev.romainguy.kotlin.explorer.code
 
+import androidx.collection.ScatterMap
 import androidx.collection.mutableScatterMapOf
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.markdown.InlineMarkdown
 import org.jetbrains.jewel.markdown.MarkdownBlock
@@ -41,41 +41,39 @@ private val Conditions = mutableScatterMapOf(
     "lt" to "signed less than.",
     "gt" to "signed greater than.",
     "le" to "signed less than or equal."
-)
+) as ScatterMap<String, String>
 
-suspend fun MarkdownProcessor.generateInlineDocumentation(code: Code, line: Int): List<MarkdownBlock> {
+fun MarkdownProcessor.generateInlineDocumentation(code: Code, line: Int): List<MarkdownBlock> {
     if (code.isa == ISA.Aarch64) {
         val fullOp = code.instructions[line]?.op ?: ""
         val op = fullOp.substringBefore('.')
         val opDocumentation = Aarch64Docs[op]
         if (opDocumentation != null) {
-            return withContext(Dispatchers.Default) {
-                val blocks = ArrayList<MarkdownBlock>()
-                blocks += MarkdownBlock.Heading(2, InlineMarkdown.Text(opDocumentation.name))
+            val blocks = ArrayList<MarkdownBlock>()
+            blocks += MarkdownBlock.Heading(2, InlineMarkdown.Text(opDocumentation.name))
 
-                val condition = fullOp.substringAfter('.', "")
-                if (condition.isNotEmpty()) {
-                    val conditionDocumentation = Conditions[condition]
-                    if (conditionDocumentation != null) {
-                        blocks += MarkdownBlock.Paragraph(
-                            InlineMarkdown.StrongEmphasis("**", InlineMarkdown.Text("Condition: ")),
-                            InlineMarkdown.Text(conditionDocumentation)
-                        )
-                    }
-                }
-
-                blocks += processMarkdownDocument(opDocumentation.documentation)
-
-                blocks += MarkdownBlock.Paragraph(
-                    InlineMarkdown.Link(
-                        opDocumentation.url,
-                        "See full documentation",
-                        InlineMarkdown.Text("See full documentation")
+            val condition = fullOp.substringAfter('.', "")
+            if (condition.isNotEmpty()) {
+                val conditionDocumentation = Conditions[condition]
+                if (conditionDocumentation != null) {
+                    blocks += MarkdownBlock.Paragraph(
+                        InlineMarkdown.StrongEmphasis("**", InlineMarkdown.Text("Condition: ")),
+                        InlineMarkdown.Text(conditionDocumentation)
                     )
-                )
-
-                blocks
+                }
             }
+
+            blocks += processMarkdownDocument(opDocumentation.documentation)
+
+            blocks += MarkdownBlock.Paragraph(
+                InlineMarkdown.Link(
+                    opDocumentation.url,
+                    "See full documentation",
+                    InlineMarkdown.Text("See full documentation")
+                )
+            )
+
+            return blocks
         }
     }
     return emptyList()
