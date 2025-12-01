@@ -299,9 +299,11 @@ def docenizer():
 // NOTE: AUTO-GENERATED FILE, DO NOT MODIFY!
 
 package dev.romainguy.kotlin.explorer.code
-                
+
+import androidx.collection.MutableScatterMap
+
 """.lstrip())
-        f.write("val {}Docs = HashMap<String, OpCodeDoc>({}).apply {{\n".format(config.isa.capitalize(), len(instructions)))
+        f.write("val {}Docs = MutableScatterMap<String, OpCodeDoc>({}).apply {{\n".format(config.isa.capitalize(), len(instructions)))
         seen = {}
         for inst in instructions:
             for name in sorted(inst.names):
@@ -312,6 +314,6 @@ package dev.romainguy.kotlin.explorer.code
                 f.write("        \"\"\"{}\"\"\",\n".format(inst.body))
                 f.write("        \"{}\"\n".format(get_url_for_instruction(inst)))
                 f.write("    )\n")
-        f.write("}\n")
+        f.write("} as ScatterMap<String, OpCodeDoc>\n")
 if __name__ == '__main__':
     docenizer()

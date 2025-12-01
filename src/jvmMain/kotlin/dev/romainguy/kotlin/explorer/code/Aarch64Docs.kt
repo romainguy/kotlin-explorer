@@ -1,8 +1,11 @@
 // NOTE: AUTO-GENERATED FILE, DO NOT MODIFY!
 
 package dev.romainguy.kotlin.explorer.code
-                
-val Aarch64Docs = HashMap<String, OpCodeDoc>(2023).apply {
+
+import androidx.collection.MutableScatterMap
+import androidx.collection.ScatterMap
+
+val Aarch64Docs = MutableScatterMap<String, OpCodeDoc>(2023).apply {
     this["abs"] = OpCodeDoc(
         "ABS",
         """Absolute value computes the absolute value of the signed integer value in the
@@ -33894,4 +33897,4 @@ unpredicated.
 """,
         "https://developer.arm.com/documentation/ddi0602/2024-06/Base-Instructions/ZIPQ----"
     )
-}
+} as ScatterMap<String, OpCodeDoc>

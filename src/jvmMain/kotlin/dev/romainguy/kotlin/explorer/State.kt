@@ -16,6 +16,8 @@
 
 package dev.romainguy.kotlin.explorer
 
+import androidx.collection.MutableScatterMap
+import androidx.collection.mutableScatterMapOf
 import androidx.compose.runtime.*
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPlacement.Floating
@@ -54,7 +56,7 @@ private const val Placement = "WINDOW_PLACEMENT"
 class ExplorerState {
     val directory: Path = settingsPath()
     private val file: Path = directory.resolve("settings")
-    private val entries: MutableMap<String, String> = readSettings(file)
+    private val entries: MutableScatterMap<String, String> = readSettings(file)
 
     var androidHome by StringState(AndroidHome, System.getenv("ANDROID_HOME") ?: System.getProperty("user.home"))
     var kotlinHome by StringState(KotlinHome, System.getenv("KOTLIN_HOME") ?: System.getProperty("user.home"))
@@ -122,7 +124,7 @@ class ExplorerState {
         writeSourceCodeState()
         Files.writeString(
             file,
-            entries.map { (key, value) -> "$key=${value.replace("\n", "\\\n")}" }.joinToString("\n")
+            entries.joinToString("\n") { key, value -> "$key=${value.replace("\n", "\\\n")}" }
         )
     }
 }
@@ -131,8 +133,8 @@ private fun settingsPath() = Paths.get(System.getProperty("user.home"), ".kotlin
     if (!exists()) Files.createDirectory(this)
 }
 
-private fun readSettings(file: Path): MutableMap<String, String> {
-    val settings = mutableMapOf<String, String>()
+private fun readSettings(file: Path): MutableScatterMap<String, String> {
+    val settings = mutableScatterMapOf<String, String>()
     if (!file.exists()) return settings
 
     val lines = file.readLines()
