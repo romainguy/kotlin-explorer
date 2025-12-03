@@ -32,7 +32,7 @@
 -dontwarn org.jetbrains.jewel.intui.markdown.standalone.styling.extensions.**
 
 -keep class org.jetbrains.jewel.ui** { *; }
--dontnote class org.jetbrains.jewel.ui** { *; }
+-dontnote org.jetbrains.jewel.ui** { *; }
 
 -dontnote org.jetbrains.jewel.foundation.lazy.**
 -dontwarn org.jetbrains.jewel.foundation.lazy.**
