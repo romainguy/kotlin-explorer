@@ -19,6 +19,7 @@ package dev.romainguy.kotlin.explorer.build
 import dev.romainguy.kotlin.explorer.DependencyCache
 import dev.romainguy.kotlin.explorer.ProcessResult
 import dev.romainguy.kotlin.explorer.ToolPaths
+import dev.romainguy.kotlin.explorer.isWindows
 import dev.romainguy.kotlin.explorer.process
 import java.io.File
 import java.nio.file.Path
@@ -77,8 +78,7 @@ class KotlinCompiler(
             }
         }.joinToString((File.pathSeparator)) { it.toString() }
 
-        val command = buildList {
-            add(toolPaths.kotlinc.toString())
+        val args = buildList {
             add("-Xmulti-platform")
             add("-classpath")
             add(classpath)
@@ -107,15 +107,31 @@ class KotlinCompiler(
             }
         }
 
-        return command.toTypedArray()
+        return buildKotlincCommand(args)
     }
 
     private suspend fun getKotlinVersion(): String {
-        val command = mutableListOf(
-            toolPaths.kotlinc.toString(),
-            "-version",
-        ).toTypedArray()
+        val command = buildKotlincCommand(listOf("-version"))
         return process(*command).output.substringAfter("kotlinc-jvm ").substringBefore(" ")
+    }
+
+    private fun buildKotlincCommand(args: List<String>): Array<String> {
+        return buildList {
+            add(toolPaths.kotlinc.toString())
+            addAll(args.map { quoteIfNeeded(it) })
+        }.toTypedArray()
+    }
+
+    private fun quoteIfNeeded(arg: String): String {
+        val needsQuoting = isWindows && arg.any {
+            Character.isWhitespace(it) || it == '=' || it == ';' || it == ','
+        }
+
+        return if (needsQuoting) {
+            "\"$arg\""
+        } else {
+            arg
+        }
     }
 }
 
