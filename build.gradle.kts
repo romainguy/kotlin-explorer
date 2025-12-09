@@ -1,8 +1,9 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
-import kotlin.io.path.listDirectoryEntries
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -19,6 +20,7 @@ repositories {
 
 version = "1.6.6"
 val baseName = "Kotlin Explorer"
+val distributionBaseName = "kotlin-explorer"
 
 kotlin {
     jvm {
@@ -84,7 +86,7 @@ compose.desktop {
         nativeDistributions {
             modules("jdk.unsupported")
 
-            targetFormats(TargetFormat.Dmg, TargetFormat.Exe)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
 
             packageVersion = version.toString()
             packageName = baseName
@@ -106,32 +108,43 @@ compose.desktop {
     }
 }
 
-val currentArch: String = when (val osArch = System.getProperty("os.arch")) {
-    "x86_64", "amd64" -> "x64"
-    "aarch64" -> "arm64"
-    else -> error("Unsupported OS arch: $osArch")
-}
-
 /**
  * TODO: workaround for https://github.com/JetBrains/compose-multiplatform/issues/4976.
  */
-val renameDmg by tasks.registering(Copy::class) {
+val packageAndRenameReleaseDistributionForCurrentOS by tasks.registering {
     group = "distribution"
-    description = "Rename the DMG file"
-
-    val packageReleaseDmg = tasks.named<AbstractJPackageTask>("packageReleaseDmg")
-    // build/compose/binaries/main-release/dmg/*.dmg
-    val fromFile = packageReleaseDmg.map { task ->
-        task.destinationDir.asFile.get().toPath().listDirectoryEntries("$baseName*.dmg").single()
-    }
-
-    from(fromFile)
-    into(fromFile.map { it.parent })
-    rename {
-        "kotlin-explorer-$currentArch-$version.dmg"
-    }
+    description = "Packages and renames release distributions for the current OS"
+    dependsOn("packageReleaseDistributionForCurrentOS")
+    doLast { renameReleaseDistributionForCurrentOS() }
 }
 
-tasks.assemble {
-    dependsOn(renameDmg)
+private fun renameReleaseDistributionForCurrentOS() {
+    val os = DefaultNativePlatform.getCurrentOperatingSystem()
+    val arch = DefaultNativePlatform.getCurrentArchitecture()
+
+    val osName = when {
+        os.isMacOsX -> "macos"
+        os.isWindows -> "windows"
+        else -> os.internalOs.familyName
+    }
+
+    val archName = when {
+        arch.isAmd64 -> "x64"
+        arch.isArm64 -> "arm64"
+        else -> arch.name
+    }
+
+    compose.desktop.application.nativeDistributions.targetFormats.forEach { targetFormat ->
+        if (!targetFormat.isCompatibleWithCurrentOS) return@forEach
+
+        val distributionPath = layout.buildDirectory.get()
+            .dir("compose/binaries/main-release/${targetFormat.outputDirName}")
+            .file("$baseName-$version${targetFormat.fileExt}")
+            .asFile.toPath()
+
+        val newDistributionPath = distributionPath
+            .resolveSibling("$distributionBaseName-$osName-$archName-$version${targetFormat.fileExt}")
+
+        Files.move(distributionPath, newDistributionPath, StandardCopyOption.REPLACE_EXISTING)
+    }
 }
