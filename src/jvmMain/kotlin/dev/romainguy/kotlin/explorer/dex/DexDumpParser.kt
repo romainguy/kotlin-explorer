@@ -41,7 +41,6 @@ private const val Access = "access"
 
 internal class DexDumpParser {
     fun parse(text: String): CodeContent {
-        println(text)
         return try {
             val lines = text.lineSequence().iterator()
             val classes = buildList {

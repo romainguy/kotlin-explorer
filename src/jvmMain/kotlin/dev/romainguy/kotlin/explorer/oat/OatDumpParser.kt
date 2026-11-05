@@ -25,7 +25,7 @@ import dev.romainguy.kotlin.explorer.code.CodeContent.Success
 
 private val CodeStartRegex = Regex("^\\s+CODE: \\(code_offset=0x[a-fA-F0-9]+ size=(?<codeSize>\\d+)\\)([.]{3})?")
 
-private val ClassNameRegex = Regex("^\\d+: L(?<class>[^;]+); \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
+private val ClassNameRegex = Regex("^\\d+: L?(?<class>[^;]+);? \\(offset=0x$HexDigit+\\) \\(type_idx=\\d+\\).+")
 private val MethodRegex = Regex("^\\s+\\d+:\\s+(?<method>.+)\\s+\\(dex_method_idx=(?<methodIndex>\\d+)\\)")
 private val CodeRegex = Regex("^\\s+0x(?<address>$HexDigit+):\\s+$HexDigit+\\s+(?<code>.+)")
 
@@ -60,7 +60,6 @@ internal class OatDumpParser {
             val methodCallRegex = when (isa) {
                 ISA.Aarch64 -> Aarch64MethodCallRegex
                 ISA.X86_64 -> X86MethodCallRegex
-                else -> throw IllegalStateException("Incompatible ISA: $isa")
             }
             val classes = buildList {
                 while (lines.hasNext()) {
@@ -70,7 +69,7 @@ internal class OatDumpParser {
                         jumpRegex,
                         methodCallRegex
                     )
-                    if (clazz != null && clazz.methods.isNotEmpty()) {
+                    if (clazz.methods.isNotEmpty()) {
                         add(clazz)
                     }
                 }
@@ -90,7 +89,7 @@ internal class OatDumpParser {
         className: String,
         jumpRegex: Regex,
         methodCallRegex: Regex
-    ): Class? {
+    ): Class {
         val builtIn = className.matches(BuiltInKotlinClass)
         val methods = buildList {
             while (hasNext()) {
